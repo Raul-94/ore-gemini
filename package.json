@@ -1,20 +1,22 @@
 {
-  "name": "ore-gemini",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-scripts": "5.0.1",
-    "@supabase/supabase-js": "^2.39.0",
-    "lucide-react": "^0.292.0"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
+    "name": "ore-gemini",
+    "version": "0.1.0",
+    "private": true,
+    "dependencies": {
+      "react": "^18.0.0",
+      "react-dom": "^18.0.0",
+      "react-scripts": "5.0.1"
+    },
+    "scripts": {
+      "start": "react-scripts start",
+      "build": "react-scripts build",
+      "test": "react-scripts test",
+      "eject": "react-scripts eject"
+    },
+    "engines": {
+      "node": "18.x"
+    },
+
   "browserslist": {
     "production": [
       ">0.2%",
