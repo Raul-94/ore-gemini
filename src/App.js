@@ -447,30 +447,49 @@ export default function App() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {products
-                .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                .map(product => (
-                  <div key={product.id} className="group cursor-pointer bg-ore-card rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition border border-white/5 flex flex-col" onClick={() => { setSelectedProduct(product); setCurrentView('product-detail'); }}>
-                    <div className="relative h-80 overflow-hidden bg-ore-dark">
-                      <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500"/>
-                      <span className="absolute top-3 left-3 bg-ore-dark/80 backdrop-blur text-ore-gold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded">
-                        {product.material}
-                      </span>
-                    </div>
-                    <div className="p-6 flex flex-col flex-grow justify-between">
-                      <div>
-                        <p className="text-xs text-ore-muted uppercase tracking-wider">{product.category}</p>
-                        <h3 className="font-serif text-xl font-medium mt-1 text-ore-cream">{product.name}</h3>
+            {products && products.length === 0 ? (
+              <div className="text-center py-16 text-ore-muted">
+                <p>No hay productos cargados en el inventario actualmente.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {products
+                  .filter(p => {
+                    const productName = p.name || p.title || '';
+                    return productName.toLowerCase().includes((searchTerm || '').toLowerCase());
+                  })
+                  .map(product => (
+                    <div 
+                      key={product.id} 
+                      className="group cursor-pointer bg-ore-card rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition border border-white/5 flex flex-col" 
+                      onClick={() => { setSelectedProduct(product); setCurrentView('product-detail'); }}
+                    >
+                      <div className="relative h-80 overflow-hidden bg-ore-dark">
+                        <img 
+                          src={product.image || product.image_url || 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=800&q=80'} 
+                          alt={product.name || product.title || 'Joya ORE'} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        />
+                        <span className="absolute top-3 left-3 bg-ore-dark/80 backdrop-blur text-ore-gold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded">
+                          {product.material || 'General'}
+                        </span>
                       </div>
-                      <div className="mt-6 flex items-center justify-between">
-                        <span className="text-ore-gold font-semibold text-xl">${product.price.toLocaleString('es-AR')}</span>
-                        <span className="text-xs uppercase tracking-widest text-ore-gold underline">Ver pieza</span>
+                      <div className="p-6 flex flex-col flex-grow justify-between">
+                        <div>
+                          <p className="text-xs text-ore-muted uppercase tracking-wider">{product.category || 'Joyas'}</p>
+                          <h3 className="font-serif text-xl font-medium mt-1 text-ore-cream">{product.name || product.title || 'Sin nombre'}</h3>
+                        </div>
+                        <div className="mt-6 flex items-center justify-between">
+                          <span className="text-ore-gold font-semibold text-xl">
+                            ${Number(product.price || 0).toLocaleString('es-AR')}
+                          </span>
+                          <span className="text-xs uppercase tracking-widest text-ore-gold underline">Ver pieza</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
