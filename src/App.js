@@ -13,6 +13,11 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   
+  const [showPassword, setShowPassword] = useState(false);
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
+    return sessionStorage.getItem('ore_admin_auth') === 'true';
+  });
+  
   // Carrito de compras
   const [cart, setCart] = useState(() => {
     try {
@@ -109,7 +114,6 @@ export default function App() {
 
   // Estados de Admin y CRUD interno
   const [adminPin, setAdminPin] = useState('');
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [adminTab, setAdminTab] = useState('products'); // 'products', 'gold'
   
   // Estados para formulario de gestión en Admin
@@ -586,25 +590,45 @@ export default function App() {
           </div>
         )}
 
-        {/* VISTA: PANEL DE ADMINISTRACIÓN SEGURO (ACCESIBLE VÍA /#admin) */}
-        {currentView === 'admin' && (
+       {/* VISTA: PANEL DE ADMINISTRACIÓN SEGURO (ACCESIBLE VÍA /#admin) */}
+       {currentView === 'admin' && (
           <div className="max-w-6xl mx-auto px-4 py-12">
             {!isAdminAuthenticated ? (
               <div className="max-w-md mx-auto bg-ore-card p-8 rounded-lg border border-ore-gold/30 shadow-xl space-y-6">
                 <div className="text-center space-y-2">
-                  <Lock className="text-ore-gold mx-auto" size="{32}"/>
+                  <Lock className="text-ore-gold mx-auto" size={32}/>
                   <h2 className="font-serif text-2xl">Panel de Administración ORE</h2>
                   <p className="text-xs text-ore-muted">Ingrese su contraseña de acceso seguro.</p>
                 </div>
-                <form onSubmit={(e) => { e.preventDefault(); if(adminPin === 'Francesca#230426') setIsAdminAuthenticated(true); else alert('PIN incorrecto'); }} className="space-y-4">
-                  <input 
-                    type="password" 
-                    placeholder="Contraseña" 
-                    autoComplete="new-password"
-                    value={adminPin}
-                    onChange={(e) => setAdminPin(e.target.value)}
-                    className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream text-center focus:outline-none focus:border-ore-gold"
-                  />
+                <form onSubmit={(e) => { 
+                  e.preventDefault(); 
+                  if(adminPin === 'admin123') {
+                    setIsAdminAuthenticated(true);
+                    sessionStorage.setItem('ore_admin_auth', 'true'); // Guardamos la sesión activa
+                  } else {
+                    alert('PIN incorrecto');
+                  } 
+                }} className="space-y-4">
+                  
+                  {/* CAMPO DE CONTRASEÑA CON VISUALIZACIÓN */}
+                  <div className="relative">
+                    <input 
+                      type={showPassword ? "text" : "password"} 
+                      placeholder="Contraseña" 
+                      autoComplete="new-password"
+                      value={adminPin}
+                      onChange={(e) => setAdminPin(e.target.value)}
+                      className="w-full bg-ore-dark border border-white/10 rounded p-3 pr-10 text-sm text-ore-cream text-center focus:outline-none focus:border-ore-gold"
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-3.5 text-ore-muted hover:text-ore-gold text-xs"
+                    >
+                      {showPassword ? "Ocultar" : "Ver"}
+                    </button>
+                  </div>
+
                   <button type="submit" className="w-full bg-ore-gold text-ore-dark font-semibold py-3 uppercase text-xs tracking-wider">
                     Desbloquear Panel
                   </button>
@@ -614,7 +638,17 @@ export default function App() {
               <div className="space-y-8">
                 <div className="flex justify-between items-center border-b border-white/10 pb-4">
                   <h1 className="font-serif text-3xl">Gestión de Inventario y Catálogo</h1>
-                  
+                  <button 
+                    onClick={() => { 
+                      setIsAdminAuthenticated(false); 
+                      sessionStorage.removeItem('ore_admin_auth');
+                      setCurrentView('home'); 
+                      window.location.hash = ''; 
+                    }} 
+                    className="text-xs text-ore-muted uppercase tracking-wider hover:text-ore-gold"
+                  >
+                    Cerrar sesión de admin
+                  </button>
                 </div>
 
                 {adminMessage && (
@@ -666,14 +700,14 @@ export default function App() {
                         <label className="block text-xs uppercase text-ore-muted mb-1">Categoría</label>
                         <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} className="w-full bg-ore-dark border border-white/10 rounded p-2.5 text-sm text-ore-cream">
                           <option value="">-- Seleccionar --</option>
-                          {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                          {categories && categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                         </select>
                       </div>
                       <div>
                         <label className="block text-xs uppercase text-ore-muted mb-1">Material</label>
                         <select value={selectedMaterial} onChange={e => setSelectedMaterial(e.target.value)} className="w-full bg-ore-dark border border-white/10 rounded p-2.5 text-sm text-ore-cream">
                           <option value="">-- Seleccionar --</option>
-                          {materials.map(mat => <option key={mat.id} value={mat.id}>{mat.name}</option>)}
+                          {materials && materials.map(mat => <option key={mat.id} value={mat.id}>{mat.name}</option>)}
                         </select>
                       </div>
                     </div>
@@ -723,25 +757,27 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* BOTÓN DE SALIDA AL FINAL DE LA PÁGINA DE ADMINISTRACIÓN */}
+                <div className="mt-12 pt-6 border-t border-white/10 flex justify-between items-center bg-ore-card p-6 rounded-lg">
+                  <div>
+                    <h4 className="font-serif text-sm text-ore-gold">Sesión de Administrador Activa</h4>
+                    <p className="text-xs text-ore-muted">Recuerda cerrar sesión al terminar de gestionar el stock.</p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setIsAdminAuthenticated(false);
+                      sessionStorage.removeItem('ore_admin_auth');
+                      setCurrentView('home');
+                      window.location.hash = '';
+                    }}
+                    className="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 px-6 py-3 rounded text-xs uppercase tracking-widest transition"
+                  >
+                    Cerrar sesión y salir
+                  </button>
+                </div>
+
               </div>
             )}
-            {/* BOTÓN DE SALIDA AL FINAL DE LA PÁGINA DE ADMINISTRACIÓN */}
-<div className="mt-12 pt-6 border-t border-white/10 flex justify-between items-center bg-ore-card p-6 rounded-lg">
-  <div>
-    <h4 className="font-serif text-sm text-ore-gold">Sesión de Administrador Activa</h4>
-    <p className="text-xs text-ore-muted">Recuerda cerrar sesión al terminar de gestionar el stock.</p>
-  </div>
-  <button 
-    onClick={() => {
-      setIsAdminAuthenticated(false);
-      setCurrentView('home');
-      window.history.pushState("", document.title, window.location.pathname);
-    }}
-    className="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 px-6 py-3 rounded text-xs uppercase tracking-widest transition"
-  >
-    Cerrar sesión y salir
-  </button>
-</div>
           </div>
         )}
 
