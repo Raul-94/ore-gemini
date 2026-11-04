@@ -577,7 +577,7 @@ export default function App() {
                   <h2 className="font-serif text-2xl">Panel de Administración ORE</h2>
                   <p className="text-xs text-ore-muted">Ingrese su contraseña de acceso seguro.</p>
                 </div>
-                <form onSubmit={(e) => { e.preventDefault(); if(adminPin === 'admin123') setIsAdminAuthenticated(true); else alert('PIN incorrecto'); }} className="space-y-4">
+                <form onSubmit={(e) => { e.preventDefault(); if(adminPin === 'Francesca#230426') setIsAdminAuthenticated(true); else alert('PIN incorrecto'); }} className="space-y-4">
                   <input 
                     type="password" 
                     placeholder="Contraseña" 
@@ -595,7 +595,7 @@ export default function App() {
               <div className="space-y-8">
                 <div className="flex justify-between items-center border-b border-white/10 pb-4">
                   <h1 className="font-serif text-3xl">Gestión de Inventario y Catálogo</h1>
-                  <button onClick={() => { setIsAdminAuthenticated(false); setCurrentView('home'); window.location.hash = ''; }} className="text-xs text-ore-muted uppercase tracking-wider hover:text-ore-gold">Cerrar sesión y salir</button>
+                  
                 </div>
 
                 {adminMessage && (
@@ -706,6 +706,23 @@ export default function App() {
 
               </div>
             )}
+            {/* BOTÓN DE SALIDA AL FINAL DE LA PÁGINA DE ADMINISTRACIÓN */}
+<div className="mt-12 pt-6 border-t border-white/10 flex justify-between items-center bg-ore-card p-6 rounded-lg">
+  <div>
+    <h4 className="font-serif text-sm text-ore-gold">Sesión de Administrador Activa</h4>
+    <p className="text-xs text-ore-muted">Recuerda cerrar sesión al terminar de gestionar el stock.</p>
+  </div>
+  <button 
+    onClick={() => {
+      setIsAdminAuthenticated(false);
+      setCurrentView('home');
+      window.history.pushState("", document.title, window.location.pathname);
+    }}
+    className="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 px-6 py-3 rounded text-xs uppercase tracking-widest transition"
+  >
+    Cerrar sesión y salir
+  </button>
+</div>
           </div>
         )}
 
