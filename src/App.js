@@ -465,73 +465,154 @@ export default function App() {
           </div>
         )}
 
-        {/* VISTA: TIENDA */}
-        {currentView === 'shop' && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="mb-8">
-              <h1 className="font-serif text-4xl mb-2">Catálogo de Joyas</h1>
-              <p className="text-ore-muted text-sm">Explora nuestra colección completa sincronizada con el sistema.</p>
-            </div>
+        {/* VISTA DE LA TIENDA CON TARJETAS VISUALES DE ÚLTIMO PRODUCTO CARGADO */}
+{currentView === 'shop' && (
+  <div className="max-w-7xl mx-auto px-4 py-8 space-y-12">
+    
+    {/* CABECERA Y TARJETAS VISUALES DE CATEGORÍAS */}
+    <div className="space-y-6">
+      <div className="text-center space-y-2">
+        <h2 className="font-serif text-3xl text-ore-cream">Explora por Categoría</h2>
+        <p className="text-xs text-ore-muted uppercase tracking-widest">Piezas exclusivas en cada categoría</p>
+      </div>
 
-            <div className="bg-ore-card p-6 rounded-lg border border-white/5 mb-10 flex flex-col md:flex-row gap-4 items-center justify-between">
-              <div className="relative w-full md:w-80">
-                <Search size={18} className="absolute left-3 top-3 text-ore-muted" />
-                <input 
-                  type="text" 
-                  placeholder="Buscar pieza..." 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-ore-dark border border-white/10 rounded px-4 py-2 pl-10 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
-                />
+      {/* Botón para restablecer y ver todo el catálogo */}
+      <div className="flex justify-center">
+        <button 
+          onClick={() => { setFilterCategory('Todos'); setFilterMaterial('Todos'); }}
+          className={`px-5 py-2 text-xs uppercase tracking-wider rounded transition border ${
+            filterCategory === 'Todos' && filterMaterial === 'Todos'
+              ? 'bg-ore-gold text-ore-dark border-ore-gold font-bold shadow-md'
+              : 'bg-ore-card text-ore-cream border-white/10 hover:border-ore-gold'
+          }`}
+        >
+          Ver Todo el Catálogo
+        </button>
+      </div>
+
+      {/* GRID DE CATEGORÍAS (Muestra la imagen del ÚLTIMO producto creado) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {categories && categories.map(cat => {
+          // Buscamos los productos de esta categoría y tomamos el ÚLTIMO agregado (último elemento del arreglo)
+          const categoryProducts = products.filter(p => p.category === cat.name || p.category_id === cat.id);
+          const lastProduct = categoryProducts.length > 0 ? categoryProducts[categoryProducts.length - 1] : null;
+          
+          // Si hay último producto usamos su imagen, si no, una imagen elegante por defecto
+          const coverImage = lastProduct?.image || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=600&q=80';
+
+          return (
+            <div 
+              key={cat.id}
+              onClick={() => {
+                setFilterCategory(cat.name);
+                setFilterMaterial('Todos');
+              }}
+              className={`group relative h-48 rounded-lg overflow-hidden cursor-pointer border transition-all duration-300 shadow-xl ${
+                filterCategory === cat.name ? 'border-ore-gold ring-2 ring-ore-gold/50' : 'border-white/10 hover:border-ore-gold/60'
+              }`}
+            >
+              <img 
+                src={coverImage} 
+                alt={cat.name} 
+                className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-70 group-hover:opacity-90"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-ore-dark via-ore-dark/30 to-transparent flex items-end p-4">
+                <div>
+                  <h3 className="font-serif text-lg text-ore-cream group-hover:text-ore-gold transition">{cat.name}</h3>
+                  <span className="text-[10px] uppercase tracking-wider text-ore-muted">Ver Colección</span>
+                </div>
               </div>
             </div>
+          );
+        })}
+      </div>
+    </div>
 
-            {products && products.length === 0 ? (
-              <div className="text-center py-16 text-ore-muted">
-                <p>No hay productos cargados en el inventario actualmente.</p>
+    {/* SECCIÓN DE MATERIALES (Muestra la imagen del ÚLTIMO producto creado) */}
+    <div className="space-y-6 pt-8 border-t border-white/10">
+      <div className="text-center space-y-2">
+        <h2 className="font-serif text-3xl text-ore-cream">Selecciona por Material</h2>
+        <p className="text-xs text-ore-muted uppercase tracking-widest">Encuentra piezas según su metal</p>
+      </div>
+
+      {/* GRID DE MATERIALES */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+        {materials && materials.map(mat => {
+          // Buscamos los productos de este material y tomamos el ÚLTIMO agregado
+          const materialProducts = products.filter(p => p.material === mat.name || p.material_id === mat.id);
+          const lastMatProduct = materialProducts.length > 0 ? materialProducts[materialProducts.length - 1] : null;
+          
+          const matCoverImage = lastMatProduct?.image || 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80';
+
+          return (
+            <div 
+              key={mat.id}
+              onClick={() => {
+                setFilterMaterial(mat.name);
+                setFilterCategory('Todos');
+              }}
+              className={`group relative h-40 rounded-lg overflow-hidden cursor-pointer border transition-all duration-300 shadow-xl ${
+                filterMaterial === mat.name ? 'border-ore-gold ring-2 ring-ore-gold/50' : 'border-white/10 hover:border-ore-gold/60'
+              }`}
+            >
+              <img 
+                src={matCoverImage} 
+                alt={mat.name} 
+                className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-70 group-hover:opacity-90"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-ore-dark via-ore-dark/30 to-transparent flex items-end p-4">
+                <div>
+                  <h3 className="font-serif text-base text-ore-cream group-hover:text-ore-gold transition">{mat.name}</h3>
+                  <span className="text-[10px] uppercase tracking-wider text-ore-muted">Explorar Piezas</span>
+                </div>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {products
-                  .filter(p => {
-                    const productName = p.name || p.title || '';
-                    return productName.toLowerCase().includes((searchTerm || '').toLowerCase());
-                  })
-                  .map(product => (
-                    <div 
-                      key={product.id} 
-                      className="group cursor-pointer bg-ore-card rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition border border-white/5 flex flex-col" 
-                      onClick={() => { setSelectedProduct(product); setCurrentView('product-detail'); }}
-                    >
-                      <div className="relative h-80 overflow-hidden bg-ore-dark">
-                        <img 
-                          src={product.image || product.image_url || 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=800&q=80'} 
-                          alt={product.name || product.title || 'Joya ORE'} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                        />
-                        <span className="absolute top-3 left-3 bg-ore-dark/80 backdrop-blur text-ore-gold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded">
-                          {product.material || 'General'}
-                        </span>
-                      </div>
-                      <div className="p-6 flex flex-col flex-grow justify-between">
-                        <div>
-                          <p className="text-xs text-ore-muted uppercase tracking-wider">{product.category || 'Joyas'}</p>
-                          <h3 className="font-serif text-xl font-medium mt-1 text-ore-cream">{product.name || product.title || 'Sin nombre'}</h3>
-                        </div>
-                        <div className="mt-6 flex items-center justify-between">
-                          <span className="text-ore-gold font-semibold text-xl">
-                            ${Number(product.price || 0).toLocaleString('es-AR')}
-                          </span>
-                          <span className="text-xs uppercase tracking-widest text-ore-gold underline">Ver pieza</span>
-                        </div>
-                      </div>
-                    </div>
-                ))}
-              </div>
-            )}
-          </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+    {/* LISTADO DE PRODUCTOS FILTRADOS */}
+    <div className="pt-10 border-t border-white/10">
+      <div className="flex justify-between items-center mb-8">
+        <h3 className="font-serif text-2xl text-ore-cream">
+          {filterCategory !== 'Todos' 
+            ? `Categoría: ${filterCategory}` 
+            : filterMaterial !== 'Todos' 
+              ? `Material: ${filterMaterial}` 
+              : 'Catálogo Completo'}
+        </h3>
+        {(filterCategory !== 'Todos' || filterMaterial !== 'Todos') && (
+          <button 
+            onClick={() => { setFilterCategory('Todos'); setFilterMaterial('Todos'); }}
+            className="text-xs text-ore-gold hover:underline font-semibold"
+          >
+            Limpiar Filtros ×
+          </button>
         )}
+      </div>
 
+      {/* Tarjetas individuales de productos */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {products
+          .filter(p => filterCategory === 'Todos' || p.category === filterCategory || p.categories?.name === filterCategory)
+          .filter(p => filterMaterial === 'Todos' || p.material === filterMaterial || p.materials?.name === filterMaterial)
+          .map(p => (
+            <div key={p.id} className="bg-ore-card border border-white/5 rounded-lg overflow-hidden shadow-lg hover:border-ore-gold/40 transition group">
+              <div className="h-64 overflow-hidden relative">
+                <img src={p.image} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+              </div>
+              <div className="p-5 space-y-2">
+                <h4 className="font-serif text-lg text-ore-cream group-hover:text-ore-gold transition">{p.title}</h4>
+                <p className="text-ore-gold font-bold text-lg">${Number(p.price).toLocaleString('es-AR')}</p>
+              </div>
+            </div>
+          ))}
+      </div>
+    </div>
+
+  </div>
+)}
         {/* VISTA: FICHA DE PRODUCTO */}
         {currentView === 'product-detail' && selectedProduct && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
