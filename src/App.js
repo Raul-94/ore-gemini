@@ -469,7 +469,7 @@ export default function App() {
 {currentView === 'shop' && (
   <div className="max-w-7xl mx-auto px-4 py-12 space-y-12">
     
-    {/* SI HAY UN FILTRO ACTIVO (CATEGORÍA O MATERIAL), MOSTRAMOS SOLO LOS PRODUCTOS FILTRADOS */}
+    {/* SI HAY UN FILTRO ACTIVO, MOSTRAMOS LOS PRODUCTOS DE ESA COLECCIÓN */}
     {(filterCategory !== 'Todos' || filterMaterial !== 'Todos') ? (
       <div className="space-y-6">
         <div className="flex justify-between items-center bg-ore-card p-4 rounded-lg border border-ore-gold/30">
@@ -487,40 +487,46 @@ export default function App() {
           </button>
         </div>
 
-        {/* Grilla exclusiva de productos filtrados */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {products
             .filter(p => filterCategory === 'Todos' || (p.category && p.category.toLowerCase().trim() === filterCategory.toLowerCase().trim()))
             .filter(p => filterMaterial === 'Todos' || (p.material && p.material.toLowerCase().trim() === filterMaterial.toLowerCase().trim()))
-            .map(p => (
-              <div 
-                key={p.id} 
-                onClick={() => {
-                  setSelectedProduct(p);
-                  setCurrentView('product-detail');
-                }}
-                className="bg-ore-card border border-white/5 rounded-lg overflow-hidden shadow-lg hover:border-ore-gold transition group cursor-pointer"
-              >
-                <div className="h-64 overflow-hidden relative bg-ore-dark">
-                  <img 
-                    src={p.image || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=600&q=80'} 
-                    alt={p.title} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
-                  />
-                </div>
-                <div className="p-5 space-y-2">
-                  <h4 className="font-serif text-lg text-ore-cream group-hover:text-ore-gold transition">{p.title}</h4>
-                  <div className="flex justify-between items-center pt-2">
-                    <span className="text-ore-gold font-bold text-lg">${Number(p.price || 0).toLocaleString('es-AR')}</span>
-                    <span className="text-xs uppercase tracking-widest text-ore-muted underline">Ver detalle</span>
+            .map(p => {
+              const productImg = p.image || p.image_url;
+              return (
+                <div 
+                  key={p.id} 
+                  onClick={() => {
+                    setSelectedProduct(p);
+                    setCurrentView('product-detail');
+                  }}
+                  className="bg-ore-card border border-white/5 rounded-lg overflow-hidden shadow-lg hover:border-ore-gold transition group cursor-pointer"
+                >
+                  <div className="h-64 overflow-hidden relative bg-ore-dark flex items-center justify-center">
+                    {productImg ? (
+                      <img 
+                        src={productImg} 
+                        alt={p.title} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+                      />
+                    ) : (
+                      <span className="text-xs text-ore-muted italic">Sin imagen disponible</span>
+                    )}
+                  </div>
+                  <div className="p-5 space-y-2">
+                    <h4 className="font-serif text-lg text-ore-cream group-hover:text-ore-gold transition">{p.title}</h4>
+                    <div className="flex justify-between items-center pt-2">
+                      <span className="text-ore-gold font-bold text-lg">${Number(p.price || 0).toLocaleString('es-AR')}</span>
+                      <span className="text-xs uppercase tracking-widest text-ore-muted underline">Ver detalle</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
         </div>
       </div>
     ) : (
-      /* SI NO HAY FILTROS ACTIVOS, MOSTRAMOS LAS TARJETAS DE CATEGORÍAS Y MATERIALES DE FORMA LIMPIA */
+      /* SI NO HAY FILTROS, MOSTRAMOS LAS TARJETAS DE CATEGORÍAS Y MATERIALES */
       <div className="space-y-16">
         
         {/* SECCIÓN DE CATEGORÍAS */}
@@ -531,18 +537,28 @@ export default function App() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {categories && categories.map(cat => {
               const catProducts = products.filter(p => p.category && p.category.toLowerCase().trim() === cat.name.toLowerCase().trim());
-              const validCatProduct = catProducts.slice().reverse().find(p => p.image && p.image.trim() !== '');
-              const coverImg = validCatProduct?.image || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=600&q=80';
+              
+              // Buscamos estrictamente desde el último hacia atrás el producto que SÍ tenga imagen real
+              const lastValidProduct = catProducts.slice().reverse().find(p => (p.image && p.image.trim() !== '') || (p.image_url && p.image_url.trim() !== ''));
+              const coverImg = lastValidProduct ? (lastValidProduct.image || lastValidProduct.image_url) : null;
 
               return (
                 <div 
                   key={cat.id}
                   onClick={() => setFilterCategory(cat.name)}
-                  className="group relative h-52 rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-ore-gold transition-all shadow-xl"
+                  className="group relative h-52 rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-ore-gold transition-all shadow-xl bg-ore-card flex items-center justify-center"
                 >
-                  <img src={coverImg} alt={cat.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-ore-dark via-ore-dark/30 to-transparent flex items-end p-4">
-                    <h3 className="font-serif text-lg text-ore-cream group-hover:text-ore-gold transition">{cat.name}</h3>
+                  {coverImg ? (
+                    <img 
+                      src={coverImg} 
+                      alt={cat.name} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" 
+                    />
+                  ) : (
+                    <div className="text-ore-muted text-xs italic p-4 text-center">Sin productos con imagen</div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-ore-dark via-ore-dark/40 to-transparent flex items-end p-4">
+                    <h3 className="font-serif text-lg text-ore-cream group-hover:text-ore-gold transition font-bold">{cat.name}</h3>
                   </div>
                 </div>
               );
@@ -558,18 +574,28 @@ export default function App() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             {materials && materials.map(mat => {
               const matProducts = products.filter(p => p.material && p.material.toLowerCase().trim() === mat.name.toLowerCase().trim());
-              const validMatProduct = matProducts.slice().reverse().find(p => p.image && p.image.trim() !== '');
-              const matCoverImg = validMatProduct?.image || 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80';
+              
+              // Buscamos estrictamente desde el último hacia atrás el producto que SÍ tenga imagen real
+              const lastValidMatProduct = matProducts.slice().reverse().find(p => (p.image && p.image.trim() !== '') || (p.image_url && p.image_url.trim() !== ''));
+              const matCoverImg = lastValidMatProduct ? (lastValidMatProduct.image || lastValidMatProduct.image_url) : null;
 
               return (
                 <div 
                   key={mat.id}
                   onClick={() => setFilterMaterial(mat.name)}
-                  className="group relative h-44 rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-ore-gold transition-all shadow-xl"
+                  className="group relative h-44 rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-ore-gold transition-all shadow-xl bg-ore-card flex items-center justify-center"
                 >
-                  <img src={matCoverImg} alt={mat.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-ore-dark via-ore-dark/30 to-transparent flex items-end p-4">
-                    <h3 className="font-serif text-base text-ore-cream group-hover:text-ore-gold transition">{mat.name}</h3>
+                  {matCoverImg ? (
+                    <img 
+                      src={matCoverImg} 
+                      alt={mat.name} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" 
+                    />
+                  ) : (
+                    <div className="text-ore-muted text-xs italic p-4 text-center">Sin productos con imagen</div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-ore-dark via-ore-dark/40 to-transparent flex items-end p-4">
+                    <h3 className="font-serif text-base text-ore-cream group-hover:text-ore-gold transition font-bold">{mat.name}</h3>
                   </div>
                 </div>
               );
