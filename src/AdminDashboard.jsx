@@ -93,18 +93,17 @@ export default function AdminDashboard() {
           .from('products')
           .update(productData)
           .eq('id', editingId);
-
+    
         if (error) throw error;
         setMessage('¡Producto actualizado con éxito!');
-        setIsSuccess(true);
       } else {
         // Crear nuevo producto
         const { error } = await supabase.from('products').insert([productData]);
         if (error) throw error;
         setMessage('¡Producto agregado con éxito!');
-        setIsSuccess(true);
       }
-
+    
+      setIsSuccess(true);
       resetForm();
       fetchProducts();
     } catch (err) {
