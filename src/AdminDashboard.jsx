@@ -210,44 +210,43 @@ export default function AdminDashboard() {
       <hr style={{ margin: '30px 0' }} />
 
       {/* PEGA ESTO EN LA ZONA VISUAL (DENTRO DEL RETURN) DONDE ESTABA TU FORMULARIO */}
-
-{isSuccess ? (
-  /* Pantalla elegante de éxito con los dos botones */
-  <div style={{ backgroundColor: '#1a1a1a', border: '1px solid #d4af37', padding: '40px', borderRadius: '8px', textAlign: 'center', maxWidth: '600px', margin: '40px auto' }}>
-    <div style={{ color: '#d4af37', fontSize: '32px', marginBottom: '10px' }}>✓</div>
-    <h3 style={{ color: '#f3f3f3', fontSize: '24px', fontFamily: 'serif', marginBottom: '10px' }}>¡Producto creado con éxito!</h3>
-    <p style={{ color: '#a0a0a0', fontSize: '14px', marginBottom: '25px' }}>El producto ya se encuentra registrado y disponible en el catálogo de la tienda.</p>
-    
-    <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
-    <button 
-  type="button"
-  onClick={() => setIsSuccess(false)}
-  style={{ backgroundColor: '#d4af37', color: '#111', fontWeight: 'bold', padding: '12px 24px', border: 'none', borderRadius: '4px', cursor: 'pointer', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '1px' }}
->
-        Crear nuevo producto
-      </button>
       
-      <button 
-        onClick={() => {
-          setCurrentView('shop'); // Te lleva directo a explorar el catálogo de la tienda
-        }}
-        style={{ backgroundColor: '#111', border: '1px solid rgba(255,255,255,0.2)', color: '#f3f3f3', padding: '12px 24px', borderRadius: '4px', cursor: 'pointer', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '1px' }}
-      >
-        Explorar catálogo
-      </button>
+      
+  {/* VISTA DE ÉXITO O FORMULARIO */}
+{isSuccess ? (
+    <div style={{ backgroundColor: '#1a1a1a', border: '1px solid #d4af37', padding: '40px', borderRadius: '8px', textAlign: 'center', maxWidth: '600px', margin: '40px auto' }}>
+      <div style={{ color: '#d4af37', fontSize: '32px', marginBottom: '10px' }}>✓</div>
+      <h3 style={{ color: '#f3f3f3', fontSize: '24px', marginBottom: '10px' }}>¡Producto creado con éxito!</h3>
+      <p style={{ color: '#a0a0a0', fontSize: '14px', marginBottom: '25px' }}>El producto ya se encuentra registrado y disponible en el catálogo de la tienda.</p>
+      
+      <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+        <button 
+          type="button"
+          onClick={() => setIsSuccess(false)}
+          style={{ backgroundColor: '#d4af37', color: '#111', fontWeight: 'bold', padding: '12px 24px', border: 'none', borderRadius: '4px', cursor: 'pointer', textTransform: 'uppercase', fontSize: '11px' }}
+        >
+          Crear nuevo producto
+        </button>
+        
+        <button 
+          type="button"
+          onClick={() => setCurrentView('shop')}
+          style={{ backgroundColor: '#111', border: '1px solid rgba(255,255,255,0.2)', color: '#f3f3f3', padding: '12px 24px', borderRadius: '4px', cursor: 'pointer', textTransform: 'uppercase', fontSize: '11px' }}
+        >
+          Explorar catálogo
+        </button>
+      </div>
     </div>
-  </div>
-) : (
-  /* Tu formulario original que ya tenías para cargar productos */
-  <div>
-    <h2 style={{ fontSize: '20px', fontFamily: 'serif', marginBottom: '20px', color: '#f3f3f3' }}>
-      {editingId ? 'Editar Producto' : 'Cargar Nuevo Producto'}
-    </h2>
-    <form onSubmit={handleSubmitProduct} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-      {/* Aquí dentro dejas todos tus inputs actuales (Título, precio, descripción, etc.) */}
-    </form>
-  </div>
-)}
+  ) : (
+    <div>
+      <h2 style={{ fontSize: '20px', marginBottom: '20px', color: '#f3f3f3' }}>
+        {editingId ? 'Editar Producto' : 'Cargar Nuevo Producto'}
+      </h2>
+      <form onSubmit={handleSubmitProduct} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        {/* Tus inputs actuales */}
+      </form>
+    </div>
+  )}
 
       <hr style={{ margin: '40px 0' }} />
 
