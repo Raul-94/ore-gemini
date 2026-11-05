@@ -694,20 +694,95 @@ export default function App() {
 
                 {/* GESTIÓN DE CATEGORÍAS Y MATERIALES */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-ore-card p-6 rounded-lg border border-white/5">
-                  <form onSubmit={handleAddCategory} className="space-y-3">
-                    <h3 className="font-serif text-sm uppercase tracking-wider text-ore-gold">Agregar Categoría</h3>
-                    <div className="flex gap-2">
-                      <input type="text" placeholder="Ej: Anillos, Cadenas" value={newCategory} onChange={e => setNewCategory(e.target.value)} className="w-full bg-ore-dark border border-white/10 rounded p-2 text-sm text-ore-cream" required />
-                      <button type="submit" className="bg-ore-gold text-ore-dark px-4 py-2 text-xs font-bold uppercase rounded">Crear</button>
+                  
+                  {/* COLUMNA: CATEGORÍAS */}
+                  <div className="space-y-4">
+                    <form onSubmit={handleAddCategory} className="space-y-3">
+                      <h3 className="font-serif text-sm uppercase tracking-wider text-ore-gold">Agregar Categoría</h3>
+                      <div className="flex gap-2">
+                        <input 
+                          type="text" 
+                          placeholder="Ej: Anillos, Cadenas" 
+                          value={newCategory} 
+                          onChange={e => setNewCategory(e.target.value)} 
+                          className="w-full bg-ore-dark border border-white/10 rounded p-2 text-sm text-ore-cream" 
+                          required 
+                        />
+                        <button type="submit" className="bg-ore-gold text-ore-dark px-4 py-2 text-xs font-bold uppercase rounded hover:bg-ore-cream transition">
+                          Crear
+                        </button>
+                      </div>
+                    </form>
+
+                    {/* LISTA VISUAL DE CATEGORÍAS CON BOTÓN DE BORRAR (CRUZ) */}
+                    <div className="pt-2 border-t border-white/5">
+                      <p className="text-[10px] uppercase text-ore-muted mb-2 font-semibold">Categorías registradas:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {categories && categories.length > 0 ? (
+                          categories.map(cat => (
+                            <span key={cat.id} className="bg-ore-dark border border-white/10 text-xs px-3 py-1 rounded-full flex items-center gap-2 text-ore-cream">
+                              {cat.name}
+                              <button 
+                                type="button"
+                                onClick={() => handleDeleteCategory(cat.id)} 
+                                className="text-red-400 hover:text-red-200 font-bold text-sm leading-none bg-red-500/10 hover:bg-red-500/30 w-4 h-4 rounded-full flex items-center justify-center transition"
+                                title="Eliminar categoría"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-ore-muted italic">No hay categorías cargadas</span>
+                        )}
+                      </div>
                     </div>
-                  </form>
-                  <form onSubmit={handleAddMaterial} className="space-y-3">
-                    <h3 className="font-serif text-sm uppercase tracking-wider text-ore-gold">Agregar Material</h3>
-                    <div className="flex gap-2">
-                      <input type="text" placeholder="Ej: Plata 925, Oro 18k" value={newMaterial} onChange={e => setNewMaterial(e.target.value)} className="w-full bg-ore-dark border border-white/10 rounded p-2 text-sm text-ore-cream" required />
-                      <button type="submit" className="bg-ore-gold text-ore-dark px-4 py-2 text-xs font-bold uppercase rounded">Crear</button>
+                  </div>
+
+                  {/* COLUMNA: MATERIALES */}
+                  <div className="space-y-4">
+                    <form onSubmit={handleAddMaterial} className="space-y-3">
+                      <h3 className="font-serif text-sm uppercase tracking-wider text-ore-gold">Agregar Material</h3>
+                      <div className="flex gap-2">
+                        <input 
+                          type="text" 
+                          placeholder="Ej: Plata 925, Oro 18k" 
+                          value={newMaterial} 
+                          onChange={e => setNewMaterial(e.target.value)} 
+                          className="w-full bg-ore-dark border border-white/10 rounded p-2 text-sm text-ore-cream" 
+                          required 
+                        />
+                        <button type="submit" className="bg-ore-gold text-ore-dark px-4 py-2 text-xs font-bold uppercase rounded hover:bg-ore-cream transition">
+                          Crear
+                        </button>
+                      </div>
+                    </form>
+
+                    {/* LISTA VISUAL DE MATERIALES CON BOTÓN DE BORRAR (CRUZ) */}
+                    <div className="pt-2 border-t border-white/5">
+                      <p className="text-[10px] uppercase text-ore-muted mb-2 font-semibold">Materiales registrados:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {materials && materials.length > 0 ? (
+                          materials.map(mat => (
+                            <span key={mat.id} className="bg-ore-dark border border-white/10 text-xs px-3 py-1 rounded-full flex items-center gap-2 text-ore-cream">
+                              {mat.name}
+                              <button 
+                                type="button"
+                                onClick={() => handleDeleteMaterial(mat.id)} 
+                                className="text-red-400 hover:text-red-200 font-bold text-sm leading-none bg-red-500/10 hover:bg-red-500/30 w-4 h-4 rounded-full flex items-center justify-center transition"
+                                title="Eliminar material"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-ore-muted italic">No hay materiales cargados</span>
+                        )}
+                      </div>
                     </div>
-                  </form>
+                  </div>
+
                 </div>
 
                 {/* FORMULARIO DE ALTA Y EDICIÓN DE PRODUCTOS */}
