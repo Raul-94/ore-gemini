@@ -149,19 +149,44 @@ export default function App() {
   const handleAddCategory = async (e) => {
     e.preventDefault();
     if (!newCategory.trim()) return;
-    await supabase.from('categories').insert([{ name: newCategory.trim() }]);
-    setNewCategory('');
-    fetchAdminMetadata();
+    const { data, error } = await supabase
+      .from('categories')
+      .insert([{ name: newCategory.trim() }])
+      .select();
+
+    if (!error) {
+      setNewCategory('');
+      if (data && data.length > 0) {
+        setCategories(prev => [...prev, data[0]]);
+      }
+      fetchAdminMetadata();
+      setAdminMessage('¡Categoría creada con éxito!');
+    } else {
+      console.error('Error al crear categoría:', error);
+      alert('No se pudo crear la categoría: ' + error.message);
+    }
   };
 
   const handleAddMaterial = async (e) => {
     e.preventDefault();
     if (!newMaterial.trim()) return;
-    await supabase.from('materials').insert([{ name: newMaterial.trim() }]);
-    setNewMaterial('');
-    fetchAdminMetadata();
-  };
+    const { data, error } = await supabase
+      .from('materials')
+      .insert([{ name: newMaterial.trim() }])
+      .select();
 
+    if (!error) {
+      setNewMaterial('');
+      if (data && data.length > 0) {
+        setMaterials(prev => [...prev, data[0]]);
+      }
+      fetchAdminMetadata();
+      setAdminMessage('¡Material creado con éxito!');
+    } else {
+      console.error('Error al crear material:', error);
+      alert('No se pudo crear el material: ' + error.message);
+    }
+  };
   const handleSubmitProduct = async (e) => {
     e.preventDefault();
     setAdminLoading(true);
@@ -333,7 +358,17 @@ export default function App() {
             <button onClick={() => setCurrentView('gold')} className={`transition hover:text-ore-gold ${currentView === 'gold' ? 'text-ore-gold border-b border-ore-gold pb-1' : 'text-ore-cream/80'}`}>Compramos oro</button>
             <button onClick={() => setCurrentView('about')} className={`transition hover:text-ore-gold ${currentView === 'about' ? 'text-ore-gold border-b border-ore-gold pb-1' : 'text-ore-cream/80'}`}>Nosotros</button>
             <button onClick={() => setCurrentView('contact')} className={`transition hover:text-ore-gold ${currentView === 'contact' ? 'text-ore-gold border-b border-ore-gold pb-1' : 'text-ore-cream/80'}`}>Contacto</button>
+          {/* Acceso rápido a Admin (solo si la sesión está iniciada) */}
+          {isAdminAuthenticated && (
+            <button onClick={() => { setCurrentView('admin'); window.scrollTo({ top: 0, behavior: 'smooth' }); 
+    }} 
+    className="bg-ore-gold/20 text-ore-gold border border-ore-gold/40 px-3 py-1 rounded text-xs uppercase tracking-wider font-semibold hover:bg-ore-gold hover:text-ore-dark transition"
+  >
+    Panel Admin
+  </button>
+)}
           </nav>
+
 
           {/* ACCIONES (Sólo Carrito visible públicamente) */}
           <div className="flex items-center gap-4">
@@ -602,7 +637,7 @@ export default function App() {
                 </div>
                 <form onSubmit={(e) => { 
                   e.preventDefault(); 
-                  if(adminPin === 'admin123') {
+                  if(adminPin === 'Francesca#230426') {
                     setIsAdminAuthenticated(true);
                     sessionStorage.setItem('ore_admin_auth', 'true'); // Guardamos la sesión activa
                   } else {
@@ -638,7 +673,7 @@ export default function App() {
               <div className="space-y-8">
                 <div className="flex justify-between items-center border-b border-white/10 pb-4">
                   <h1 className="font-serif text-3xl">Gestión de Inventario y Catálogo</h1>
-                  <button 
+                  {/*<button 
                     onClick={() => { 
                       setIsAdminAuthenticated(false); 
                       sessionStorage.removeItem('ore_admin_auth');
@@ -648,7 +683,7 @@ export default function App() {
                     className="text-xs text-ore-muted uppercase tracking-wider hover:text-ore-gold"
                   >
                     Cerrar sesión de admin
-                  </button>
+                  </button>*/}
                 </div>
 
                 {adminMessage && (
