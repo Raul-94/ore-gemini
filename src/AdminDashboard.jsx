@@ -173,26 +173,28 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Categorías y Materiales */}
-<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+      {/* Sección independiente de Gestión de Categorías y Materiales */}
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '40px' }}>
   
-  {/* COLUMNA 1: CATEGORÍAS */}
-  <div>
-    <h3>Nueva Categoría</h3>
-    <form onSubmit={handleAddCategory} style={{ display: 'flex', gap: '10px' }}>
+  {/* TARJETA 1: GESTIÓN DE CATEGORÍAS */}
+  <div style={{ background: '#1a1a1a', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
+    <h3 style={{ color: '#d4af37', marginBottom: '15px', fontSize: '16px' }}>Gestionar Categorías</h3>
+    
+    {/* Formulario para agregar */}
+    <form onSubmit={handleAddCategory} style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
       <input
         type="text"
-        placeholder="Ej: Anillos, Cadenas"
+        placeholder="Nueva categoría (ej: Anillos)"
         value={newCategory}
         onChange={(e) => setNewCategory(e.target.value)}
-        style={{ flex: 1, padding: '8px' }}
+        style={{ flex: 1, padding: '8px 12px', background: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: '4px' }}
         required
       />
-      <button type="submit" style={{ padding: '8px 16px' }}>Agregar</button>
+      <button type="submit" style={{ padding: '8px 16px', background: '#d4af37', color: '#000', fontWeight: 'bold', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Agregar</button>
     </form>
 
-    {/* Lista de categorías existentes con botón SVG */}
-    <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+    {/* Lista limpia en formato pastilla con tachito SVG */}
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
       {categories && categories.length > 0 ? (
         categories.map(cat => (
           <span 
@@ -204,7 +206,8 @@ export default function AdminDashboard() {
               display: 'flex', 
               alignItems: 'center', 
               gap: '8px', 
-              color: '#fff' 
+              color: '#fff',
+              fontSize: '14px'
             }}
           >
             {cat.name}
@@ -222,7 +225,7 @@ export default function AdminDashboard() {
               }}
               title="Eliminar categoría"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 <line x1="10" y1="11" x2="10" y2="17"></line>
@@ -237,23 +240,25 @@ export default function AdminDashboard() {
     </div>
   </div>
 
-  {/* COLUMNA 2: MATERIALES */}
-  <div>
-    <h3>Nuevo Material</h3>
-    <form onSubmit={handleAddMaterial} style={{ display: 'flex', gap: '10px' }}>
+  {/* TARJETA 2: GESTIÓN DE MATERIALES */}
+  <div style={{ background: '#1a1a1a', padding: '20px', borderRadius: '8px', border: '1px solid #333' }}>
+    <h3 style={{ color: '#d4af37', marginBottom: '15px', fontSize: '16px' }}>Gestionar Materiales</h3>
+    
+    {/* Formulario para agregar */}
+    <form onSubmit={handleAddMaterial} style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
       <input
         type="text"
-        placeholder="Ej: Plata 925, Oro 18k"
+        placeholder="Nuevo material (ej: Oro 18k)"
         value={newMaterial}
         onChange={(e) => setNewMaterial(e.target.value)}
-        style={{ flex: 1, padding: '8px' }}
+        style={{ flex: 1, padding: '8px 12px', background: '#2a2a2a', color: '#fff', border: '1px solid #444', borderRadius: '4px' }}
         required
       />
-      <button type="submit" style={{ padding: '8px 16px' }}>Agregar</button>
+      <button type="submit" style={{ padding: '8px 16px', background: '#d4af37', color: '#000', fontWeight: 'bold', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Agregar</button>
     </form>
 
-    {/* Lista de materiales existentes con botón SVG */}
-    <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+    {/* Lista limpia en formato pastilla con tachito SVG */}
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
       {materials && materials.length > 0 ? (
         materials.map(mat => (
           <span 
@@ -265,7 +270,8 @@ export default function AdminDashboard() {
               display: 'flex', 
               alignItems: 'center', 
               gap: '8px', 
-              color: '#fff' 
+              color: '#fff',
+              fontSize: '14px'
             }}
           >
             {mat.name}
@@ -283,7 +289,7 @@ export default function AdminDashboard() {
               }}
               title="Eliminar material"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 <line x1="10" y1="11" x2="10" y2="17"></line>
@@ -299,8 +305,6 @@ export default function AdminDashboard() {
   </div>
 
 </div>
-
-<hr style={{ margin: '30px 0' }} />
       
   {/* VISTA DE ÉXITO O FORMULARIO */}
 {isSuccess ? (
