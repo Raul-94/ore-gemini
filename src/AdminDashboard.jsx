@@ -188,6 +188,26 @@ export default function AdminDashboard() {
             />
             <button type="submit" style={{ padding: '8px 16px' }}>Agregar</button>
           </form>
+          {/* Lista de categorías existentes con botón de borrado */}
+<div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+  {categories && categories.length > 0 ? (
+    categories.map(cat => (
+      <span key={cat.id} style={{ background: '#2d3748', padding: '4px 10px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'white' }}>
+        {cat.name}
+        <button
+          type="button"
+          onClick={() => handleDeleteCategory(cat.id)}
+          style={{ color: '#fc8181', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+          title="Eliminar categoría"
+        >
+          &times;
+        </button>
+      </span>
+    ))
+  ) : (
+    <span style={{ fontSize: '12px', fontStyle: 'italic', color: '#a0aec0' }}>No hay categorías cargadas</span>
+  )}
+</div>
         </div>
 
         <div>
@@ -208,7 +228,6 @@ export default function AdminDashboard() {
 
       <hr style={{ margin: '30px 0' }} />
 
-      {/* PEGA ESTO EN LA ZONA VISUAL (DENTRO DEL RETURN) DONDE ESTABA TU FORMULARIO */}
       
       
   {/* VISTA DE ÉXITO O FORMULARIO */}

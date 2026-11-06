@@ -187,6 +187,7 @@ export default function App() {
       alert('No se pudo crear el material: ' + error.message);
     }
   };
+
   const handleSubmitProduct = async (e) => {
     e.preventDefault();
     setAdminLoading(true);
@@ -217,9 +218,8 @@ export default function App() {
         stock: parseInt(stock, 10),
         category_id: selectedCategory ? parseInt(selectedCategory, 10) : null,
         material_id: selectedMaterial ? parseInt(selectedMaterial, 10) : null,
+        image_url: imageUrl ? imageUrl : null
       };
-
-      if (imageUrl) productData.image_url = imageUrl;
 
       if (editingId) {
         const { error } = await supabase.from('products').update(productData).eq('id', editingId);
@@ -331,7 +331,7 @@ export default function App() {
         <span>ENTORNO DE DEMOSTRACIÓN — Gestión y catálogo sincronizados con Supabase</span>
       </div>
 
-      {/* ENCABEZADO (SIN BOTÓN DE ENGRANAJE VISIBLE PARA MAYOR SEGURIDAD) */}
+      {/* ENCABEZADO */}
       <header className="sticky top-0 z-40 bg-ore-dark/95 backdrop-blur border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           
@@ -358,19 +358,16 @@ export default function App() {
             <button onClick={() => setCurrentView('gold')} className={`transition hover:text-ore-gold ${currentView === 'gold' ? 'text-ore-gold border-b border-ore-gold pb-1' : 'text-ore-cream/80'}`}>Compramos oro</button>
             <button onClick={() => setCurrentView('about')} className={`transition hover:text-ore-gold ${currentView === 'about' ? 'text-ore-gold border-b border-ore-gold pb-1' : 'text-ore-cream/80'}`}>Nosotros</button>
             <button onClick={() => setCurrentView('contact')} className={`transition hover:text-ore-gold ${currentView === 'contact' ? 'text-ore-gold border-b border-ore-gold pb-1' : 'text-ore-cream/80'}`}>Contacto</button>
-          {/* Acceso rápido a Admin (solo si la sesión está iniciada) */}
-          {isAdminAuthenticated && (
-            <button onClick={() => { setCurrentView('admin'); window.scrollTo({ top: 0, behavior: 'smooth' }); 
-    }} 
-    className="bg-ore-gold/20 text-ore-gold border border-ore-gold/40 px-3 py-1 rounded text-xs uppercase tracking-wider font-semibold hover:bg-ore-gold hover:text-ore-dark transition"
-  >
-    Panel Admin
-  </button>
-)}
+            {isAdminAuthenticated && (
+              <button onClick={() => { setCurrentView('admin'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
+                className="bg-ore-gold/20 text-ore-gold border border-ore-gold/40 px-3 py-1 rounded text-xs uppercase tracking-wider font-semibold hover:bg-ore-gold hover:text-ore-dark transition"
+              >
+                Panel Admin
+              </button>
+            )}
           </nav>
 
-
-          {/* ACCIONES (Sólo Carrito visible públicamente) */}
+          {/* ACCIONES */}
           <div className="flex items-center gap-4">
             <button onClick={() => setCartOpen(true)} className="relative text-ore-cream hover:text-ore-gold transition p-2">
               <ShoppingBag size={22} />
@@ -465,149 +462,186 @@ export default function App() {
           </div>
         )}
 
- {/* VISTA DE LA TIENDA */}
-{currentView === 'shop' && (
-  <div className="max-w-7xl mx-auto px-4 py-12 space-y-12">
-    
-    {/* SI HAY UN FILTRO ACTIVO, MOSTRAMOS LOS PRODUCTOS DE ESA COLECCIÓN */}
-    {(filterCategory !== 'Todos' || filterMaterial !== 'Todos') ? (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center bg-ore-card p-4 rounded-lg border border-ore-gold/30">
-          <div>
-            <span className="text-[10px] uppercase tracking-widest text-ore-muted">Mostrando colección:</span>
-            <h3 className="font-serif text-2xl text-ore-gold">
-              {filterCategory !== 'Todos' ? filterCategory : filterMaterial}
-            </h3>
-          </div>
-          <button 
-            onClick={() => { setFilterCategory('Todos'); setFilterMaterial('Todos'); }}
-            className="text-xs bg-ore-dark border border-white/10 text-ore-cream px-4 py-2 rounded hover:border-ore-gold transition uppercase tracking-wider"
-          >
-            ← Volver al catálogo
-          </button>
-        </div>
+        {/* VISTA DE LA TIENDA (NAVEGACIÓN POR NIVELES: CATEGORÍA -> MATERIAL -> PRODUCTOS) */}
+        {currentView === 'shop' && (
+          <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {products
-            .filter(p => filterCategory === 'Todos' || (p.category && p.category.toLowerCase().trim() === filterCategory.toLowerCase().trim()))
-            .filter(p => filterMaterial === 'Todos' || (p.material && p.material.toLowerCase().trim() === filterMaterial.toLowerCase().trim()))
-            .map(p => {
-              const productImg = p.image || p.image_url;
-              return (
-                <div 
-                  key={p.id} 
-                  onClick={() => {
-                    setSelectedProduct(p);
-                    setCurrentView('product-detail');
-                  }}
-                  className="bg-ore-card border border-white/5 rounded-lg overflow-hidden shadow-lg hover:border-ore-gold transition group cursor-pointer"
-                >
-                  <div className="h-64 overflow-hidden relative bg-ore-dark flex items-center justify-center">
-                    {productImg ? (
-                      <img 
-                        src={productImg} 
-                        alt={p.title} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
-                      />
-                    ) : (
-                      <span className="text-xs text-ore-muted italic">Sin imagen disponible</span>
-                    )}
+            {/* PASO 3: SI YA SELECCIONÓ CATEGORÍA Y MATERIAL -> MOSTRAR PRODUCTOS FILTRADOS */}
+            {filterCategory !== 'Todos' && filterMaterial !== 'Todos' ? (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center bg-ore-card p-4 rounded-lg border border-ore-gold/30">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-widest text-ore-muted">Filtro aplicado:</span>
+                    <h3 className="font-serif text-2xl text-ore-gold">
+                      {filterCategory} <span className="text-ore-cream text-lg">en</span> {filterMaterial}
+                    </h3>
                   </div>
-                  <div className="p-5 space-y-2">
-                    <h4 className="font-serif text-lg text-ore-cream group-hover:text-ore-gold transition">{p.title}</h4>
-                    <div className="flex justify-between items-center pt-2">
-                      <span className="text-ore-gold font-bold text-lg">${Number(p.price || 0).toLocaleString('es-AR')}</span>
-                      <span className="text-xs uppercase tracking-widest text-ore-muted underline">Ver detalle</span>
-                    </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setFilterMaterial('Todos')}
+                      className="text-xs bg-ore-dark border border-white/10 text-ore-cream px-3 py-2 rounded hover:border-ore-gold transition uppercase tracking-wider"
+                    >
+                      ← Cambiar Material
+                    </button>
+                    <button 
+                      onClick={() => { setFilterCategory('Todos'); setFilterMaterial('Todos'); }}
+                      className="text-xs bg-ore-gold/20 border border-ore-gold/40 text-ore-gold px-3 py-2 rounded hover:bg-ore-gold hover:text-ore-dark transition uppercase tracking-wider"
+                    >
+                      Ver todas las Categorías
+                    </button>
                   </div>
                 </div>
-              );
-            })}
-        </div>
-      </div>
-    ) : (
-      /* SI NO HAY FILTROS, MOSTRAMOS LAS TARJETAS DE CATEGORÍAS Y MATERIALES */
-      <div className="space-y-16">
-        
-        {/* SECCIÓN DE CATEGORÍAS */}
-        <div className="space-y-6">
-          <div className="border-b border-white/10 pb-4">
-            <h2 className="font-serif text-2xl text-ore-cream">Colecciones por Categoría</h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {categories && categories.map(cat => {
-              const catProducts = products.filter(p => p.category && p.category.toLowerCase().trim() === cat.name.toLowerCase().trim());
-              
-              // Buscamos estrictamente desde el último hacia atrás el producto que SÍ tenga imagen real
-              const lastValidProduct = catProducts.slice().reverse().find(p => (p.image && p.image.trim() !== '') || (p.image_url && p.image_url.trim() !== ''));
-              const coverImg = lastValidProduct ? (lastValidProduct.image || lastValidProduct.image_url) : null;
 
-              return (
-                <div 
-                  key={cat.id}
-                  onClick={() => setFilterCategory(cat.name)}
-                  className="group relative h-52 rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-ore-gold transition-all shadow-xl bg-ore-card flex items-center justify-center"
-                >
-                  {coverImg ? (
-                    <img 
-                      src={coverImg} 
-                      alt={cat.name} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" 
-                    />
-                  ) : (
-                    <div className="text-ore-muted text-xs italic p-4 text-center">Sin productos con imagen</div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-ore-dark via-ore-dark/40 to-transparent flex items-end p-4">
-                    <h3 className="font-serif text-lg text-ore-cream group-hover:text-ore-gold transition font-bold">{cat.name}</h3>
-                  </div>
+                {/* GRILLA DE PRODUCTOS FINAL */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                  {products
+                    .filter(p => {
+                      const matchesCategoryName = p.category && p.category.toLowerCase().trim() === filterCategory.toLowerCase().trim();
+                      const matchesCategoryId = categories.find(c => c.name === filterCategory)?.id === p.category_id;
+                      return matchesCategoryName || matchesCategoryId;
+                    })
+                    .filter(p => {
+                      const matchesMaterialName = p.material && p.material.toLowerCase().trim() === filterMaterial.toLowerCase().trim();
+                      const matchesMaterialId = materials.find(m => m.name === filterMaterial)?.id === p.material_id;
+                      return matchesMaterialName || matchesMaterialId;
+                    })
+                    .map(p => {
+                      const productImg = p.image || p.image_url;
+                      return (
+                        <div 
+                          key={p.id} 
+                          onClick={() => {
+                            setSelectedProduct(p);
+                            setCurrentView('product-detail');
+                          }}
+                          className="bg-ore-card border border-white/5 rounded-lg overflow-hidden shadow-lg hover:border-ore-gold transition group cursor-pointer"
+                        >
+                          <div className="h-64 overflow-hidden relative bg-ore-dark flex items-center justify-center">
+                            {productImg ? (
+                              <img 
+                                src={productImg} 
+                                alt={p.title || p.name} 
+                                className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+                              />
+                            ) : (
+                              <span className="text-xs text-ore-muted italic">Sin imagen disponible</span>
+                            )}
+                          </div>
+                          <div className="p-5 space-y-2">
+                            <h4 className="font-serif text-lg text-ore-cream group-hover:text-ore-gold transition">{p.title || p.name}</h4>
+                            <div className="flex justify-between items-center pt-2">
+                              <span className="text-ore-gold font-bold text-lg">${Number(p.price || 0).toLocaleString('es-AR')}</span>
+                              <span className="text-xs uppercase tracking-widest text-ore-muted underline">Ver detalle</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                 </div>
-              );
-            })}
-          </div>
-        </div>
+              </div>
+            ) : 
 
-        {/* SECCIÓN DE MATERIALES */}
-        <div className="space-y-6">
-          <div className="border-b border-white/10 pb-4">
-            <h2 className="font-serif text-2xl text-ore-cream">Selección por Material</h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-            {materials && materials.map(mat => {
-              const matProducts = products.filter(p => p.material && p.material.toLowerCase().trim() === mat.name.toLowerCase().trim());
-              
-              // Buscamos estrictamente desde el último hacia atrás el producto que SÍ tenga imagen real
-              const lastValidMatProduct = matProducts.slice().reverse().find(p => (p.image && p.image.trim() !== '') || (p.image_url && p.image_url.trim() !== ''));
-              const matCoverImg = lastValidMatProduct ? (lastValidMatProduct.image || lastValidMatProduct.image_url) : null;
-
-              return (
-                <div 
-                  key={mat.id}
-                  onClick={() => setFilterMaterial(mat.name)}
-                  className="group relative h-44 rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-ore-gold transition-all shadow-xl bg-ore-card flex items-center justify-center"
-                >
-                  {matCoverImg ? (
-                    <img 
-                      src={matCoverImg} 
-                      alt={mat.name} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" 
-                    />
-                  ) : (
-                    <div className="text-ore-muted text-xs italic p-4 text-center">Sin productos con imagen</div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-ore-dark via-ore-dark/40 to-transparent flex items-end p-4">
-                    <h3 className="font-serif text-base text-ore-cream group-hover:text-ore-gold transition font-bold">{mat.name}</h3>
+            /* PASO 2: SI SELECCIONÓ CATEGORÍA PERO NO MATERIAL -> MOSTRAR FICHAS DE MATERIALES */
+            filterCategory !== 'Todos' ? (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center bg-ore-card p-4 rounded-lg border border-white/10">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-widest text-ore-gold font-semibold">Paso 2 de 2</span>
+                    <h2 className="font-serif text-2xl text-ore-cream">Selecciona un Material para <span className="text-ore-gold">{filterCategory}</span></h2>
                   </div>
+                  <button 
+                    onClick={() => setFilterCategory('Todos')}
+                    className="text-xs bg-ore-dark border border-white/10 text-ore-cream px-4 py-2 rounded hover:border-ore-gold transition uppercase tracking-wider"
+                  >
+                    ← Volver a Categorías
+                  </button>
                 </div>
-              );
-            })}
+
+                {/* GRILLA DE TARJETAS DE MATERIALES */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                  {materials && materials.map(mat => {
+                    // Buscamos productos que coincidan con ESTA categoría y ESTE material para la portada
+                    const catMatProducts = products.filter(p => {
+                      const matchesCat = (p.category && p.category.toLowerCase().trim() === filterCategory.toLowerCase().trim()) || (categories.find(c => c.name === filterCategory)?.id === p.category_id);
+                      const matchesMat = (p.material && p.material.toLowerCase().trim() === mat.name.toLowerCase().trim()) || (mat.id === p.material_id);
+                      return matchesCat && matchesMat;
+                    });
+
+                    const lastValidProduct = catMatProducts.slice().reverse().find(p => (p.image && p.image.trim() !== '') || (p.image_url));
+                    const matCoverImg = lastValidProduct ? (lastValidProduct.image || lastValidProduct.image_url) : null;
+
+                    return (
+                      <div 
+                        key={mat.id}
+                        onClick={() => setFilterMaterial(mat.name)}
+                        className="group relative h-48 rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-ore-gold transition-all shadow-xl bg-ore-card flex items-center justify-center"
+                      >
+                        {matCoverImg ? (
+                          <img 
+                            src={matCoverImg} 
+                            alt={mat.name} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" 
+                          />
+                        ) : (
+                          <div className="text-ore-muted text-xs italic p-4 text-center">Sin productos con imagen</div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-ore-dark via-ore-dark/40 to-transparent flex items-end p-4">
+                          <h3 className="font-serif text-lg text-ore-cream group-hover:text-ore-gold transition font-bold">{mat.name}</h3>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : 
+
+            /* PASO 1: SI NO HA SELECCIONADO NADA -> MOSTRAR ÚNICAMENTE FICHAS DE CATEGORÍAS */
+            (
+              <div className="space-y-6">
+                <div className="border-b border-white/10 pb-4 text-center">
+                  <span className="text-[10px] uppercase tracking-widest text-ore-gold font-semibold">Paso 1 de 2</span>
+                  <h2 className="font-serif text-3xl text-ore-cream mt-1">Selecciona una Categoría</h2>
+                </div>
+
+                {/* GRILLA DE TARJETAS DE CATEGORÍAS */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {categories && categories.map(cat => {
+                    const catProducts = products.filter(p => {
+                      const matchesName = p.category && p.category.toLowerCase().trim() === cat.name.toLowerCase().trim();
+                      const matchesId = p.category_id === cat.id;
+                      return matchesName || matchesId;
+                    });
+
+                    const lastValidProduct = catProducts.slice().reverse().find(p => (p.image && p.image.trim() !== '') || (p.image_url));
+                    const coverImg = lastValidProduct ? (lastValidProduct.image || lastValidProduct.image_url) : null;
+
+                    return (
+                      <div 
+                        key={cat.id}
+                        onClick={() => setFilterCategory(cat.name)}
+                        className="group relative h-56 rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-ore-gold transition-all shadow-xl bg-ore-card flex items-center justify-center"
+                      >
+                        {coverImg ? (
+                          <img 
+                            src={coverImg} 
+                            alt={cat.name} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" 
+                          />
+                        ) : (
+                          <div className="text-ore-muted text-xs italic p-4 text-center">Sin productos con imagen</div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-ore-dark via-ore-dark/40 to-transparent flex items-end p-4">
+                          <h3 className="font-serif text-xl text-ore-cream group-hover:text-ore-gold transition font-bold">{cat.name}</h3>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
           </div>
-        </div>
-
-      </div>
-    )}
-
-  </div>
-)}
+        )}
         {/* VISTA: FICHA DE PRODUCTO */}
         {currentView === 'product-detail' && selectedProduct && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -701,8 +735,8 @@ export default function App() {
           </div>
         )}
 
-       {/* VISTA: PANEL DE ADMINISTRACIÓN SEGURO (ACCESIBLE VÍA /#admin) */}
-       {currentView === 'admin' && (
+        {/* VISTA: PANEL DE ADMINISTRACIÓN SEGURO (ACCESIBLE VÍA /#admin) */}
+        {currentView === 'admin' && (
           <div className="max-w-6xl mx-auto px-4 py-12">
             {!isAdminAuthenticated ? (
               <div className="max-w-md mx-auto bg-ore-card p-8 rounded-lg border border-ore-gold/30 shadow-xl space-y-6">
@@ -715,13 +749,12 @@ export default function App() {
                   e.preventDefault(); 
                   if(adminPin === 'Francesca#230426') {
                     setIsAdminAuthenticated(true);
-                    sessionStorage.setItem('ore_admin_auth', 'true'); // Guardamos la sesión activa
+                    sessionStorage.setItem('ore_admin_auth', 'true');
                   } else {
                     alert('PIN incorrecto');
                   } 
                 }} className="space-y-4">
                   
-                  {/* CAMPO DE CONTRASEÑA CON VISUALIZACIÓN */}
                   <div className="relative">
                     <input 
                       type={showPassword ? "text" : "password"} 
@@ -749,17 +782,6 @@ export default function App() {
               <div className="space-y-8">
                 <div className="flex justify-between items-center border-b border-white/10 pb-4">
                   <h1 className="font-serif text-3xl">Gestión de Inventario y Catálogo</h1>
-                  {/*<button 
-                    onClick={() => { 
-                      setIsAdminAuthenticated(false); 
-                      sessionStorage.removeItem('ore_admin_auth');
-                      setCurrentView('home'); 
-                      window.location.hash = ''; 
-                    }} 
-                    className="text-xs text-ore-muted uppercase tracking-wider hover:text-ore-gold"
-                  >
-                    Cerrar sesión de admin
-                  </button>*/}
                 </div>
 
                 {adminMessage && (
@@ -789,30 +811,6 @@ export default function App() {
                         </button>
                       </div>
                     </form>
-
-                    {/* LISTA VISUAL DE CATEGORÍAS CON BOTÓN DE BORRAR (CRUZ) */}
-                    <div className="pt-2 border-t border-white/5">
-                      <p className="text-[10px] uppercase text-ore-muted mb-2 font-semibold">Categorías registradas:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {categories && categories.length > 0 ? (
-                          categories.map(cat => (
-                            <span key={cat.id} className="bg-ore-dark border border-white/10 text-xs px-3 py-1 rounded-full flex items-center gap-2 text-ore-cream">
-                              {cat.name}
-                              <button 
-                                type="button"
-                                onClick={() => handleDeleteCategory(cat.id)} 
-                                className="text-red-400 hover:text-red-200 font-bold text-sm leading-none bg-red-500/10 hover:bg-red-500/30 w-4 h-4 rounded-full flex items-center justify-center transition"
-                                title="Eliminar categoría"
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-xs text-ore-muted italic">No hay categorías cargadas</span>
-                        )}
-                      </div>
-                    </div>
                   </div>
 
                   {/* COLUMNA: MATERIALES */}
@@ -833,30 +831,6 @@ export default function App() {
                         </button>
                       </div>
                     </form>
-
-                    {/* LISTA VISUAL DE MATERIALES CON BOTÓN DE BORRAR (CRUZ) */}
-                    <div className="pt-2 border-t border-white/5">
-                      <p className="text-[10px] uppercase text-ore-muted mb-2 font-semibold">Materiales registrados:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {materials && materials.length > 0 ? (
-                          materials.map(mat => (
-                            <span key={mat.id} className="bg-ore-dark border border-white/10 text-xs px-3 py-1 rounded-full flex items-center gap-2 text-ore-cream">
-                              {mat.name}
-                              <button 
-                                type="button"
-                                onClick={() => handleDeleteMaterial(mat.id)} 
-                                className="text-red-400 hover:text-red-200 font-bold text-sm leading-none bg-red-500/10 hover:bg-red-500/30 w-4 h-4 rounded-full flex items-center justify-center transition"
-                                title="Eliminar material"
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-xs text-ore-muted italic">No hay materiales cargados</span>
-                        )}
-                      </div>
-                    </div>
                   </div>
 
                 </div>
@@ -975,7 +949,7 @@ export default function App() {
           <div className="w-full max-w-md bg-ore-card h-full flex flex-col border-l border-white/10 p-6 shadow-2xl">
             <div className="flex justify-between items-center border-b border-white/10 pb-4">
               <h2 className="font-serif text-xl">Tu Carrito ({cartCount})</h2>
-              <button onClick={() => setCartOpen(false)} className="text-ore-cream hover:text-ore-gold"><X size="{20}"/></button>
+              <button onClick={() => setCartOpen(false)} className="text-ore-cream hover:text-ore-gold"><X size={20}/></button>
             </div>
 
             <div className="flex-grow overflow-y-auto py-6 space-y-4">
@@ -990,7 +964,7 @@ export default function App() {
                       <p className="text-ore-gold font-semibold text-sm mt-1">${(item.price * item.qty).toLocaleString('es-AR')}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <button onClick={() => removeFromCart(item.cartKey)} className="text-ore-muted hover:text-red-400"><Trash2 size="{16}"/></button>
+                      <button onClick={() => removeFromCart(item.cartKey)} className="text-ore-muted hover:text-red-400"><Trash2 size={16}/></button>
                       <div className="flex items-center gap-2 border border-white/10 rounded px-2 py-1 text-xs">
                         <button onClick={() => updateQty(item.cartKey, -1)}>-</button>
                         <span>{item.qty}</span>
