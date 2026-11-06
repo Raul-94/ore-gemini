@@ -174,61 +174,133 @@ export default function AdminDashboard() {
       )}
 
       {/* Categorías y Materiales */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-        <div>
-          <h3>Nueva Categoría</h3>
-          <form onSubmit={handleAddCategory} style={{ display: 'flex', gap: '10px' }}>
-            <input
-              type="text"
-              placeholder="Ej: Anillos, Cadenas"
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              style={{ flex: 1, padding: '8px' }}
-              required
-            />
-            <button type="submit" style={{ padding: '8px 16px' }}>Agregar</button>
-          </form>
-          {/* Lista de categorías existentes con botón de borrado */}
-<div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-  {categories && categories.length > 0 ? (
-    categories.map(cat => (
-      <span key={cat.id} style={{ background: '#2d3748', padding: '4px 10px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'white' }}>
-        {cat.name}
-        <button
-          type="button"
-          onClick={() => handleDeleteCategory(cat.id)}
-          style={{ color: '#fc8181', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
-          title="Eliminar categoría"
-        >
-          &times;
-        </button>
-      </span>
-    ))
-  ) : (
-    <span style={{ fontSize: '12px', fontStyle: 'italic', color: '#a0aec0' }}>No hay categorías cargadas</span>
-  )}
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+  
+  {/* COLUMNA 1: CATEGORÍAS */}
+  <div>
+    <h3>Nueva Categoría</h3>
+    <form onSubmit={handleAddCategory} style={{ display: 'flex', gap: '10px' }}>
+      <input
+        type="text"
+        placeholder="Ej: Anillos, Cadenas"
+        value={newCategory}
+        onChange={(e) => setNewCategory(e.target.value)}
+        style={{ flex: 1, padding: '8px' }}
+        required
+      />
+      <button type="submit" style={{ padding: '8px 16px' }}>Agregar</button>
+    </form>
+
+    {/* Lista de categorías existentes con botón SVG */}
+    <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+      {categories && categories.length > 0 ? (
+        categories.map(cat => (
+          <span 
+            key={cat.id} 
+            style={{ 
+              background: '#2d3748', 
+              padding: '6px 12px', 
+              borderRadius: '20px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              color: '#fff' 
+            }}
+          >
+            {cat.name}
+            <button
+              type="button"
+              onClick={() => handleDeleteCategory(cat.id)}
+              style={{ 
+                color: '#fc8181', 
+                background: 'none', 
+                border: 'none', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                padding: '2px' 
+              }}
+              title="Eliminar categoría"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+            </button>
+          </span>
+        ))
+      ) : (
+        <span style={{ fontSize: '12px', fontStyle: 'italic', color: '#a0aec0' }}>No hay categorías cargadas</span>
+      )}
+    </div>
+  </div>
+
+  {/* COLUMNA 2: MATERIALES */}
+  <div>
+    <h3>Nuevo Material</h3>
+    <form onSubmit={handleAddMaterial} style={{ display: 'flex', gap: '10px' }}>
+      <input
+        type="text"
+        placeholder="Ej: Plata 925, Oro 18k"
+        value={newMaterial}
+        onChange={(e) => setNewMaterial(e.target.value)}
+        style={{ flex: 1, padding: '8px' }}
+        required
+      />
+      <button type="submit" style={{ padding: '8px 16px' }}>Agregar</button>
+    </form>
+
+    {/* Lista de materiales existentes con botón SVG */}
+    <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+      {materials && materials.length > 0 ? (
+        materials.map(mat => (
+          <span 
+            key={mat.id} 
+            style={{ 
+              background: '#2d3748', 
+              padding: '6px 12px', 
+              borderRadius: '20px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              color: '#fff' 
+            }}
+          >
+            {mat.name}
+            <button
+              type="button"
+              onClick={() => handleDeleteMaterial(mat.id)}
+              style={{ 
+                color: '#fc8181', 
+                background: 'none', 
+                border: 'none', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                padding: '2px' 
+              }}
+              title="Eliminar material"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+            </button>
+          </span>
+        ))
+      ) : (
+        <span style={{ fontSize: '12px', fontStyle: 'italic', color: '#a0aec0' }}>No hay materiales cargados</span>
+      )}
+    </div>
+  </div>
+
 </div>
-        </div>
 
-        <div>
-          <h3>Nuevo Material</h3>
-          <form onSubmit={handleAddMaterial} style={{ display: 'flex', gap: '10px' }}>
-            <input
-              type="text"
-              placeholder="Ej: Plata 925, Oro 18k"
-              value={newMaterial}
-              onChange={(e) => setNewMaterial(e.target.value)}
-              style={{ flex: 1, padding: '8px' }}
-              required
-            />
-            <button type="submit" style={{ padding: '8px 16px' }}>Agregar</button>
-          </form>
-        </div>
-      </div>
-
-      <hr style={{ margin: '30px 0' }} />
-
-      
+<hr style={{ margin: '30px 0' }} />
       
   {/* VISTA DE ÉXITO O FORMULARIO */}
 {isSuccess ? (
