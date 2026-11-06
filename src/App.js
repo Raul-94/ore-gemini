@@ -33,6 +33,19 @@ export default function App() {
     localStorage.setItem('ore_cart', JSON.stringify(cart));
   }, [cart]);
 
+  // Cargar categorías y materiales desde Supabase al iniciar la tienda
+  useEffect(() => {
+    fetchCategoriesAndMaterials();
+  }, []);
+
+  const fetchCategoriesAndMaterials = async () => {
+    const { data: catData } = await supabase.from('categories').select('*').order('name');
+    if (catData) setCategories(catData);
+
+    const { data: matData } = await supabase.from('materials').select('*').order('name');
+    if (matData) setMaterials(matData);
+  };
+  
   // DETECCIÓN DE RUTA SECRETA /#admin o /admin
   useEffect(() => {
     const checkAdminPath = () => {
