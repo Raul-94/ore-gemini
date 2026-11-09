@@ -513,39 +513,154 @@ export default function App() {
           </div>
         )}
 
-        {/* VISTA: COMPRAMOS ORO */}
-        {currentView === 'gold' && (
-          <div className="max-w-4xl mx-auto px-4 py-12">
-            <div className="text-center space-y-4 mb-12">
-              <span className="text-ore-gold text-xs uppercase tracking-[0.25em] font-semibold">Tasación y Adquisición</span>
-              <h1 className="font-serif text-4xl sm:text-5xl">Compramos Oro</h1>
-              <p className="text-ore-cream/80 max-w-xl mx-auto text-sm">El proceso es simple, transparente y confidencial.</p>
+       {/* VISTA: COMPRAMOS ORO */}
+       {currentView === 'gold' && (
+          <div className="max-w-3xl mx-auto px-4 py-12">
+            <div className="text-center space-y-4 mb-10">
+              <span className="text-ore-gold text-xs uppercase tracking-[0.25em] font-semibold">Tasación y Adquisición Profesional</span>
+              <h1 className="font-serif text-4xl sm:text-5xl text-ore-cream">Compramos Oro</h1>
+              <p className="text-ore-cream/80 max-w-xl mx-auto text-sm leading-relaxed font-light">
+                Brindamos un servicio confidencial, transparente y con cotización competitiva basada en los estándares internacionales del mercado. Complete el formulario con los detalles de su pieza para iniciar una evaluación preliminar.
+              </p>
             </div>
 
             {goldSuccess ? (
-              <div className="bg-ore-card p-8 rounded-lg border border-ore-gold/30 text-center space-y-4">
+              <div className="bg-ore-card p-10 rounded-lg border border-ore-gold/30 text-center space-y-6 shadow-2xl">
                 <CheckCircle size={48} className="text-ore-gold mx-auto" />
-                <h3 className="font-serif text-2xl">¡Consulta enviada con éxito!</h3>
-                <button onClick={() => setGoldSuccess(false)} className="bg-ore-gold text-ore-dark font-semibold px-6 py-3 uppercase text-xs tracking-wider mt-4">
-                  Nueva consulta
+                <div className="space-y-2">
+                  <h3 className="font-serif text-2xl text-ore-cream">Solicitud de Tasación Registrada</h3>
+                  <p className="text-ore-muted text-sm max-w-md mx-auto leading-relaxed">
+                    Hemos recibido los datos de su pieza correctamente. Un especialista de <strong className="text-ore-gold">ORE Joyería</strong> se comunicará con usted a la brevedad vía WhatsApp o llamada para coordinar la evaluación presencial y segura.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setGoldSuccess(false)} 
+                  className="bg-ore-gold text-ore-dark font-semibold px-8 py-3.5 uppercase text-xs tracking-wider rounded hover:bg-ore-cream transition shadow-lg"
+                >
+                  Enviar otra consulta
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleGoldSubmit} className="bg-ore-card p-8 rounded-lg border border-white/5 space-y-6">
-                <h3 className="font-serif text-2xl mb-4 border-b border-white/10 pb-4">Formulario de Tasación de Oro</h3>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                setGoldSuccess(true);
+              }} className="bg-ore-card p-8 sm:p-10 rounded-lg border border-white/5 space-y-6 shadow-2xl">
+                
+                <div className="border-b border-white/10 pb-4">
+                  <h3 className="font-serif text-xl text-ore-cream">Detalles de la Pieza a Tasar</h3>
+                  <p className="text-xs text-ore-muted mt-1">Cuantos más detalles nos proporcione, más precisa será nuestra orientación inicial.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-ore-muted mb-2">Tipo de Pieza *</label>
+                    <select 
+                      value={goldForm.pieceType} 
+                      onChange={e => setGoldForm({...goldForm, pieceType: e.target.value})} 
+                      className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
+                    >
+                      <option value="Anillo">Anillo / Solitario</option>
+                      <option value="Alianzas">Alianzas (Par)</option>
+                      <option value="Cadena">Cadena o Gargantilla</option>
+                      <option value="Pulsera">Pulsera / Esclava</option>
+                      <option value="Dije / Medalla">Dije / Medalla</option>
+                      <option value="Moneda / Lingote">Moneda / Lingote</option>
+                      <option value="Oro roto o desparejo">Oro roto / Joyas desparejas</option>
+                      <option value="Otro">Otro tipo de pieza</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-ore-muted mb-2">Kilates Estimado *</label>
+                    <select 
+                      value={goldForm.karat} 
+                      onChange={e => setGoldForm({...goldForm, karat: e.target.value})} 
+                      className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
+                    >
+                      <option value="18k">Oro 18k (Ley 750 - Estándar Joyería)</option>
+                      <option value="14k">Oro 14k (Ley 585)</option>
+                      <option value="24k">Oro 24k (Oro puro / Lingotes)</option>
+                      <option value="No lo sé">No estoy seguro / Desconozco</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-ore-muted mb-2">Peso Aproximado (en gramos)</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ej: 12.5 grs (si lo desconoce, déjelo en blanco)" 
+                      value={goldForm.weight} 
+                      onChange={e => setGoldForm({...goldForm, weight: e.target.value})} 
+                      className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-ore-muted mb-2">Estado / Observaciones</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ej: Con sello visible, buen estado, grabado interno..." 
+                      value={goldForm.description} 
+                      onChange={e => setGoldForm({...goldForm, description: e.target.value})} 
+                      className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
+                    />
+                  </div>
+                </div>
+
+                <div className="border-b border-white/10 pt-4 pb-2">
+                  <h3 className="font-serif text-xl text-ore-cream">Información de Contacto</h3>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-ore-muted mb-2">Nombre y Apellido *</label>
-                    <input type="text" required value={goldForm.name} onChange={e => setGoldForm({...goldForm, name: e.target.value})} className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"/>
+                    <input 
+                      type="text" 
+                      required 
+                      placeholder="Su nombre completo"
+                      value={goldForm.name} 
+                      onChange={e => setGoldForm({...goldForm, name: e.target.value})} 
+                      className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
+                    />
                   </div>
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-ore-muted mb-2">Teléfono / WhatsApp *</label>
-                    <input type="text" required value={goldForm.phone} onChange={e => setGoldForm({...goldForm, phone: e.target.value})} className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"/>
+                    <input 
+                      type="text" 
+                      required 
+                      placeholder="Ej: 261..."
+                      value={goldForm.phone} 
+                      onChange={e => setGoldForm({...goldForm, phone: e.target.value})} 
+                      className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
+                    />
                   </div>
                 </div>
-                <button type="submit" className="w-full bg-ore-gold text-ore-dark font-semibold py-4 uppercase text-xs tracking-widest hover:bg-ore-gold-light transition shadow-lg">
-                  Solicitar evaluación
-                </button>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-ore-muted mb-2">Correo Electrónico (Opcional)</label>
+                  <input 
+                    type="email" 
+                    placeholder="correo@ejemplo.com"
+                    value={goldForm.email || ''} 
+                    onChange={e => setGoldForm({...goldForm, email: e.target.value})} 
+                    className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <button 
+                    type="submit" 
+                    className="w-full bg-ore-gold text-ore-dark font-semibold py-4 uppercase text-xs tracking-widest hover:bg-ore-gold-light transition shadow-lg rounded"
+                  >
+                    Solicitar Tasación Profesional
+                  </button>
+                  <p className="text-[11px] text-ore-muted text-center mt-3">
+                    🔒 Sus datos y consultas son absolutamente confidenciales y tratados bajo rigurosas normas de seguridad.
+                  </p>
+                </div>
+
               </form>
             )}
           </div>
