@@ -23,6 +23,7 @@ export default function AdminDashboard({
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedMaterial, setSelectedMaterial] = useState('');
   const [imageFile, setImageFile] = useState(null);
+  const [currentImageUrl, setCurrentImageUrl] = useState(''); // <--- NUEVO: Para guardar la URL actual al editar
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -35,17 +36,9 @@ export default function AdminDashboard({
     setMessage('');
 
     try {
-      let imageUrl = null;
+      let imageUrl = currentImageUrl; // Mantenemos por defecto la imagen que ya tenía
 
-      // Si estamos editando, buscamos el producto actual para conservar su imagen si no se sube una nueva
-      if (editingId) {
-        const currentProd = products.find(p => p.id === editingId);
-        if (currentProd) {
-          imageUrl = currentProd.image_url || currentProd.image || null;
-        }
-      }
-
-      // Si hay archivo de imagen nuevo, lo subimos a Supabase Storage
+      // Si hay archivo de imagen nuevo, lo subimos a Supabase Storage y reemplazamos
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -106,6 +99,11 @@ export default function AdminDashboard({
     setStock(product.stock);
     setSelectedCategory(product.category_id || '');
     setSelectedMaterial(product.material_id || '');
+    
+    // Capturamos la imagen actual del producto para mostrarla en el panel
+    const existingImg = product.image_url || product.image || '';
+    setCurrentImageUrl(existingImg);
+
     setIsSuccess(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -131,6 +129,7 @@ export default function AdminDashboard({
     setSelectedCategory('');
     setSelectedMaterial('');
     setImageFile(null);
+    setCurrentImageUrl('');
   };
 
   const handleAddCategory = async (e) => {
@@ -192,7 +191,7 @@ export default function AdminDashboard({
         </div>
         <button 
           onClick={onLogout}
-          className="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 px-4 py-2 rounded text-xs uppercase tracking-widest transition"
+          className="bg-red-600/25 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 px-4 py-2 rounded text-xs uppercase tracking-widest transition"
         >
           Cerrar sesión
         </button>
@@ -226,7 +225,6 @@ export default function AdminDashboard({
             </button>
           </form>
 
-          {/* LISTA DE CATEGORÍAS */}
           <div className="flex flex-wrap gap-2 pt-2">
             {categories && categories.length > 0 ? (
               categories.map(cat => (
@@ -269,7 +267,6 @@ export default function AdminDashboard({
             </button>
           </form>
 
-          {/* LISTA DE MATERIALES */}
           <div className="flex flex-wrap gap-2 pt-2">
             {materials && materials.length > 0 ? (
               materials.map(mat => (
@@ -397,10 +394,20 @@ export default function AdminDashboard({
               />
             </div>
 
-            <div>
-              <label className="block text-xs uppercase tracking-wider text-ore-muted mb-1">
-                {editingId ? 'Imagen (Sube una nueva si deseas reemplazar la actual)' : 'Imagen del producto (Bucket product-images)'}
-              </label>
+            {/* SECCIÓN DE IMAGEN CON PREVISUALIZACIÓN AL EDITAR */}
+            <div className="space-y-3 pt-2">
+              <label className="block text-xs uppercase tracking-wider text-ore-muted">Imagen del Producto</label>
+              
+              {editingId && currentImageUrl && (
+                <div className="flex items-center gap-4 bg-ore-dark p-3 rounded border border-white/10">
+                  <img src={currentImageUrl} alt="Imagen actual" className="w-16 h-16 object-cover rounded border border-ore-gold/40" />
+                  <div>
+                    <p className="text-xs text-ore-gold font-semibold">Imagen actual cargada</p>
+                    <p className="text-[10px] text-ore-muted">Si seleccionas un archivo nuevo abajo, se reemplazará automáticamente.</p>
+                  </div>
+                </div>
+              )}
+
               <input 
                 type="file" 
                 accept="image/*" 
@@ -435,7 +442,7 @@ export default function AdminDashboard({
 
       {/* LISTADO DE INVENTARIO ACTUAL */}
       <div className="space-y-4">
-        <h3 className="font-serif text-2xl text-ore-cream">Inventario Actual ({products.length} productos)</h3>
+        <h3 className="font-serif text-2xl text-ore-cream">Inventario Actual ({products.length} products)</h3>
         
         <div className="space-y-3">
           {products && products.length > 0 ? (
