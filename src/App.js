@@ -14,6 +14,8 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   
+  // Autenticación Admin
+  const [adminPin, setAdminPin] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
     return sessionStorage.getItem('ore_admin_auth') === 'true';
@@ -124,7 +126,6 @@ export default function App() {
   // Filtros de Tienda
   const [filterCategory, setFilterCategory] = useState('Todos');
   const [filterMaterial, setFilterMaterial] = useState('Todos');
-  const [searchTerm, setSearchTerm] = useState('');
 
   // Consultas de Compra de Oro
   const [goldForm, setGoldForm] = useState({
@@ -307,11 +308,10 @@ export default function App() {
           </div>
         )}
 
-        {/* VISTA DE LA TIENDA (NAVEGACIÓN POR NIVELES: CATEGORÍA -> MATERIAL -> PRODUCTOS) */}
+        {/* VISTA DE LA TIENDA */}
         {currentView === 'shop' && (
           <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
 
-            {/* PASO 3: SI YA SELECCIONÓ CATEGORÍA Y MATERIAL -> MOSTRAR PRODUCTOS FILTRADOS */}
             {filterCategory !== 'Todos' && filterMaterial !== 'Todos' ? (
               <div className="space-y-6">
                 <div className="flex justify-between items-center bg-ore-card p-4 rounded-lg border border-ore-gold/30">
@@ -337,7 +337,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* GRILLA DE PRODUCTOS FINAL */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                   {products
                     .filter(p => {
@@ -384,10 +383,7 @@ export default function App() {
                     })}
                 </div>
               </div>
-            ) : 
-
-            /* PASO 2: SI SELECCIONÓ CATEGORÍA PERO NO MATERIAL -> MOSTRAR FICHAS DE MATERIALES */
-            filterCategory !== 'Todos' ? (
+            ) : filterCategory !== 'Todos' ? (
               <div className="space-y-6">
                 <div className="flex justify-between items-center bg-ore-card p-4 rounded-lg border border-white/10">
                   <div>
@@ -402,7 +398,6 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* GRILLA DE TARJETAS DE MATERIALES */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                   {materials && materials.map(mat => {
                     const catMatProducts = products.filter(p => {
@@ -437,17 +432,13 @@ export default function App() {
                   })}
                 </div>
               </div>
-            ) : 
-
-            /* PASO 1: SI NO HA SELECCIONADO NADA -> MOSTRAR FICHAS DE CATEGORÍAS */
-            (
+            ) : (
               <div className="space-y-6">
                 <div className="border-b border-white/10 pb-4 text-center">
                   <span className="text-[10px] uppercase tracking-widest text-ore-gold font-semibold">Paso 1 de 2</span>
                   <h2 className="font-serif text-3xl text-ore-cream mt-1">Selecciona una Categoría</h2>
                 </div>
 
-                {/* GRILLA DE TARJETAS DE CATEGORÍAS */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                   {categories && categories.map(cat => {
                     const catProducts = products.filter(p => {
@@ -624,7 +615,6 @@ export default function App() {
                 </form>
               </div>
             ) : (
-              /* Llamada al componente modularizado AdminDashboard */
               <AdminDashboard 
                 categories={categories}
                 materials={materials}
