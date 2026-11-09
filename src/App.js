@@ -20,7 +20,9 @@ export default function App() {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
     return sessionStorage.getItem('ore_admin_auth') === 'true';
   });
-  
+
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+
   // Carrito de compras
   const [cart, setCart] = useState(() => {
     try {
@@ -749,12 +751,12 @@ export default function App() {
 
       </main>
 
-      {/* CARRITO LATERAL */}
-      {cartOpen && (
+{/* CARRITO LATERAL */}
+{cartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm">
           <div className="w-full max-w-md bg-ore-card h-full flex flex-col border-l border-white/10 p-6 shadow-2xl">
             <div className="flex justify-between items-center border-b border-white/10 pb-4">
-              <h2 className="font-serif text-xl">Tu Carrito ({cartCount})</h2>
+              <h2 className="font-serif text-xl text-ore-cream">Tu Carrito ({cartCount})</h2>
               <button onClick={() => setCartOpen(false)} className="text-ore-cream hover:text-ore-gold"><X size={20}/></button>
             </div>
 
@@ -766,12 +768,12 @@ export default function App() {
                   <div key={item.cartKey} className="flex gap-4 items-center bg-ore-dark p-4 rounded-lg border border-white/5">
                     <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
                     <div className="flex-grow">
-                      <h4 className="font-serif text-sm">{item.name}</h4>
+                      <h4 className="font-serif text-sm text-ore-cream">{item.name}</h4>
                       <p className="text-ore-gold font-semibold text-sm mt-1">${Number(item.price * item.qty).toLocaleString('es-AR')}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <button onClick={() => removeFromCart(item.cartKey)} className="text-ore-muted hover:text-red-400"><Trash2 size={16}/></button>
-                      <div className="flex items-center gap-2 border border-white/10 rounded px-2 py-1 text-xs">
+                      <div className="flex items-center gap-2 border border-white/10 rounded px-2 py-1 text-xs text-ore-cream">
                         <button onClick={() => updateQty(item.cartKey, -1)}>-</button>
                         <span>{item.qty}</span>
                         <button onClick={() => updateQty(item.cartKey, 1)}>+</button>
@@ -784,18 +786,96 @@ export default function App() {
 
             {cart.length > 0 && (
               <div className="border-t border-white/10 pt-4 space-y-4">
-                <div className="flex justify-between text-lg font-serif">
+                <div className="flex justify-between text-lg font-serif text-ore-cream">
                   <span>Total:</span>
                   <span className="text-ore-gold">${cartTotal.toLocaleString('es-AR')}</span>
                 </div>
                 <button 
-                  onClick={() => { setCartOpen(false); alert('Iniciando checkout de demostración.'); }}
-                  className="w-full bg-ore-gold text-ore-dark font-semibold py-4 uppercase text-xs tracking-widest hover:bg-ore-gold-light transition shadow-lg"
+                  onClick={() => { 
+                    setCartOpen(false); 
+                    setCheckoutModalOpen(true); 
+                  }}
+                  className="w-full bg-ore-gold text-ore-dark font-semibold py-4 uppercase text-xs tracking-widest hover:bg-ore-gold-light transition shadow-lg rounded"
                 >
                   Iniciar compra
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE FINALIZACIÓN DE COMPRA (MERCADOPAGO Y WHATSAPP) */}
+      {checkoutModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg bg-ore-card border border-ore-gold/40 rounded-lg p-8 shadow-2xl space-y-6 text-center animate-in fade-in zoom-in duration-200">
+            
+            <div className="w-14 h-14 rounded-full bg-ore-gold/10 border border-ore-gold flex items-center justify-center mx-auto text-ore-gold">
+              <ShoppingBag size={28} />
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-xs uppercase tracking-[0.25em] text-ore-gold font-semibold">Finalizar Pedido</span>
+              <h3 className="font-serif text-2xl sm:text-3xl text-ore-cream">Seleccione la forma de pago</h3>
+              <p className="text-ore-muted text-sm leading-relaxed max-w-md mx-auto">
+                Elija abonar de forma directa a través de MercadoPago o coordinar con un asesor comercial para atención personalizada.
+              </p>
+            </div>
+
+            {/* RESUMEN DE LA COMPRA */}
+            <div className="bg-ore-dark p-4 rounded border border-white/10 text-left space-y-2">
+              <p className="text-xs text-ore-muted uppercase tracking-wider font-semibold border-b border-white/10 pb-1">Resumen del pedido</p>
+              <div className="max-h-32 overflow-y-auto space-y-1 text-xs text-ore-cream">
+                {cart.map(item => (
+                  <div key={item.cartKey} className="flex justify-between">
+                    <span>{item.qty}x {item.name}</span>
+                    <span className="text-ore-gold font-semibold">${Number(item.price * item.qty).toLocaleString('es-AR')}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-white/10 pt-2 flex justify-between items-center text-sm font-serif text-ore-cream">
+                <span>Total:</span>
+                <span className="text-ore-gold font-bold text-base">${cartTotal.toLocaleString('es-AR')}</span>
+              </div>
+            </div>
+
+            {/* OPCIONES DE PAGO */}
+            <div className="flex flex-col gap-3 pt-2">
+              
+              {/* OPCIÓN 1: MERCADOPAGO */}
+              <button 
+                onClick={() => {
+                  alert('Redirigiendo a la pasarela de pago de MercadoPago...');
+                }}
+                className="w-full bg-[#009EE3] hover:bg-[#0089C7] text-white font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+              >
+                <span>Pagar con MercadoPago</span>
+              </button>
+
+              {/* OPCIÓN 2: ATENCIÓN PERSONALIZADA VIA WHATSAPP */}
+              <button 
+                onClick={() => {
+                  const phone = "5492610000000"; // Reemplazar con el número real de WhatsApp de ORE
+                  const itemsList = cart.map(i => `- ${i.qty}x ${i.name} ($${(i.price * i.qty).toLocaleString('es-AR')})`).join('%0A');
+                  const message = `Hola ORE Joyería! Quisiera finalizar la compra de los siguientes productos:%0A%0A${itemsList}%0A%0A*Total: $${cartTotal.toLocaleString('es-AR')}*%0A%0AQuedo a la espera de la atención de un asesor comercial.`;
+                  
+                  window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+                  setCheckoutModalOpen(false);
+                }}
+                className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark font-bold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+              >
+                <span>Finalizar con Asesor por WhatsApp</span>
+              </button>
+
+              {/* CANCELAR O VOLVER */}
+              <button 
+                onClick={() => setCheckoutModalOpen(false)}
+                className="text-xs text-ore-muted hover:text-ore-cream uppercase tracking-wider pt-2 cursor-pointer"
+              >
+                Volver al carrito
+              </button>
+            </div>
+
           </div>
         </div>
       )}
