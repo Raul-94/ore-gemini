@@ -5,6 +5,7 @@ import {
   Plus, Edit, Eye, Filter, RefreshCw, ChevronRight, Lock, User
 } from 'lucide-react';
 import { supabase } from './supabase';
+import AdminDashboard from './AdminDashboard';
 
 export default function App() {
   // Estados de navegación y vistas
@@ -33,9 +34,14 @@ export default function App() {
     localStorage.setItem('ore_cart', JSON.stringify(cart));
   }, [cart]);
 
+  // Estados de categorías y materiales globales
+  const [categories, setCategories] = useState([]);
+  const [materials, setMaterials] = useState([]);
+
   // Cargar categorías y materiales desde Supabase al iniciar la tienda
   useEffect(() => {
     fetchCategoriesAndMaterials();
+    fetchProductsFromSupabase();
   }, []);
 
   const fetchCategoriesAndMaterials = async () => {
@@ -68,7 +74,7 @@ export default function App() {
     };
   }, []);
 
-  // Productos desde Supabase con fallback a sampleProducts
+  // Productos iniciales de respaldo (fallback)
   const sampleProducts = [
     {
       id: 1,
@@ -96,11 +102,7 @@ export default function App() {
 
   const [products, setProducts] = useState(sampleProducts);
   
-  // Cargar productos y tablas desde Supabase al iniciar
-  useEffect(() => {
-    fetchProductsFromSupabase();
-  }, []);
-
+  // Cargar productos desde Supabase
   const fetchProductsFromSupabase = async () => {
     const { data, error } = await supabase
       .from('products')
@@ -108,7 +110,6 @@ export default function App() {
       .order('id', { ascending: false });
     
     if (!error && data && data.length > 0) {
-      // Mapeamos para mantener compatibilidad con las propiedades visuales
       const formatted = data.map(p => ({
         ...p,
         name: p.title,
@@ -125,183 +126,14 @@ export default function App() {
   const [filterMaterial, setFilterMaterial] = useState('Todos');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Estados de Admin y CRUD interno
-  const [adminPin, setAdminPin] = useState('');
-  const [adminTab, setAdminTab] = useState('products'); // 'products', 'gold'
-  
-  // Estados para formulario de gestión en Admin
-  const [categories, setCategories] = useState([]);
-  const [materials, setMaterials] = useState([]);
-  const [newCategory, setNewCategory] = useState('');
-  const [newMaterial, setNewMaterial] = useState('');
-  const [editingId, setEditingId] = useState(null);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
-  const [stock, setStock] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedMaterial, setSelectedMaterial] = useState('');
-  const [imageFile, setImageFile] = useState(null);
-  const [adminLoading, setAdminLoading] = useState(false);
-  const [adminMessage, setAdminMessage] = useState('');
-
-  useEffect(() => {
-    if (isAdminAuthenticated) {
-      fetchAdminMetadata();
-    }
-  }, [isAdminAuthenticated]);
-
-  const fetchAdminMetadata = async () => {
-    const { data: catData } = await supabase.from('categories').select('*').order('name');
-    if (catData) setCategories(catData);
-
-    const { data: matData } = await supabase.from('materials').select('*').order('name');
-    if (matData) setMaterials(matData);
-  };
-
-  const handleAddCategory = async (e) => {
-    e.preventDefault();
-    if (!newCategory.trim()) return;
-    const { data, error } = await supabase
-      .from('categories')
-      .insert([{ name: newCategory.trim() }])
-      .select();
-
-    if (!error) {
-      setNewCategory('');
-      if (data && data.length > 0) {
-        setCategories(prev => [...prev, data[0]]);
-      }
-      fetchAdminMetadata();
-      setAdminMessage('¡Categoría creada con éxito!');
-    } else {
-      console.error('Error al crear categoría:', error);
-      alert('No se pudo crear la categoría: ' + error.message);
-    }
-  };
-
-  const handleAddMaterial = async (e) => {
-    e.preventDefault();
-    if (!newMaterial.trim()) return;
-    const { data, error } = await supabase
-      .from('materials')
-      .insert([{ name: newMaterial.trim() }])
-      .select();
-
-    if (!error) {
-      setNewMaterial('');
-      if (data && data.length > 0) {
-        setMaterials(prev => [...prev, data[0]]);
-      }
-      fetchAdminMetadata();
-      setAdminMessage('¡Material creado con éxito!');
-    } else {
-      console.error('Error al crear material:', error);
-      alert('No se pudo crear el material: ' + error.message);
-    }
-  };
-
-  const handleSubmitProduct = async (e) => {
-    e.preventDefault();
-    setAdminLoading(true);
-    setAdminMessage('');
-
-    try {
-      let imageUrl = '';
-      if (imageFile) {
-        const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('product-images')
-          .upload(fileName, imageFile);
-
-        if (uploadError) throw uploadError;
-
-        const { data: publicUrlData } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(fileName);
-
-        imageUrl = publicUrlData.publicUrl;
-      }
-
-      const productData = {
-        title,
-        description,
-        price: parseFloat(price),
-        stock: parseInt(stock, 10),
-        category_id: selectedCategory ? parseInt(selectedCategory, 10) : null,
-        material_id: selectedMaterial ? parseInt(selectedMaterial, 10) : null,
-        image_url: imageUrl ? imageUrl : null
-      };
-
-      if (editingId) {
-        const { error } = await supabase.from('products').update(productData).eq('id', editingId);
-        if (error) throw error;
-        setAdminMessage('¡Producto actualizado con éxito!');
-      } else {
-        const { error } = await supabase.from('products').insert([productData]);
-        if (error) throw error;
-        setAdminMessage('¡Producto agregado con éxito!');
-      }
-
-      resetAdminForm();
-      fetchProductsFromSupabase();
-    } catch (err) {
-      setAdminMessage(`Error: ${err.message}`);
-    } finally {
-      setAdminLoading(false);
-    }
-  };
-
-  const handleEditProduct = (p) => {
-    setEditingId(p.id);
-    setTitle(p.title || p.name);
-    setDescription(p.description || '');
-    setPrice(p.price);
-    setStock(p.stock);
-    setSelectedCategory(p.category_id || '');
-    setSelectedMaterial(p.material_id || '');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleDeleteProduct = async (id) => {
-    if (!window.confirm('¿Estás seguro de eliminar este producto?')) return;
-    const { error } = await supabase.from('products').delete().eq('id', id);
-    if (!error) {
-      setAdminMessage('Producto eliminado correctamente');
-      fetchProductsFromSupabase();
-    } else {
-      setAdminMessage(`Error al eliminar: ${error.message}`);
-    }
-  };
-
-  const resetAdminForm = () => {
-    setEditingId(null);
-    setTitle('');
-    setDescription('');
-    setPrice('');
-    setStock(0);
-    setSelectedCategory('');
-    setSelectedMaterial('');
-    setImageFile(null);
-  };
-
   // Consultas de Compra de Oro
   const [goldForm, setGoldForm] = useState({
     name: '', phone: '', email: '', pieceType: 'Anillo', karat: '18k', weight: '', description: ''
   });
-  const [goldSubmissions, setGoldSubmissions] = useState([]);
   const [goldSuccess, setGoldSuccess] = useState(false);
 
   const handleGoldSubmit = (e) => {
     e.preventDefault();
-    const newSubmission = {
-      id: Date.now(),
-      date: new Date().toLocaleDateString(),
-      ...goldForm,
-      status: 'Nueva'
-    };
-    setGoldSubmissions([newSubmission, ...goldSubmissions]);
     setGoldSuccess(true);
     setGoldForm({ name: '', phone: '', email: '', pieceType: 'Anillo', karat: '18k', weight: '', description: '' });
   };
@@ -463,7 +295,7 @@ export default function App() {
                           <h3 className="font-serif text-lg font-medium mt-1 text-ore-cream group-hover:text-ore-gold transition">{product.name}</h3>
                         </div>
                         <div className="mt-4 flex items-center justify-between">
-                          <span className="text-ore-gold font-semibold text-lg">${product.price.toLocaleString('es-AR')}</span>
+                          <span className="text-ore-gold font-semibold text-lg">${Number(product.price || 0).toLocaleString('es-AR')}</span>
                           <span className="text-xs uppercase tracking-widest text-ore-cream/60">Ver detalle</span>
                         </div>
                       </div>
@@ -573,7 +405,6 @@ export default function App() {
                 {/* GRILLA DE TARJETAS DE MATERIALES */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                   {materials && materials.map(mat => {
-                    // Buscamos productos que coincidan con ESTA categoría y ESTE material para la portada
                     const catMatProducts = products.filter(p => {
                       const matchesCat = (p.category && p.category.toLowerCase().trim() === filterCategory.toLowerCase().trim()) || (categories.find(c => c.name === filterCategory)?.id === p.category_id);
                       const matchesMat = (p.material && p.material.toLowerCase().trim() === mat.name.toLowerCase().trim()) || (mat.id === p.material_id);
@@ -608,7 +439,7 @@ export default function App() {
               </div>
             ) : 
 
-            /* PASO 1: SI NO HA SELECCIONADO NADA -> MOSTRAR ÚNICAMENTE FICHAS DE CATEGORÍAS */
+            /* PASO 1: SI NO HA SELECCIONADO NADA -> MOSTRAR FICHAS DE CATEGORÍAS */
             (
               <div className="space-y-6">
                 <div className="border-b border-white/10 pb-4 text-center">
@@ -655,6 +486,7 @@ export default function App() {
 
           </div>
         )}
+
         {/* VISTA: FICHA DE PRODUCTO */}
         {currentView === 'product-detail' && selectedProduct && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -671,7 +503,7 @@ export default function App() {
                 <div>
                   <span className="text-xs text-ore-gold uppercase tracking-widest">{selectedProduct.material} • {selectedProduct.category}</span>
                   <h1 className="font-serif text-4xl mt-1">{selectedProduct.name}</h1>
-                  <p className="text-2xl font-semibold text-ore-gold mt-4">${selectedProduct.price.toLocaleString('es-AR')}</p>
+                  <p className="text-2xl font-semibold text-ore-gold mt-4">${Number(selectedProduct.price || 0).toLocaleString('es-AR')}</p>
                   <p className="text-xs text-ore-muted mt-1">Stock disponible: {selectedProduct.stock} unidades</p>
                 </div>
 
@@ -748,7 +580,7 @@ export default function App() {
           </div>
         )}
 
-        {/* VISTA: PANEL DE ADMINISTRACIÓN SEGURO (ACCESIBLE VÍA /#admin) */}
+        {/* VISTA: PANEL DE ADMINISTRACIÓN SEGURO */}
         {currentView === 'admin' && (
           <div className="max-w-6xl mx-auto px-4 py-12">
             {!isAdminAuthenticated ? (
@@ -792,164 +624,20 @@ export default function App() {
                 </form>
               </div>
             ) : (
-              <div className="space-y-8">
-                <div className="flex justify-between items-center border-b border-white/10 pb-4">
-                  <h1 className="font-serif text-3xl">Gestión de Inventario y Catálogo</h1>
-                </div>
-
-                {adminMessage && (
-                  <div className="p-3 bg-ore-card border border-ore-gold/40 text-sm rounded">
-                    {adminMessage}
-                  </div>
-                )}
-
-                {/* GESTIÓN DE CATEGORÍAS Y MATERIALES */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-ore-card p-6 rounded-lg border border-white/5">
-                  
-                  {/* COLUMNA: CATEGORÍAS */}
-                  <div className="space-y-4">
-                    <form onSubmit={handleAddCategory} className="space-y-3">
-                      <h3 className="font-serif text-sm uppercase tracking-wider text-ore-gold">Agregar Categoría</h3>
-                      <div className="flex gap-2">
-                        <input 
-                          type="text" 
-                          placeholder="Ej: Anillos, Cadenas" 
-                          value={newCategory} 
-                          onChange={e => setNewCategory(e.target.value)} 
-                          className="w-full bg-ore-dark border border-white/10 rounded p-2 text-sm text-ore-cream" 
-                          required 
-                        />
-                        <button type="submit" className="bg-ore-gold text-ore-dark px-4 py-2 text-xs font-bold uppercase rounded hover:bg-ore-cream transition">
-                          Crear
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-
-                  {/* COLUMNA: MATERIALES */}
-                  <div className="space-y-4">
-                    <form onSubmit={handleAddMaterial} className="space-y-3">
-                      <h3 className="font-serif text-sm uppercase tracking-wider text-ore-gold">Agregar Material</h3>
-                      <div className="flex gap-2">
-                        <input 
-                          type="text" 
-                          placeholder="Ej: Plata 925, Oro 18k" 
-                          value={newMaterial} 
-                          onChange={e => setNewMaterial(e.target.value)} 
-                          className="w-full bg-ore-dark border border-white/10 rounded p-2 text-sm text-ore-cream" 
-                          required 
-                        />
-                        <button type="submit" className="bg-ore-gold text-ore-dark px-4 py-2 text-xs font-bold uppercase rounded hover:bg-ore-cream transition">
-                          Crear
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-
-                </div>
-
-                {/* FORMULARIO DE ALTA Y EDICIÓN DE PRODUCTOS */}
-                <div className="bg-ore-card p-6 rounded-lg border border-white/5 space-y-4">
-                  <h3 className="font-serif text-xl">{editingId ? 'Editar Producto' : 'Cargar Nuevo Producto con Foto'}</h3>
-                  <form onSubmit={handleSubmitProduct} className="space-y-4">
-                    <div>
-                      <label className="block text-xs uppercase text-ore-muted mb-1">Título del Producto</label>
-                      <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-ore-dark border border-white/10 rounded p-2.5 text-sm text-ore-cream" required />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs uppercase text-ore-muted mb-1">Precio ($)</label>
-                        <input type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} className="w-full bg-ore-dark border border-white/10 rounded p-2.5 text-sm text-ore-cream" required />
-                      </div>
-                      <div>
-                        <label className="block text-xs uppercase text-ore-muted mb-1">Stock Inicial</label>
-                        <input type="number" value={stock} onChange={e => setStock(e.target.value)} className="w-full bg-ore-dark border border-white/10 rounded p-2.5 text-sm text-ore-cream" required />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs uppercase text-ore-muted mb-1">Categoría</label>
-                        <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} className="w-full bg-ore-dark border border-white/10 rounded p-2.5 text-sm text-ore-cream">
-                          <option value="">-- Seleccionar --</option>
-                          {categories && categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs uppercase text-ore-muted mb-1">Material</label>
-                        <select value={selectedMaterial} onChange={e => setSelectedMaterial(e.target.value)} className="w-full bg-ore-dark border border-white/10 rounded p-2.5 text-sm text-ore-cream">
-                          <option value="">-- Seleccionar --</option>
-                          {materials && materials.map(mat => <option key={mat.id} value={mat.id}>{mat.name}</option>)}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs uppercase text-ore-muted mb-1">Descripción</label>
-                      <textarea rows="3" value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-ore-dark border border-white/10 rounded p-2.5 text-sm text-ore-cream" />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs uppercase text-ore-muted mb-1">Imagen (Sube al bucket product-images)</label>
-                      <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files[0])} className="text-sm text-ore-muted" />
-                    </div>
-
-                    <div className="flex gap-4 pt-2">
-                      <button type="submit" disabled={adminLoading} className="bg-ore-gold text-ore-dark font-semibold px-6 py-3 uppercase text-xs tracking-wider rounded">
-                        {adminLoading ? 'Guardando...' : editingId ? 'Actualizar Producto' : 'Guardar Producto'}
-                      </button>
-                      {editingId && (
-                        <button type="button" onClick={resetAdminForm} className="bg-gray-600 text-white px-6 py-3 uppercase text-xs tracking-wider rounded">
-                          Cancelar
-                        </button>
-                      )}
-                    </div>
-                  </form>
-                </div>
-
-                {/* LISTADO DE INVENTARIO */}
-                <div className="space-y-4">
-                  <h3 className="font-serif text-xl">Inventario Actual ({products.length} productos)</h3>
-                  <div className="space-y-3">
-                    {products.map(p => (
-                      <div key={p.id} className="bg-ore-card p-4 rounded-lg border border-white/5 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <img src={p.image} alt={p.title} className="w-12 h-12 object-cover rounded" />
-                          <div>
-                            <h4 className="font-serif text-base">{p.title || p.name}</h4>
-                            <p className="text-xs text-ore-muted">Precio: ${p.price} | Stock: {p.stock} u. | Cat: {p.category} | Mat: {p.material}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button onClick={() => handleEditProduct(p)} className="bg-sky-600 text-white px-3 py-1.5 rounded text-xs">Editar</button>
-                          <button onClick={() => handleDeleteProduct(p.id)} className="bg-red-600 text-white px-3 py-1.5 rounded text-xs">Eliminar</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* BOTÓN DE SALIDA AL FINAL DE LA PÁGINA DE ADMINISTRACIÓN */}
-                <div className="mt-12 pt-6 border-t border-white/10 flex justify-between items-center bg-ore-card p-6 rounded-lg">
-                  <div>
-                    <h4 className="font-serif text-sm text-ore-gold">Sesión de Administrador Activa</h4>
-                    <p className="text-xs text-ore-muted">Recuerda cerrar sesión al terminar de gestionar el stock.</p>
-                  </div>
-                  <button 
-                    onClick={() => {
-                      setIsAdminAuthenticated(false);
-                      sessionStorage.removeItem('ore_admin_auth');
-                      setCurrentView('home');
-                      window.location.hash = '';
-                    }}
-                    className="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 px-6 py-3 rounded text-xs uppercase tracking-widest transition"
-                  >
-                    Cerrar sesión y salir
-                  </button>
-                </div>
-
-              </div>
+              /* Llamada al componente modularizado AdminDashboard */
+              <AdminDashboard 
+                categories={categories}
+                materials={materials}
+                fetchCategoriesAndMaterials={fetchCategoriesAndMaterials}
+                fetchProductsFromSupabase={fetchProductsFromSupabase}
+                products={products}
+                onLogout={() => {
+                  setIsAdminAuthenticated(false);
+                  sessionStorage.removeItem('ore_admin_auth');
+                  setCurrentView('home');
+                  window.location.hash = '';
+                }}
+              />
             )}
           </div>
         )}
@@ -974,7 +662,7 @@ export default function App() {
                     <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
                     <div className="flex-grow">
                       <h4 className="font-serif text-sm">{item.name}</h4>
-                      <p className="text-ore-gold font-semibold text-sm mt-1">${(item.price * item.qty).toLocaleString('es-AR')}</p>
+                      <p className="text-ore-gold font-semibold text-sm mt-1">${Number(item.price * item.qty).toLocaleString('es-AR')}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <button onClick={() => removeFromCart(item.cartKey)} className="text-ore-muted hover:text-red-400"><Trash2 size={16}/></button>
