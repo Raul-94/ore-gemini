@@ -855,7 +855,7 @@ export default function App() {
               {/* OPCIÓN 2: ATENCIÓN PERSONALIZADA VIA WHATSAPP */}
               <button 
                 onClick={() => {
-                  const phone = "5492610000000"; // Reemplazar con el número real de WhatsApp de ORE
+                  const phone = "5492613737159"; 
                   const itemsList = cart.map(i => `- ${i.qty}x ${i.name} ($${(i.price * i.qty).toLocaleString('es-AR')})`).join('%0A');
                   const message = `Hola ORE Joyería! Quisiera finalizar la compra de los siguientes productos:%0A%0A${itemsList}%0A%0A*Total: $${cartTotal.toLocaleString('es-AR')}*%0A%0AQuedo a la espera de la atención de un asesor comercial.`;
                   
