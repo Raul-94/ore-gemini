@@ -844,8 +844,26 @@ export default function App() {
               
               {/* OPCIÓN 1: MERCADOPAGO */}
               <button 
-                onClick={() => {
-                  alert('Redirigiendo a la pasarela de pago de MercadoPago...');
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/create-preference', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ items: cart })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.init_point) {
+                      // Redirige al cliente a la pasarela oficial de MercadoPago con cuotas y financiación
+                      window.location.href = data.init_point;
+                    } else {
+                      alert('Error al iniciar el pago con MercadoPago. Intente nuevamente.');
+                    }
+                  } catch (err) {
+                    console.error("Error al conectar con MercadoPago:", err);
+                    alert("Ocurrió un error al procesar el pago.");
+                  }
                 }}
                 className="w-full bg-[#009EE3] hover:bg-[#0089C7] text-white font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
               >
