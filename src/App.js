@@ -481,39 +481,90 @@ export default function App() {
         )}
 
         {/* VISTA: FICHA DE PRODUCTO */}
-        {currentView === 'product-detail' && selectedProduct && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <button onClick={() => setCurrentView('shop')} className="text-xs uppercase tracking-widest text-ore-gold mb-8 hover:underline">
-              ← Volver al catálogo
-            </button>
+{currentView === 'product-detail' && selectedProduct && (
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <button onClick={() => setCurrentView('shop')} className="text-xs uppercase tracking-widest text-ore-gold mb-8 flex items-center gap-2 hover:underline cursor-pointer">
+      ← Volver al catálogo
+    </button>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-              <div className="rounded-lg overflow-hidden border border-white/10 bg-ore-card">
-                <img src={selectedProduct.image} alt={selectedProduct.name} className="w-full h-[500px] object-cover" />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+      {/* IMAGEN DEL PRODUCTO */}
+      <div className="rounded-lg overflow-hidden border border-white/10 bg-ore-card shadow-xl">
+        <img src={selectedProduct.image} alt={selectedProduct.name} className="w-full h-[500px] object-cover" />
+      </div>
+
+      {/* INFORMACIÓN Y ACCIONES */}
+      <div className="space-y-6">
+        <div>
+          <span className="text-xs text-ore-gold uppercase tracking-widest font-semibold">
+            {selectedProduct.category || 'Joyería Fina'} {selectedProduct.material ? `• ${selectedProduct.material}` : ''}
+          </span>
+          
+          <h1 className="font-serif text-3xl sm:text-4xl text-ore-cream mt-1">
+            {selectedProduct.name}
+          </h1>
+          
+          <p className="text-2xl font-semibold text-ore-gold mt-3">
+            ${Number(selectedProduct.price).toLocaleString('es-AR')}
+          </p>
+          
+          <p className="text-ore-muted mt-4 leading-relaxed">
+            {selectedProduct.description || 'Pieza elaborada con los más altos estándares de calidad y acabado artesanal.'}
+          </p>
+
+          {/* TABLA DE ESPECIFICACIONES TÉCNICAS */}
+          <div className="mt-6 border border-white/10 rounded overflow-hidden text-xs">
+            <div className="bg-ore-card p-3 text-ore-gold font-serif font-semibold border-b border-white/10 tracking-wider uppercase">
+              Especificaciones de la Pieza
+            </div>
+            <div className="divide-y divide-white/5 bg-ore-dark">
+              <div className="flex justify-between p-3">
+                <span className="text-ore-muted">Material:</span>
+                <span className="text-ore-cream font-medium">
+                  {selectedProduct.material || 'Oro / Plata'}
+                </span>
               </div>
-
-              <div className="space-y-6">
-                <div>
-                  <span className="text-xs text-ore-gold uppercase tracking-widest">{selectedProduct.material} • {selectedProduct.category}</span>
-                  <h1 className="font-serif text-4xl mt-1">{selectedProduct.name}</h1>
-                  <p className="text-2xl font-semibold text-ore-gold mt-4">${Number(selectedProduct.price || 0).toLocaleString('es-AR')}</p>
-                  <p className="text-xs text-ore-muted mt-1">Stock disponible: {selectedProduct.stock} unidades</p>
-                </div>
-
-                <p className="text-ore-cream/80 text-sm leading-relaxed">{selectedProduct.description}</p>
-
-                <div className="pt-4 flex gap-4">
-                  <button 
-                    onClick={() => addToCart(selectedProduct, 'Estándar')}
-                    className="flex-grow bg-ore-gold text-ore-dark font-semibold py-4 px-8 uppercase text-xs tracking-widest hover:bg-ore-gold-light transition shadow-lg"
-                  >
-                    Agregar al carrito
-                  </button>
-                </div>
+              <div className="flex justify-between p-3">
+                <span className="text-ore-muted">Medida / Talle:</span>
+                <span className="text-ore-cream font-medium">
+                  {selectedProduct.measure || selectedProduct.size || 'Consultar disponibilidad'}
+                </span>
               </div>
             </div>
           </div>
-        )}
+        </div>
+
+        {/* BOTONES DE ACCIÓN */}
+        <div className="space-y-3 pt-4">
+          {/* BOTÓN AGREGAR AL CARRITO */}
+          <button 
+            onClick={() => {
+              addToCart(selectedProduct);
+              setCartOpen(true);
+            }} 
+            className="w-full bg-ore-gold hover:bg-ore-gold-light text-ore-dark font-semibold py-4 px-6 uppercase text-xs tracking-widest rounded transition shadow-lg cursor-pointer flex items-center justify-center gap-2"
+          >
+            <span>Agregar al carrito</span>
+          </button>
+
+          {/* BOTÓN CONSULTAR POR ESTE PRODUCTO (CON MEDIDA INCLUIDA) */}
+          <button 
+            onClick={() => {
+              const phone = "5492617503242"; // Tu número de WhatsApp real
+              const medidaText = selectedProduct.measure ? `*Medida:* ${selectedProduct.measure}%0A` : '';
+              const message = `Hola ORE Joyería! Quisiera realizar una consulta sobre la siguiente pieza:%0A%0A*Producto:* ${selectedProduct.name}%0A${medidaText}*Precio:* $${Number(selectedProduct.price).toLocaleString('es-AR')}%0A%0A¿Tienen disponibilidad?`;
+              window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+            }} 
+            className="w-full bg-transparent hover:bg-[#25D366]/10 text-[#25D366] border border-[#25D366] font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>Consultar por este producto</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
 
        {/* VISTA: COMPRAMOS ORO */}
        {currentView === 'gold' && (

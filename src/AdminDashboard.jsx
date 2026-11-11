@@ -22,8 +22,9 @@ export default function AdminDashboard({
   const [stock, setStock] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedMaterial, setSelectedMaterial] = useState('');
+  const [measure, setMeasure] = useState('');
   const [imageFile, setImageFile] = useState(null);
-  const [currentImageUrl, setCurrentImageUrl] = useState(''); // <--- NUEVO: Para guardar la URL actual al editar
+  const [currentImageUrl, setCurrentImageUrl] = useState(''); 
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -62,6 +63,7 @@ export default function AdminDashboard({
         stock: parseInt(stock, 10),
         category_id: selectedCategory ? parseInt(selectedCategory, 10) : null,
         material_id: selectedMaterial ? parseInt(selectedMaterial, 10) : null,
+        measure: measure || null,
         image_url: imageUrl
       };
 
@@ -128,6 +130,7 @@ export default function AdminDashboard({
     setStock(0);
     setSelectedCategory('');
     setSelectedMaterial('');
+    setMeasure('');
     setImageFile(null);
     setCurrentImageUrl('');
   };
@@ -358,7 +361,16 @@ export default function AdminDashboard({
                 />
               </div>
             </div>
-
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-ore-muted mb-1">Medida / Talle</label>
+                <input 
+                  type="text" 
+                  value={productForm.measure || ''} 
+                  onChange={(e) => setProductForm({...productForm, measure: e.target.value})}
+                  className="w-full bg-ore-dark border border-white/10 rounded p-2 text-ore-cream text-sm focus:border-ore-gold outline-none"
+                  placeholder="Ej. N° 16 / 45cm"
+                />
+              </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs uppercase tracking-wider text-ore-muted mb-1">Categoría</label>

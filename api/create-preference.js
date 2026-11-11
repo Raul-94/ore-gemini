@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     }
 
 // Inicializar MercadoPago leyendo la variable de entorno de Vercel
-const client = new MercadoPagoConfig({ 
+    const client = new MercadoPagoConfig({ 
     accessToken: process.env.MP_ACCESS_TOKEN 
   });
 
