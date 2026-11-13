@@ -532,6 +532,57 @@ export default function App() {
               </div>
             </div>
           </div>
+          {/* SECCIÓN: TAMBIÉN TE PUEDE INTERESAR (MISMO MATERIAL) */}
+<div className="mt-16 border-t border-white/10 pt-12">
+  <h3 className="font-serif text-2xl text-ore-cream mb-6 text-center">
+    También te puede interesar
+  </h3>
+
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+    {products
+      .filter(p => p.id !== selectedProduct.id && p.material_id === selectedProduct.material_id)
+      .slice(0, 4) // Muestra un máximo de 4 productos relacionados
+      .map(relatedProduct => {
+        const relatedImg = relatedProduct.image_url || relatedProduct.image;
+        return (
+          <div 
+            key={relatedProduct.id} 
+            onClick={() => {
+              setSelectedProduct(relatedProduct);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="bg-ore-card border border-white/5 rounded-lg overflow-hidden group cursor-pointer hover:border-ore-gold/50 transition shadow-lg flex flex-col justify-between"
+          >
+            <div className="aspect-square w-full overflow-hidden bg-ore-dark">
+              <img 
+                src={relatedImg} 
+                alt={relatedProduct.title || relatedProduct.name} 
+                className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+              />
+            </div>
+            <div className="p-4 space-y-2 flex-1 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] text-ore-gold uppercase tracking-widest block">
+                  {relatedProduct.material || 'Joyería Fina'}
+                </span>
+                <h4 className="font-serif text-sm text-ore-cream mt-1 line-clamp-1">
+                  {relatedProduct.title || relatedProduct.name}
+                </h4>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                <span className="text-sm font-semibold text-ore-gold">
+                  ${Number(relatedProduct.price).toLocaleString('es-AR')}
+                </span>
+                <span className="text-[10px] uppercase tracking-wider text-ore-muted group-hover:text-ore-cream transition">
+                  Ver pieza →
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+  </div>
+</div>
         </div>
 
         {/* BOTONES DE ACCIÓN */}
