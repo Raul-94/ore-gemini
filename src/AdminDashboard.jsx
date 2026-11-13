@@ -101,6 +101,7 @@ export default function AdminDashboard({
     setStock(product.stock);
     setSelectedCategory(product.category_id || '');
     setSelectedMaterial(product.material_id || '');
+    setMeasure(product.measure || ''); // <--- ¡AQUÍ ESTABA EL DETALLE QUE FALTABA!
     
     // Capturamos la imagen actual del producto para mostrarla en el panel
     const existingImg = product.image_url || product.image || '';
@@ -361,16 +362,18 @@ export default function AdminDashboard({
                 />
               </div>
             </div>
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-ore-muted mb-1">Medida / Talle</label>
-                <input 
-                  type="text" 
-                  value={productForm.measure || ''} 
-                  onChange={(e) => setProductForm({...productForm, measure: e.target.value})}
-                  className="w-full bg-ore-dark border border-white/10 rounded p-2 text-ore-cream text-sm focus:border-ore-gold outline-none"
-                  placeholder="Ej. N° 16 / 45cm"
-                />
-              </div>
+
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-ore-muted mb-1">Medida / Talle</label>
+              <input 
+                type="text"
+                value={measure}
+                onChange={(e) => setMeasure(e.target.value)}
+                className="w-full bg-ore-dark border border-white/10 rounded p-2 text-ore-cream text-sm focus:border-ore-gold outline-none"
+                placeholder="Ej. N° 16 / 45cm"
+              />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs uppercase tracking-wider text-ore-muted mb-1">Categoría</label>
@@ -474,7 +477,7 @@ export default function AdminDashboard({
                         Precio: <strong className="text-ore-gold">${Number(p.price || 0).toLocaleString('es-AR')}</strong> | 
                         Stock: <strong>{p.stock} u.</strong> | 
                         Cat: {p.category || p.categories?.name || 'N/A'} | 
-                        Mat: {p.material || p.materials?.name || 'N/A'}
+                        Mat: {p.material || p.materials?.name || 'N/A'} {p.measure ? `| Medida: ${p.measure}` : ''}
                       </p>
                     </div>
                   </div>
