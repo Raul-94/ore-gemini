@@ -560,7 +560,8 @@ export default function App() {
             <span>Consultar por este producto</span>
           </button>
         </div>
-            {/* SECCIÓN: TAMBIÉN TE PUEDE INTERESAR (MISMO MATERIAL) */}
+      </div>
+      {/* SECCIÓN: TAMBIÉN TE PUEDE INTERESAR (MISMO MATERIAL) */}
 <div className="mt-16 border-t border-white/10 pt-12">
   <h3 className="font-serif text-2xl text-ore-cream mb-6 text-center">
     También te puede interesar
@@ -611,7 +612,6 @@ export default function App() {
       })}
   </div>
 </div>
-      </div>
     </div>
      
   </div>
