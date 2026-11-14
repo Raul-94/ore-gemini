@@ -328,7 +328,7 @@ export default function App() {
                       onClick={() => setFilterMaterial('Todos')}
                       className="text-xs bg-ore-dark border border-white/10 text-ore-cream px-3 py-2 rounded hover:border-ore-gold transition uppercase tracking-wider"
                     >
-                      ← Cambiar Material
+                      ↺ Cambiar Material
                     </button>
                     <button 
                       onClick={() => { setFilterCategory('Todos'); setFilterMaterial('Todos'); }}
@@ -359,6 +359,7 @@ export default function App() {
                           onClick={() => {
                             setSelectedProduct(p);
                             setCurrentView('product-detail');
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
                           }}
                           className="bg-ore-card border border-white/5 rounded-lg overflow-hidden shadow-lg hover:border-ore-gold transition group cursor-pointer"
                         >
@@ -481,144 +482,146 @@ export default function App() {
         )}
 
         {/* VISTA: FICHA DE PRODUCTO */}
-{currentView === 'product-detail' && selectedProduct && (
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <button onClick={() => setCurrentView('shop')} className="text-xs uppercase tracking-widest text-ore-gold mb-8 flex items-center gap-2 hover:underline cursor-pointer">
-      ← Volver al catálogo
-    </button>
+        {currentView === 'product-detail' && selectedProduct && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <button onClick={() => setCurrentView('shop')} className="text-xs uppercase tracking-widest text-ore-gold mb-8 flex items-center gap-2 hover:underline cursor-pointer">
+              ← Volver al catálogo
+            </button>
 
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-      {/* IMAGEN DEL PRODUCTO */}
-      <div className="rounded-lg overflow-hidden border border-white/10 bg-ore-card shadow-xl">
-        <img src={selectedProduct.image} alt={selectedProduct.name} className="w-full h-[500px] object-cover" />
-      </div>
-
-      {/* INFORMACIÓN Y ACCIONES */}
-      <div className="space-y-6">
-        <div>
-          <span className="text-xs text-ore-gold uppercase tracking-widest font-semibold">
-            {selectedProduct.category || 'Joyería Fina'} {selectedProduct.material ? `• ${selectedProduct.material}` : ''}
-          </span>
-          
-          <h1 className="font-serif text-3xl sm:text-4xl text-ore-cream mt-1">
-            {selectedProduct.name}
-          </h1>
-          
-          <p className="text-2xl font-semibold text-ore-gold mt-3">
-            ${Number(selectedProduct.price).toLocaleString('es-AR')}
-          </p>
-          
-          <p className="text-ore-muted mt-4 leading-relaxed">
-            {selectedProduct.description || 'Pieza elaborada con los más altos estándares de calidad y acabado artesanal.'}
-          </p>
-
-          {/* TABLA DE ESPECIFICACIONES TÉCNICAS */}
-          <div className="mt-6 border border-white/10 rounded overflow-hidden text-xs">
-            <div className="bg-ore-card p-3 text-ore-gold font-serif font-semibold border-b border-white/10 tracking-wider uppercase">
-              Especificaciones de la Pieza
-            </div>
-            <div className="divide-y divide-white/5 bg-ore-dark">
-              <div className="flex justify-between p-3">
-                <span className="text-ore-muted">Material:</span>
-                <span className="text-ore-cream font-medium">
-                  {selectedProduct.material || 'Oro / Plata'}
-                </span>
+            {/* GRILLA PRINCIPAL DE 2 COLUMNAS */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+              {/* IMAGEN DEL PRODUCTO */}
+              <div className="rounded-lg overflow-hidden border border-white/10 bg-ore-card shadow-xl">
+                <img src={selectedProduct.image} alt={selectedProduct.name} className="w-full h-[500px] object-cover" />
               </div>
-              <div className="flex justify-between p-3">
-                <span className="text-ore-muted">Medida / Talle:</span>
-                <span className="text-ore-cream font-medium">
-                  {selectedProduct.measure || selectedProduct.size || 'Consultar disponibilidad'}
-                </span>
+
+              {/* INFORMACIÓN Y ACCIONES */}
+              <div className="space-y-6">
+                <div>
+                  <span className="text-xs text-ore-gold uppercase tracking-widest font-semibold">
+                    {selectedProduct.category || 'Joyería Fina'} {selectedProduct.material ? `• ${selectedProduct.material}` : ''}
+                  </span>
+                  
+                  <h1 className="font-serif text-3xl sm:text-4xl text-ore-cream mt-1">
+                    {selectedProduct.name}
+                  </h1>
+                  
+                  <p className="text-2xl font-semibold text-ore-gold mt-3">
+                    ${Number(selectedProduct.price).toLocaleString('es-AR')}
+                  </p>
+                  
+                  <p className="text-ore-muted mt-4 leading-relaxed">
+                    {selectedProduct.description || 'Pieza elaborada con los más altos estándares de calidad y acabado artesanal.'}
+                  </p>
+
+                  {/* TABLA DE ESPECIFICACIONES TÉCNICAS */}
+                  <div className="mt-6 border border-white/10 rounded overflow-hidden text-xs">
+                    <div className="bg-ore-card p-3 text-ore-gold font-serif font-semibold border-b border-white/10 tracking-wider uppercase">
+                      Especificaciones de la Pieza
+                    </div>
+                    <div className="divide-y divide-white/5 bg-ore-dark">
+                      <div className="flex justify-between p-3">
+                        <span className="text-ore-muted">Material:</span>
+                        <span className="text-ore-cream font-medium">
+                          {selectedProduct.material || 'Oro / Plata'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between p-3">
+                        <span className="text-ore-muted">Medida / Talle:</span>
+                        <span className="text-ore-cream font-medium">
+                          {selectedProduct.measure || selectedProduct.size || 'Consultar disponibilidad'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* BOTONES DE ACCIÓN */}
+                <div className="space-y-3 pt-4">
+                  {/* BOTÓN AGREGAR AL CARRITO */}
+                  <button 
+                    onClick={() => {
+                      addToCart(selectedProduct);
+                      setCartOpen(true);
+                    }} 
+                    className="w-full bg-ore-gold hover:bg-ore-gold-light text-ore-dark font-semibold py-4 px-6 uppercase text-xs tracking-widest rounded transition shadow-lg cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <span>Agregar al carrito</span>
+                  </button>
+
+                  {/* BOTÓN CONSULTAR POR ESTE PRODUCTO (CON MEDIDA INCLUIDA) */}
+                  <button 
+                    onClick={() => {
+                      const phone = "5492613737159"; 
+                      const medidaText = selectedProduct.measure ? `*Medida:* ${selectedProduct.measure}%0A` : '';
+                      const message = `Hola ORE Joyería! Quisiera realizar una consulta sobre la siguiente pieza:%0A%0A*Producto:* ${selectedProduct.name}%0A${medidaText}*Precio:* $${Number(selectedProduct.price).toLocaleString('es-AR')}%0A%0A¿Tienen disponibilidad?`;
+                      window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+                    }} 
+                    className="w-full bg-transparent hover:bg-[#25D366]/10 text-[#25D366] border border-[#25D366] font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>Consultar por este producto</span>
+                  </button>
+                </div>
               </div>
             </div>
+
+            {/* SECCIÓN: TAMBIÉN TE PUEDE INTERESAR (GRANDE, FUERA DEL RECUADRO Y A ANCHO COMPLETO) */}
+            <div className="mt-20 border-t border-white/10 pt-14 w-full">
+              <h3 className="font-serif text-3xl text-ore-cream mb-8 text-center">
+                También te puede interesar
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+                {products
+                  .filter(p => p.id !== selectedProduct.id && p.material_id === selectedProduct.material_id)
+                  .slice(0, 4)
+                  .map(relatedProduct => {
+                    const relatedImg = relatedProduct.image_url || relatedProduct.image;
+                    return (
+                      <div 
+                        key={relatedProduct.id} 
+                        onClick={() => {
+                          setSelectedProduct(relatedProduct);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="bg-ore-card border border-white/5 rounded-lg overflow-hidden group cursor-pointer hover:border-ore-gold/50 transition shadow-xl flex flex-col justify-between"
+                      >
+                        <div className="aspect-square w-full overflow-hidden bg-ore-dark">
+                          <img 
+                            src={relatedImg} 
+                            alt={relatedProduct.title || relatedProduct.name} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                          />
+                        </div>
+                        <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
+                          <div>
+                            <span className="text-xs text-ore-gold uppercase tracking-widest block">
+                              {relatedProduct.material || 'Joyería Fina'}
+                            </span>
+                            <h4 className="font-serif text-base text-ore-cream mt-1 line-clamp-1">
+                              {relatedProduct.title || relatedProduct.name}
+                            </h4>
+                          </div>
+                          <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                            <span className="text-base font-semibold text-ore-gold">
+                              ${Number(relatedProduct.price).toLocaleString('es-AR')}
+                            </span>
+                            <span className="text-xs uppercase tracking-wider text-ore-muted group-hover:text-ore-cream transition">
+                              Ver pieza →
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
           </div>
-        </div>
+        )}
 
-        {/* BOTONES DE ACCIÓN */}
-        <div className="space-y-3 pt-4">
-          {/* BOTÓN AGREGAR AL CARRITO */}
-          <button 
-            onClick={() => {
-              addToCart(selectedProduct);
-              setCartOpen(true);
-            }} 
-            className="w-full bg-ore-gold hover:bg-ore-gold-light text-ore-dark font-semibold py-4 px-6 uppercase text-xs tracking-widest rounded transition shadow-lg cursor-pointer flex items-center justify-center gap-2"
-          >
-            <span>Agregar al carrito</span>
-          </button>
-
-          {/* BOTÓN CONSULTAR POR ESTE PRODUCTO (CON MEDIDA INCLUIDA) */}
-          <button 
-            onClick={() => {
-              const phone = "5492613737159"; 
-              const medidaText = selectedProduct.measure ? `*Medida:* ${selectedProduct.measure}%0A` : '';
-              const message = `Hola ORE Joyería! Quisiera realizar una consulta sobre la siguiente pieza:%0A%0A*Producto:* ${selectedProduct.name}%0A${medidaText}*Precio:* $${Number(selectedProduct.price).toLocaleString('es-AR')}%0A%0A¿Tienen disponibilidad?`;
-              window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-            }} 
-            className="w-full bg-transparent hover:bg-[#25D366]/10 text-[#25D366] border border-[#25D366] font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <span>Consultar por este producto</span>
-          </button>
-        </div>
-      </div>
-      
-</div>
-    </div>
-     {/* SECCIÓN: TAMBIÉN TE PUEDE INTERESAR (MISMO MATERIAL) */}
-<div className="mt-16 border-t border-white/10 pt-12">
-  <h3 className="font-serif text-2xl text-ore-cream mb-6 text-center">
-    También te puede interesar
-  </h3>
-
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-    {products
-      .filter(p => p.id !== selectedProduct.id && p.material_id === selectedProduct.material_id)
-      .slice(0, 4) // Muestra un máximo de 4 productos relacionados
-      .map(relatedProduct => {
-        const relatedImg = relatedProduct.image_url || relatedProduct.image;
-        return (
-          <div 
-            key={relatedProduct.id} 
-            onClick={() => {
-              setSelectedProduct(relatedProduct);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="bg-ore-card border border-white/5 rounded-lg overflow-hidden group cursor-pointer hover:border-ore-gold/50 transition shadow-lg flex flex-col justify-between"
-          >
-            <div className="aspect-square w-full overflow-hidden bg-ore-dark">
-              <img 
-                src={relatedImg} 
-                alt={relatedProduct.title || relatedProduct.name} 
-                className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-              />
-            </div>
-            <div className="p-4 space-y-2 flex-1 flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] text-ore-gold uppercase tracking-widest block">
-                  {relatedProduct.material || 'Joyería Fina'}
-                </span>
-                <h4 className="font-serif text-sm text-ore-cream mt-1 line-clamp-1">
-                  {relatedProduct.title || relatedProduct.name}
-                </h4>
-              </div>
-              <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                <span className="text-sm font-semibold text-ore-gold">
-                  ${Number(relatedProduct.price).toLocaleString('es-AR')}
-                </span>
-                <span className="text-[10px] uppercase tracking-wider text-ore-muted group-hover:text-ore-cream transition">
-                  Ver pieza →
-                </span>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-  </div>
-  </div>
-)}
-
-       {/* VISTA: COMPRAMOS ORO */}
-       {currentView === 'gold' && (
+        {/* VISTA: COMPRAMOS ORO */}
+        {currentView === 'gold' && (
           <div className="max-w-3xl mx-auto px-4 py-12">
             <div className="text-center space-y-4 mb-10">
               <span className="text-ore-gold text-xs uppercase tracking-[0.25em] font-semibold">Tasación y Adquisición Profesional</span>
@@ -645,10 +648,7 @@ export default function App() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                setGoldSuccess(true);
-              }} className="bg-ore-card p-8 sm:p-10 rounded-lg border border-white/5 space-y-6 shadow-2xl">
+              <form onSubmit={handleGoldSubmit} className="bg-ore-card p-8 sm:p-10 rounded-lg border border-white/5 space-y-6 shadow-2xl">
                 
                 <div className="border-b border-white/10 pb-4">
                   <h3 className="font-serif text-xl text-ore-cream">Detalles de la Pieza a Tasar</h3>
@@ -853,8 +853,8 @@ export default function App() {
 
       </main>
 
-{/* CARRITO LATERAL */}
-{cartOpen && (
+      {/* CARRITO LATERAL */}
+      {cartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm">
           <div className="w-full max-w-md bg-ore-card h-full flex flex-col border-l border-white/10 p-6 shadow-2xl">
             <div className="flex justify-between items-center border-b border-white/10 pb-4">
@@ -957,7 +957,6 @@ export default function App() {
                     const data = await response.json();
                     
                     if (data.init_point) {
-                      // Redirige al cliente a la pasarela oficial de MercadoPago con cuotas y financiación
                       window.location.href = data.init_point;
                     } else {
                       alert('Error al iniciar el pago con MercadoPago. Intente nuevamente.');
