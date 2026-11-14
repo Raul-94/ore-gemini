@@ -561,7 +561,10 @@ export default function App() {
           </button>
         </div>
       </div>
-      {/* SECCIÓN: TAMBIÉN TE PUEDE INTERESAR (MISMO MATERIAL) */}
+      
+</div>
+    </div>
+     {/* SECCIÓN: TAMBIÉN TE PUEDE INTERESAR (MISMO MATERIAL) */}
 <div className="mt-16 border-t border-white/10 pt-12">
   <h3 className="font-serif text-2xl text-ore-cream mb-6 text-center">
     También te puede interesar
@@ -611,9 +614,6 @@ export default function App() {
         );
       })}
   </div>
-</div>
-    </div>
-     
   </div>
 )}
 
