@@ -532,7 +532,38 @@ export default function App() {
               </div>
             </div>
           </div>
-          {/* SECCIÓN: TAMBIÉN TE PUEDE INTERESAR (MISMO MATERIAL) */}
+        </div>
+
+        {/* BOTONES DE ACCIÓN */}
+        <div className="space-y-3 pt-4">
+          {/* BOTÓN AGREGAR AL CARRITO */}
+          <button 
+            onClick={() => {
+              addToCart(selectedProduct);
+              setCartOpen(true);
+            }} 
+            className="w-full bg-ore-gold hover:bg-ore-gold-light text-ore-dark font-semibold py-4 px-6 uppercase text-xs tracking-widest rounded transition shadow-lg cursor-pointer flex items-center justify-center gap-2"
+          >
+            <span>Agregar al carrito</span>
+          </button>
+
+          {/* BOTÓN CONSULTAR POR ESTE PRODUCTO (CON MEDIDA INCLUIDA) */}
+          <button 
+            onClick={() => {
+              const phone = "5492617503242"; // Tu número de WhatsApp real
+              const medidaText = selectedProduct.measure ? `*Medida:* ${selectedProduct.measure}%0A` : '';
+              const message = `Hola ORE Joyería! Quisiera realizar una consulta sobre la siguiente pieza:%0A%0A*Producto:* ${selectedProduct.name}%0A${medidaText}*Precio:* $${Number(selectedProduct.price).toLocaleString('es-AR')}%0A%0A¿Tienen disponibilidad?`;
+              window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+            }} 
+            className="w-full bg-transparent hover:bg-[#25D366]/10 text-[#25D366] border border-[#25D366] font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>Consultar por este producto</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+     {/* SECCIÓN: TAMBIÉN TE PUEDE INTERESAR (MISMO MATERIAL) */}
 <div className="mt-16 border-t border-white/10 pt-12">
   <h3 className="font-serif text-2xl text-ore-cream mb-6 text-center">
     También te puede interesar
@@ -583,37 +614,6 @@ export default function App() {
       })}
   </div>
 </div>
-        </div>
-
-        {/* BOTONES DE ACCIÓN */}
-        <div className="space-y-3 pt-4">
-          {/* BOTÓN AGREGAR AL CARRITO */}
-          <button 
-            onClick={() => {
-              addToCart(selectedProduct);
-              setCartOpen(true);
-            }} 
-            className="w-full bg-ore-gold hover:bg-ore-gold-light text-ore-dark font-semibold py-4 px-6 uppercase text-xs tracking-widest rounded transition shadow-lg cursor-pointer flex items-center justify-center gap-2"
-          >
-            <span>Agregar al carrito</span>
-          </button>
-
-          {/* BOTÓN CONSULTAR POR ESTE PRODUCTO (CON MEDIDA INCLUIDA) */}
-          <button 
-            onClick={() => {
-              const phone = "5492617503242"; // Tu número de WhatsApp real
-              const medidaText = selectedProduct.measure ? `*Medida:* ${selectedProduct.measure}%0A` : '';
-              const message = `Hola ORE Joyería! Quisiera realizar una consulta sobre la siguiente pieza:%0A%0A*Producto:* ${selectedProduct.name}%0A${medidaText}*Precio:* $${Number(selectedProduct.price).toLocaleString('es-AR')}%0A%0A¿Tienen disponibilidad?`;
-              window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-            }} 
-            className="w-full bg-transparent hover:bg-[#25D366]/10 text-[#25D366] border border-[#25D366] font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <span>Consultar por este producto</span>
-          </button>
-        </div>
-
-      </div>
-    </div>
   </div>
 )}
 
