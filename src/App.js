@@ -521,6 +521,12 @@ export default function App() {
                     </div>
                     <div className="divide-y divide-white/5 bg-ore-dark">
                       <div className="flex justify-between p-3">
+                        <span className="text-ore-muted">Código de Pieza:</span>
+                        <span className="text-ore-gold font-mono font-semibold">
+                          ORE-{String(selectedProduct.id).padStart(4, '0')}
+                        </span>
+                      </div>
+                      <div className="flex justify-between p-3">
                         <span className="text-ore-muted">Material:</span>
                         <span className="text-ore-cream font-medium">
                           {selectedProduct.material || 'Oro / Plata'}
@@ -549,12 +555,14 @@ export default function App() {
                     <span>Agregar al carrito</span>
                   </button>
 
-                  {/* BOTÓN CONSULTAR POR ESTE PRODUCTO (CON MEDIDA INCLUIDA) */}
+                  {/* BOTÓN CONSULTAR POR ESTE PRODUCTO (CON CÓDIGO Y MEDIDA) */}
                   <button 
                     onClick={() => {
                       const phone = "5492613737159"; 
+                      const codigo = `ORE-${String(selectedProduct.id).padStart(4, '0')}`;
                       const medidaText = selectedProduct.measure ? `*Medida:* ${selectedProduct.measure}%0A` : '';
-                      const message = `Hola ORE Joyería! Quisiera realizar una consulta sobre la siguiente pieza:%0A%0A*Producto:* ${selectedProduct.name}%0A${medidaText}*Precio:* $${Number(selectedProduct.price).toLocaleString('es-AR')}%0A%0A¿Tienen disponibilidad?`;
+                      const materialText = selectedProduct.material ? `*Material:* ${selectedProduct.material}%0A` : '';
+                      const message = `Hola ORE Joyería! Quisiera realizar una consulta sobre la siguiente pieza:%0A%0A*Código:* ${codigo}%0A*Producto:* ${selectedProduct.name}%0A${materialText}${medidaText}*Precio:* $${Number(selectedProduct.price).toLocaleString('es-AR')}%0A%0A¿Tienen disponibilidad?`;
                       window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
                     }} 
                     className="w-full bg-transparent hover:bg-[#25D366]/10 text-[#25D366] border border-[#25D366] font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
@@ -975,7 +983,11 @@ export default function App() {
               <button 
                 onClick={() => {
                   const phone = "5492613737159"; 
-                  const itemsList = cart.map(i => `- ${i.qty}x ${i.name} ($${(i.price * i.qty).toLocaleString('es-AR')})`).join('%0A');
+                  const itemsList = cart.map(i => {
+                    const codigo = `ORE-${String(i.id).padStart(4, '0')}`;
+                    const medida = i.measure ? ` | Medida: ${i.measure}` : '';
+                    return `- [${codigo}] ${i.qty}x ${i.name}${medida} ($${(i.price * i.qty).toLocaleString('es-AR')})`;
+                  }).join('%0A');
                   const message = `Hola ORE Joyería! Quisiera finalizar la compra de los siguientes productos:%0A%0A${itemsList}%0A%0A*Total: $${cartTotal.toLocaleString('es-AR')}*%0A%0AQuedo a la espera de la atención de un asesor comercial.`;
                   
                   window.open(`https://wa.me/${phone}?text=${message}`, '_blank');

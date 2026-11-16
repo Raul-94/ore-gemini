@@ -472,7 +472,12 @@ export default function AdminDashboard({
                       <div className="w-14 h-14 bg-ore-dark border border-white/10 rounded flex items-center justify-center text-[10px] text-ore-muted italic">Sin foto</div>
                     )}
                     <div>
-                      <h4 className="font-serif text-base text-ore-cream">{p.title || p.name}</h4>
+                    <h4 className="font-serif text-base text-ore-cream flex items-center">
+                      <span className="text-xs font-mono bg-ore-dark border border-ore-gold/30 text-ore-gold px-2 py-0.5 rounded mr-2">
+                        ORE-{String(p.id).padStart(4, '0')}
+                      </span>
+                      {p.title || p.name}
+                    </h4>
                       <p className="text-xs text-ore-muted mt-0.5">
                         Precio: <strong className="text-ore-gold">${Number(p.price || 0).toLocaleString('es-AR')}</strong> | 
                         Stock: <strong>{p.stock} u.</strong> | 
