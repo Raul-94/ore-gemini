@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-    ShoppingBag, Search, Menu, X, Shield, Truck, Phone, Mail, Instagram,
+    ShoppingBag, Search, Menu, X, Shield, Truck, Phone, Mail,
     ArrowRight, CheckCircle, AlertCircle, Settings, Trash2, 
     Plus, Edit, Eye, Filter, RefreshCw, ChevronRight, Lock, User
   } from 'lucide-react';
@@ -864,7 +864,11 @@ export default function App() {
               {/* INSTAGRAM */}
               <div className="flex items-center gap-4 border-t border-white/5 pt-6">
                 <div className="w-10 h-10 rounded-full bg-ore-dark border border-ore-gold/30 flex items-center justify-center text-ore-gold shrink-0">
-                  <Instagram size={18} />
+                  <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+                  </svg>
                 </div>
                 <div>
                   <span className="block text-xs uppercase tracking-wider text-ore-muted">Instagram Oficial</span>
