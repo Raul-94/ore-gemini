@@ -22,6 +22,7 @@ export default function App() {
   });
 
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [sizeModalOpen, setSizeModalOpen] = useState(false);
 
   // Carrito de compras
   const [cart, setCart] = useState(() => {
@@ -532,11 +533,19 @@ export default function App() {
                           {selectedProduct.material || 'Oro / Plata'}
                         </span>
                       </div>
-                      <div className="flex justify-between p-3">
+                      <div className="flex justify-between items-center p-3">
                         <span className="text-ore-muted">Medida / Talle:</span>
-                        <span className="text-ore-cream font-medium">
-                          {selectedProduct.measure || selectedProduct.size || 'Consultar disponibilidad'}
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-ore-cream font-medium">
+                            {selectedProduct.measure || selectedProduct.size || 'Consultar disponibilidad'}
+                          </span>
+                          <button 
+                            onClick={() => setSizeModalOpen(true)}
+                            className="text-[11px] text-ore-gold hover:underline uppercase tracking-wider font-semibold cursor-pointer"
+                          >
+                            ¿No conocés tu talle?
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -562,7 +571,7 @@ export default function App() {
                       const codigo = `ORE-${String(selectedProduct.id).padStart(4, '0')}`;
                       const medidaText = selectedProduct.measure ? `*Medida:* ${selectedProduct.measure}%0A` : '';
                       const materialText = selectedProduct.material ? `*Material:* ${selectedProduct.material}%0A` : '';
-                      const message = `Hola ORE Joyería! Quisiera realizar una consulta sobre la siguiente pieza:%0A%0A*Código:* ${codigo}%0A*Producto:* ${selectedProduct.name}%0A${materialText}${medidaText}*Precio:* $${Number(selectedProduct.price).toLocaleString('es-AR')}%0A%0A`;
+                      const message = `Hola ORE Joyería! Quisiera realizar una consulta sobre la siguiente pieza:%0A%0A*Código:* ${codigo}%0A*Producto:* ${selectedProduct.name}%0A${materialText}${medidaText}*Precio:* $${Number(selectedProduct.price).toLocaleString('es-AR')}%0A%0A¿Tienen disponibilidad?`;
                       window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
                     }} 
                     className="w-full bg-transparent hover:bg-[#25D366]/10 text-[#25D366] border border-[#25D366] font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
@@ -573,7 +582,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* SECCIÓN: TAMBIÉN TE PUEDE INTERESAR (GRANDE, FUERA DEL RECUADRO Y A ANCHO COMPLETO) */}
+            {/* SECCIÓN: TAMBIÉN TE PUEDE INTERESAR */}
             <div className="mt-20 border-t border-white/10 pt-14 w-full">
               <h3 className="font-serif text-3xl text-ore-cream mb-8 text-center">
                 También te puede interesar
@@ -1000,6 +1009,61 @@ export default function App() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+{/* MODAL: GUÍA DE TALLES INTERACTIVA */}
+{sizeModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg bg-ore-card border border-ore-gold/40 rounded-lg p-6 sm:p-8 shadow-2xl space-y-6 text-left animate-in fade-in zoom-in duration-200">
+            
+            <div className="flex justify-between items-center border-b border-white/10 pb-4">
+              <div>
+                <span className="text-xs uppercase tracking-[0.25em] text-ore-gold font-semibold">Guía Práctica</span>
+                <h3 className="font-serif text-2xl text-ore-cream mt-0.5">¿Cómo calcular tu talle de anillo?</h3>
+              </div>
+              <button 
+                onClick={() => setSizeModalOpen(false)} 
+                className="text-ore-cream hover:text-ore-gold p-1 cursor-pointer"
+              >
+                <X size={20}/>
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs sm:text-sm text-ore-cream/90 leading-relaxed">
+              <p className="font-light">
+                Si tenés un anillo que te quede cómodo en el dedo que querés usar, podés seguir estos simples pasos para conocer tu medida exacta en milímetros:
+              </p>
+
+              <div className="bg-ore-dark p-4 rounded border border-white/10 space-y-3">
+                <div className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">1</span>
+                  <p>Colocá el anillo sobre una superficie plana.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">2</span>
+                  <p>Usá una regla milimetrada para medir el <strong className="text-ore-gold">diámetro interno</strong> (de lado a lado por el centro, sin contar el borde metálico).</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">3</span>
+                  <p>Los milímetros obtenidos corresponden a la medida estándar de la pieza (Ej: 16 mm = Talle 16).</p>
+                </div>
+              </div>
+
+              <p className="text-xs text-ore-muted italic">
+                * Si tenés dudas entre dos medidas o se trata de una pieza especial (alianzas), te recomendamos consultarnos directamente por WhatsApp para un asesoramiento personalizado.
+              </p>
+            </div>
+
+            <div className="pt-2">
+              <button 
+                onClick={() => setSizeModalOpen(false)}
+                className="w-full bg-ore-gold hover:bg-ore-gold-light text-ore-dark font-semibold py-3.5 uppercase text-xs tracking-wider rounded transition shadow-lg cursor-pointer"
+              >
+                Entendido, volver al producto
+              </button>
+            </div>
+
           </div>
         </div>
       )}
