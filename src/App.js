@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  ShoppingBag, Search, Menu, X, Shield, Truck, Phone, 
-  ArrowRight, CheckCircle, AlertCircle, Settings, Trash2, 
-  Plus, Edit, Eye, Filter, RefreshCw, ChevronRight, Lock, User
-} from 'lucide-react';
+    ShoppingBag, Search, Menu, X, Shield, Truck, Phone, Mail, Instagram,
+    ArrowRight, CheckCircle, AlertCircle, Settings, Trash2, 
+    Plus, Edit, Eye, Filter, RefreshCw, ChevronRight, Lock, User
+  } from 'lucide-react';
 import { supabase } from './supabase';
 import AdminDashboard from './AdminDashboard';
 
@@ -131,14 +131,14 @@ export default function App() {
 
   // Consultas de Compra de Oro
   const [goldForm, setGoldForm] = useState({
-    name: '', phone: '', email: '', pieceType: 'Anillo', karat: '18k', weight: '', description: ''
+    name: '', phone: '', email: '', pieceType: 'Anillo', karat: '18k', weight: '', description: '' , acceptedTerms: false
   });
   const [goldSuccess, setGoldSuccess] = useState(false);
 
   const handleGoldSubmit = (e) => {
     e.preventDefault();
     setGoldSuccess(true);
-    setGoldForm({ name: '', phone: '', email: '', pieceType: 'Anillo', karat: '18k', weight: '', description: '' });
+    setGoldForm({ name: '', phone: '', email: '', pieceType: 'Anillo', karat: '18k', weight: '', description: '' , acceptedTerms: false });
   };
 
   // Carrito helpers
@@ -256,12 +256,12 @@ export default function App() {
               </div>
               
               <div className="relative z-10 max-w-3xl space-y-6">
-                <span className="text-ore-gold uppercase tracking-[0.3em] text-xs font-semibold">Alta Joyería Contemporánea</span>
+                <span className="text-ore-gold uppercase tracking-[0.3em] text-xs font-semibold">Tu Joyería Online de Confianza</span>
                 <h1 className="font-serif text-4xl sm:text-6xl font-normal tracking-wide leading-tight">Joyas que acompañan tu historia</h1>
-                <p className="text-ore-cream/80 text-sm sm:text-base max-w-xl mx-auto font-light">Diseños exclusivos en plata, plata con oro y oro 18k creados para perdurar en el tiempo.</p>
+                <p className="text-ore-cream/80 text-sm sm:text-base max-w-xl mx-auto font-light">Diseños exclusivos en Plata, Plata con Oro y Oro 18k creados para perdurar en el tiempo.</p>
                 <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
                   <button onClick={() => setCurrentView('shop')} className="bg-ore-gold text-ore-dark font-semibold px-8 py-3.5 tracking-wider uppercase text-xs hover:bg-ore-gold-light transition shadow-lg">
-                    Explorar colección
+                    Ver Catalogo
                   </button>
                   <button onClick={() => setCurrentView('gold')} className="border border-ore-gold text-ore-gold hover:bg-ore-gold/10 font-semibold px-8 py-3.5 tracking-wider uppercase text-xs transition">
                     Vender mi oro
@@ -275,11 +275,11 @@ export default function App() {
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-end mb-10">
                   <div>
-                    <span className="text-ore-gold text-xs uppercase tracking-[0.2em] font-semibold">Selección exclusiva</span>
+                    <span className="text-ore-gold text-xs uppercase tracking-[0.2em] font-semibold">Nuestra Selección</span>
                     <h2 className="font-serif text-3xl mt-1">Piezas Recientes</h2>
                   </div>
                   <button onClick={() => setCurrentView('shop')} className="text-xs uppercase tracking-widest text-ore-gold hover:underline flex items-center gap-1">
-                    Ver todo <ArrowRight size={14} />
+                    Explorar Colección <ArrowRight size={14} />
                   </button>
                 </div>
 
@@ -562,7 +562,7 @@ export default function App() {
                       const codigo = `ORE-${String(selectedProduct.id).padStart(4, '0')}`;
                       const medidaText = selectedProduct.measure ? `*Medida:* ${selectedProduct.measure}%0A` : '';
                       const materialText = selectedProduct.material ? `*Material:* ${selectedProduct.material}%0A` : '';
-                      const message = `Hola ORE Joyería! Quisiera realizar una consulta sobre la siguiente pieza:%0A%0A*Código:* ${codigo}%0A*Producto:* ${selectedProduct.name}%0A${materialText}${medidaText}*Precio:* $${Number(selectedProduct.price).toLocaleString('es-AR')}%0A%0A¿Tienen disponibilidad?`;
+                      const message = `Hola ORE Joyería! Quisiera realizar una consulta sobre la siguiente pieza:%0A%0A*Código:* ${codigo}%0A*Producto:* ${selectedProduct.name}%0A${materialText}${medidaText}*Precio:* $${Number(selectedProduct.price).toLocaleString('es-AR')}%0A%0A`;
                       window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
                     }} 
                     className="w-full bg-transparent hover:bg-[#25D366]/10 text-[#25D366] border border-[#25D366] font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
@@ -742,7 +742,7 @@ export default function App() {
                     <input 
                       type="text" 
                       required 
-                      placeholder="Ej: 261..."
+                      placeholder="Cod. Area + Telefono"
                       value={goldForm.phone} 
                       onChange={e => setGoldForm({...goldForm, phone: e.target.value})} 
                       className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
@@ -761,13 +761,35 @@ export default function App() {
                   />
                 </div>
 
+                {/* CASILLA DE CONSENTIMIENTO LEGAL */}
+                <div className="bg-ore-dark/60 border border-white/10 rounded-lg p-4">
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input 
+                      type="checkbox" 
+                      required
+                      checked={goldForm.acceptedTerms}
+                      onChange={e => setGoldForm({...goldForm, acceptedTerms: e.target.checked})}
+                      className="mt-1 w-4 h-4 accent-[#D4AF37] rounded border-white/20 bg-ore-dark cursor-pointer shrink-0"
+                    />
+                    <span className="text-xs text-ore-cream/90 leading-relaxed">
+                      Autorizo expresamente a <strong className="text-ore-gold">ORE Joyería</strong> a utilizar los datos personales y de contacto proporcionados en este formulario con el único fin de evaluar mi consulta y comunicarse conmigo para coordinar la tasación, conforme a la Ley N° 25.326 de Protección de Datos Personales. *
+                    </span>
+                  </label>
+                </div>
+
                 <div className="pt-2">
                   <button 
                     type="submit" 
-                    className="w-full bg-ore-gold text-ore-dark font-semibold py-4 uppercase text-xs tracking-widest hover:bg-ore-gold-light transition shadow-lg rounded"
+                    disabled={!goldForm.acceptedTerms}
+                    className={`w-full font-semibold py-4 uppercase text-xs tracking-widest transition shadow-lg rounded ${
+                      goldForm.acceptedTerms 
+                        ? 'bg-ore-gold text-ore-dark hover:bg-ore-gold-light cursor-pointer' 
+                        : 'bg-white/10 text-ore-muted cursor-not-allowed'
+                    }`}
                   >
                     Solicitar Tasación Profesional
                   </button>
+                
                   <p className="text-[11px] text-ore-muted text-center mt-3">
                     🔒 Sus datos y consultas son absolutamente confidenciales y tratados bajo rigurosas normas de seguridad.
                   </p>
@@ -783,17 +805,80 @@ export default function App() {
           <div className="max-w-4xl mx-auto px-4 py-12 space-y-8">
             <h1 className="font-serif text-4xl">Nosotros</h1>
             <p className="text-ore-cream/80 text-base leading-relaxed">
-              En <strong className="text-ore-gold font-serif">ORE Joyería</strong> nos especializamos en la selección y comercialización de piezas contemporáneas en plata, plata con oro y oro 18k.
+            En <strong className="text-ore-gold font-serif">ORE Joyería</strong> seleccionamos cuidadosamente cada pieza...
             </p>
-          </div>
+            <p className="text-ore-cream/80 text-base leading-relaxed">
+            Con más de 30 años de experiencia, ofrecemos joyas en Plata 925, Plata con Oro y Oro 18k, acompañándote con atención personalizada...
+            </p>
+            <p className="pt-2">
+            <strong className="text-ore-gold font-serif text-lg">ORE Joyería - Elegancia en cada Detalle</strong>
+            </p>
+            </div>
         )}
 
         {/* VISTA: CONTACTO */}
         {currentView === 'contact' && (
           <div className="max-w-4xl mx-auto px-4 py-12 space-y-8">
-            <h1 className="font-serif text-4xl">Contacto y Asesoramiento</h1>
-            <div className="bg-ore-card p-8 rounded-lg border border-white/5 space-y-4">
-              <p className="text-sm">📧 Correo: <span className="text-ore-gold">contacto@orejoyeria.com</span></p>
+            <div className="space-y-2">
+              <span className="text-ore-gold text-xs uppercase tracking-[0.25em] font-semibold">Atención Personalizada</span>
+              <h1 className="font-serif text-4xl text-ore-cream">Contacto y Asesoramiento</h1>
+              <p className="text-ore-muted text-sm">Comunícate con nosotros por cualquiera de nuestros canales oficiales.</p>
+            </div>
+
+            <div className="bg-ore-card p-8 rounded-lg border border-white/5 space-y-6 shadow-xl">
+              
+              {/* CORREO ELECTRÓNICO */}
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-ore-dark border border-ore-gold/30 flex items-center justify-center text-ore-gold shrink-0">
+                  <Mail size={18} />
+                </div>
+                <div>
+                  <span className="block text-xs uppercase tracking-wider text-ore-muted">Correo Electrónico</span>
+                  <a 
+                    href="mailto:contacto@orejoyeria.com" 
+                    className="text-sm sm:text-base text-ore-gold hover:underline font-medium"
+                  >
+                    orejoyeria23@gmail.com
+                  </a>
+                </div>
+              </div>
+
+              {/* TELÉFONO / WHATSAPP */}
+              <div className="flex items-center gap-4 border-t border-white/5 pt-6">
+                <div className="w-10 h-10 rounded-full bg-ore-dark border border-ore-gold/30 flex items-center justify-center text-ore-gold shrink-0">
+                  <Phone size={18} />
+                </div>
+                <div>
+                  <span className="block text-xs uppercase tracking-wider text-ore-muted">Teléfono / WhatsApp</span>
+                  <a 
+                    href="https://wa.me/5492613737159" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm sm:text-base text-ore-gold hover:underline font-medium"
+                  >
+                    +54 9 261 373-7159
+                  </a>
+                </div>
+              </div>
+
+              {/* INSTAGRAM */}
+              <div className="flex items-center gap-4 border-t border-white/5 pt-6">
+                <div className="w-10 h-10 rounded-full bg-ore-dark border border-ore-gold/30 flex items-center justify-center text-ore-gold shrink-0">
+                  <Instagram size={18} />
+                </div>
+                <div>
+                  <span className="block text-xs uppercase tracking-wider text-ore-muted">Instagram Oficial</span>
+                  <a 
+                    href="https://instagram.com/ore.joyeria" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm sm:text-base text-ore-gold hover:underline font-medium"
+                  >
+                    @ore.joyeria
+                  </a>
+                </div>
+              </div>
+
             </div>
           </div>
         )}
