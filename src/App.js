@@ -171,6 +171,22 @@ export default function App() {
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
+  const getSizeGuideType = (product) => {
+    if (!product) return null;
+    const cat = (product.category || product.categories?.name || product.title || product.name || '').toLowerCase();
+    
+    if (cat.includes('anillo') || cat.includes('alianza') || cat.includes('cintillo') || cat.includes('solitario')) {
+      return 'ring';
+    }
+    if (cat.includes('cadena') || cat.includes('collar') || cat.includes('gargantilla')) {
+      return 'chain';
+    }
+    if (cat.includes('pulsera') || cat.includes('esclava')) {
+      return 'bracelet';
+    }
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-ore-dark text-ore-cream flex flex-col font-sans selection:bg-ore-gold selection:text-ore-dark">
       
@@ -539,12 +555,14 @@ export default function App() {
                           <span className="text-ore-cream font-medium">
                             {selectedProduct.measure || selectedProduct.size || 'Consultar disponibilidad'}
                           </span>
-                          <button 
-                            onClick={() => setSizeModalOpen(true)}
-                            className="text-[11px] text-ore-gold hover:underline uppercase tracking-wider font-semibold cursor-pointer"
-                          >
-                            ¿No conocés tu talle?
-                          </button>
+                          {getSizeGuideType(selectedProduct) && (
+                            <button 
+                              onClick={() => setSizeModalOpen(true)}
+                              className="text-[11px] text-ore-gold hover:underline uppercase tracking-wider font-semibold cursor-pointer"
+                            >
+                              {getSizeGuideType(selectedProduct) === 'chain' ? 'Guía de largos' : '¿No conocés tu talle?'}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1012,61 +1030,127 @@ export default function App() {
           </div>
         </div>
       )}
-{/* MODAL: GUÍA DE TALLES INTERACTIVA */}
-{sizeModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg bg-ore-card border border-ore-gold/40 rounded-lg p-6 sm:p-8 shadow-2xl space-y-6 text-left animate-in fade-in zoom-in duration-200">
-            
-            <div className="flex justify-between items-center border-b border-white/10 pb-4">
-              <div>
-                <span className="text-xs uppercase tracking-[0.25em] text-ore-gold font-semibold">Guía Práctica</span>
-                <h3 className="font-serif text-2xl text-ore-cream mt-0.5">¿Cómo calcular tu talle de anillo?</h3>
-              </div>
-              <button 
-                onClick={() => setSizeModalOpen(false)} 
-                className="text-ore-cream hover:text-ore-gold p-1 cursor-pointer"
-              >
-                <X size={20}/>
-              </button>
-            </div>
+{/* MODAL: GUÍA DE TALLES Y MEDIDAS INTERACTIVA */}
+{sizeModalOpen && selectedProduct && (() => {
+        const guideType = getSizeGuideType(selectedProduct);
+        if (!guideType) return null;
 
-            <div className="space-y-4 text-xs sm:text-sm text-ore-cream/90 leading-relaxed">
-              <p className="font-light">
-                Si tenés un anillo que te quede cómodo en el dedo que querés usar, podés seguir estos simples pasos para conocer tu medida exacta en milímetros:
-              </p>
-
-              <div className="bg-ore-dark p-4 rounded border border-white/10 space-y-3">
-                <div className="flex items-start gap-3">
-                  <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">1</span>
-                  <p>Colocá el anillo sobre una superficie plana.</p>
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="w-full max-w-lg bg-ore-card border border-ore-gold/40 rounded-lg p-6 sm:p-8 shadow-2xl space-y-6 text-left animate-in fade-in zoom-in duration-200">
+              
+              {/* ENCABEZADO DINÁMICO */}
+              <div className="flex justify-between items-center border-b border-white/10 pb-4">
+                <div>
+                  <span className="text-xs uppercase tracking-[0.25em] text-ore-gold font-semibold">Guía Práctica ORE</span>
+                  <h3 className="font-serif text-2xl text-ore-cream mt-0.5">
+                    {guideType === 'ring' && '¿Cómo calcular tu talle de anillo?'}
+                    {guideType === 'chain' && 'Guía de largos para cadenas'}
+                    {guideType === 'bracelet' && '¿Cómo medir tu muñeca para pulseras?'}
+                  </h3>
                 </div>
-                <div className="flex items-start gap-3">
-                  <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">2</span>
-                  <p>Usá una regla milimetrada para medir el <strong className="text-ore-gold">diámetro interno</strong> (de lado a lado por el centro, sin contar el borde metálico).</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">3</span>
-                  <p>Los milímetros obtenidos corresponden a la medida estándar de la pieza (Ej: 16 mm = Talle 16).</p>
-                </div>
+                <button 
+                  onClick={() => setSizeModalOpen(false)} 
+                  className="text-ore-cream hover:text-ore-gold p-1 cursor-pointer"
+                >
+                  <X size={20}/>
+                </button>
               </div>
 
-              <p className="text-xs text-ore-muted italic">
-                * Si tenés dudas entre dos medidas o se trata de una pieza especial (alianzas), te recomendamos consultarnos directamente por WhatsApp para un asesoramiento personalizado.
-              </p>
-            </div>
+              {/* CONTENIDO SEGÚN CATEGORÍA */}
+              <div className="space-y-4 text-xs sm:text-sm text-ore-cream/90 leading-relaxed">
+                
+                {/* OPCIÓN 1: ANILLOS Y ALIANZAS */}
+                {guideType === 'ring' && (
+                  <>
+                    <p className="font-light">
+                      Si tenés un anillo o alianza que te quede cómodo en el dedo que querés usar, medí su interior siguiendo estos pasos:
+                    </p>
+                    <div className="bg-ore-dark p-4 rounded border border-white/10 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">1</span>
+                        <p>Colocá el anillo sobre una superficie plana y bien iluminada.</p>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">2</span>
+                        <p>Con una regla milimetrada, medí el <strong className="text-ore-gold">diámetro interno</strong> de lado a lado pasando por el centro (sin incluir el espesor del metal).</p>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">3</span>
+                        <p>El valor en milímetros equivale a tu medida estándar (Ej: 16 mm = Talle 16 | 18 mm = Talle 18).</p>
+                      </div>
+                    </div>
+                  </>
+                )}
 
-            <div className="pt-2">
-              <button 
-                onClick={() => setSizeModalOpen(false)}
-                className="w-full bg-ore-gold hover:bg-ore-gold-light text-ore-dark font-semibold py-3.5 uppercase text-xs tracking-wider rounded transition shadow-lg cursor-pointer"
-              >
-                Entendido, volver al producto
-              </button>
-            </div>
+                {/* OPCIÓN 2: CADENAS Y COLLARES */}
+                {guideType === 'chain' && (
+                  <>
+                    <p className="font-light">
+                      Elegí el largo ideal según cómo te gustaría que luzca la caída de la cadena o el dije:
+                    </p>
+                    <div className="bg-ore-dark p-4 rounded border border-white/10 divide-y divide-white/5 text-xs sm:text-sm">
+                      <div className="py-2.5 flex justify-between items-center gap-4">
+                        <span className="font-mono font-bold text-ore-gold shrink-0">40 cm</span>
+                        <span className="text-ore-cream/90 text-right">Estilo gargantilla; cae justo en la base del cuello.</span>
+                      </div>
+                      <div className="py-2.5 flex justify-between items-center gap-4">
+                        <span className="font-mono font-bold text-ore-gold shrink-0">45 cm</span>
+                        <span className="text-ore-cream/90 text-right">Medida clásica femenina; descansa sobre la clavícula (ideal para dijes).</span>
+                      </div>
+                      <div className="py-2.5 flex justify-between items-center gap-4">
+                        <span className="font-mono font-bold text-ore-gold shrink-0">50 cm</span>
+                        <span className="text-ore-cream/90 text-right">Caída media; llega ligeramente por debajo de la clavícula (estándar unisex).</span>
+                      </div>
+                      <div className="py-2.5 flex justify-between items-center gap-4">
+                        <span className="font-mono font-bold text-ore-gold shrink-0">60 cm</span>
+                        <span className="text-ore-cream/90 text-right">Largo pronunciado; cae a la altura del centro del pecho.</span>
+                      </div>
+                    </div>
+                  </>
+                )}
 
+                {/* OPCIÓN 3: PULSERAS Y ESCLAVAS */}
+                {guideType === 'bracelet' && (
+                  <>
+                    <p className="font-light">
+                      Para asegurar un calce cómodo y que el cierre no tire, calculá tu medida de muñeca así:
+                    </p>
+                    <div className="bg-ore-dark p-4 rounded border border-white/10 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">1</span>
+                        <p>Rodeá tu muñeca justo debajo del hueso con un centímetro flexible (o una tira de papel que luego midas con regla).</p>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">2</span>
+                        <p>Sumale entre <strong className="text-ore-gold">1 cm y 1,5 cm</strong> a la medida justa de tu contorno según qué tan suelta prefieras llevarla.</p>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">3</span>
+                        <p>Ejemplo: Si tu muñeca mide 16,5 cm, tu largo ideal de pulsera es <strong className="text-ore-gold">18 cm</strong>.</p>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <p className="text-xs text-ore-muted italic pt-1">
+                  * ¿Tenés dudas sobre el calce o necesitás un ajuste a medida? Escribinos por WhatsApp y te asesoramos antes de despachar tu pieza.
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <button 
+                  onClick={() => setSizeModalOpen(false)}
+                  className="w-full bg-ore-gold hover:bg-ore-gold-light text-ore-dark font-semibold py-3.5 uppercase text-xs tracking-wider rounded transition shadow-lg cursor-pointer"
+                >
+                  Entendido, volver al producto
+                </button>
+              </div>
+
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* MODAL DE FINALIZACIÓN DE COMPRA (MERCADOPAGO Y WHATSAPP) */}
       {checkoutModalOpen && (
