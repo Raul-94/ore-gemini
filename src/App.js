@@ -24,6 +24,76 @@ export default function App() {
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [sizeModalOpen, setSizeModalOpen] = useState(false);
 
+  // Estados para cálculo dinámico de envío
+  const [postalCode, setPostalCode] = useState('');
+  const [deliveryType, setDeliveryType] = useState('domicilio'); // 'domicilio' | 'sucursal'
+
+  const calcularEnvioAndreani = (cp, tipoEntrega) => {
+    const cpClean = (cp || '').replace(/\D/g, '');
+    const cpNum = Number(cpClean);
+
+    // Si todavía no ingresó un CP válido (mínimo 4 dígitos)
+    if (cpClean.length < 4 || !cpNum) {
+      return {
+        costo: 0,
+        zona: 'Ingresá tu Código Postal para calcular',
+        calculado: false,
+        esMendoza: false
+      };
+    }
+
+    // 1. Gran Mendoza (CPs 5500 a 5549)
+    if (cpNum >= 5500 && cpNum <= 5549) {
+      return {
+        costo: tipoEntrega === 'domicilio' ? 7000 : 0,
+        zona: tipoEntrega === 'domicilio'
+          ? `Gran Mendoza (CP ${cpClean}) - Envío a Domicilio`
+          : `Gran Mendoza (CP ${cpClean}) - Retiro en Domicilio ORE`,
+        calculado: true,
+        esMendoza: true
+      };
+    }
+
+    // 2. CABA y Gran Buenos Aires (CABA: 1000-1440, GBA: 1600-1999)
+    if ((cpNum >= 1000 && cpNum <= 1440) || (cpNum >= 1600 && cpNum <= 1999)) {
+      return {
+        costo: tipoEntrega === 'domicilio' ? 13900 : 11500,
+        zona: `CABA / Buenos Aires (CP ${cpClean}) - Andreani ${tipoEntrega === 'domicilio' ? 'Domicilio' : 'Sucursal'}`,
+        calculado: true,
+        esMendoza: false
+      };
+    }
+
+    // 3. Entre Ríos / Paraná / Santa Fe / Córdoba (Región Litoral / Centro)
+    // Nota: Excluimos 5500-5549 porque ya se evaluó arriba como Gran Mendoza
+    if ((cpNum >= 2000 && cpNum <= 3999) || (cpNum >= 5000 && cpNum <= 5880)) {
+      return {
+        costo: tipoEntrega === 'domicilio' ? 15200 : 12500,
+        zona: `Centro / Litoral / Paraná (CP ${cpClean}) - Andreani ${tipoEntrega === 'domicilio' ? 'Domicilio' : 'Sucursal'}`,
+        calculado: true,
+        esMendoza: false
+      };
+    }
+
+    // 4. Patagonia / Tierra del Fuego (Ushuaia, etc., CPs 8300 a 9490)
+    if (cpNum >= 8300 && cpNum <= 9490) {
+      return {
+        costo: tipoEntrega === 'domicilio' ? 16000 : 13800,
+        zona: `Patagonia / Ushuaia (CP ${cpClean}) - Andreani ${tipoEntrega === 'domicilio' ? 'Domicilio' : 'Sucursal'}`,
+        calculado: true,
+        esMendoza: false
+      };
+    }
+
+    // 5. Resto del país (Tarifa estándar de respaldo para NOA, NEA y CPs no listados)
+    return {
+      costo: tipoEntrega === 'domicilio' ? 14500 : 12000,
+      zona: `Resto del País (CP ${cpClean}) - Andreani ${tipoEntrega === 'domicilio' ? 'Domicilio' : 'Sucursal'}`,
+      calculado: true,
+      esMendoza: false
+    };
+  };
+
   // Carrito de compras
   const [cart, setCart] = useState(() => {
     try {
@@ -1300,92 +1370,205 @@ export default function App() {
         );
       })()}
 
-      {/* MODAL DE FINALIZACIÓN DE COMPRA */}
-      {checkoutModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg bg-ore-card border border-ore-gold/40 rounded-lg p-8 shadow-2xl space-y-6 text-center animate-in fade-in zoom-in duration-200">
-            
-            <div className="w-14 h-14 rounded-full bg-ore-gold/10 border border-ore-gold flex items-center justify-center mx-auto text-ore-gold">
-              <ShoppingBag size={28} />
-            </div>
+{/* MODAL DE FINALIZACIÓN DE COMPRA (CON CÁLCULO DE ENVÍO ANDREANI Y MENDOZA) */}
+{checkoutModalOpen && (() => {
+        const envioInfo = calcularEnvioAndreani(postalCode, deliveryType);
+        const finalTotal = cartTotal + envioInfo.costo;
 
-            <div className="space-y-2">
-              <span className="text-xs uppercase tracking-[0.25em] text-ore-gold font-semibold">Finalizar Pedido</span>
-              <h3 className="font-serif text-2xl sm:text-3xl text-ore-cream">Seleccione la forma de pago</h3>
-              <p className="text-ore-muted text-sm leading-relaxed max-w-md mx-auto">
-                Elija abonar de forma directa a través de MercadoPago o coordinar con un asesor comercial para atención personalizada.
-              </p>
-            </div>
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+            <div className="w-full max-w-lg bg-ore-card border border-ore-gold/40 rounded-lg p-6 sm:p-8 shadow-2xl space-y-5 text-center animate-in fade-in zoom-in duration-200 my-auto">
+              
+              <div className="w-12 h-12 rounded-full bg-ore-gold/10 border border-ore-gold flex items-center justify-center mx-auto text-ore-gold">
+                <Truck size={24} />
+              </div>
 
-            <div className="bg-ore-dark p-4 rounded border border-white/10 text-left space-y-2">
-              <p className="text-xs text-ore-muted uppercase tracking-wider font-semibold border-b border-white/10 pb-1">Resumen del pedido</p>
-              <div className="max-h-32 overflow-y-auto space-y-1 text-xs text-ore-cream">
-                {cart.map(item => (
-                  <div key={item.cartKey} className="flex justify-between">
-                    <span>{item.qty}x {item.name}</span>
-                    <span className="text-ore-gold font-semibold">${Number(item.price * item.qty).toLocaleString('es-AR')}</span>
+              <div className="space-y-1">
+                <span className="text-xs uppercase tracking-[0.25em] text-ore-gold font-semibold">Envío y Finalización</span>
+                <h3 className="font-serif text-2xl sm:text-3xl text-ore-cream">Calculá tu entrega</h3>
+                <p className="text-ore-muted text-xs sm:text-sm leading-relaxed max-w-md mx-auto">
+                  Ingresá tu Código Postal para calcular el envío asegurado o seleccioná retiro sin cargo en Mendoza.
+                </p>
+              </div>
+
+              {/* PASO 1: CÓDIGO POSTAL Y MODALIDAD */}
+              <div className="bg-ore-dark p-4 rounded border border-white/10 text-left space-y-4">
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wider text-ore-gold font-semibold mb-1.5">
+                    1. Código Postal de Destino *
+                  </label>
+                  <input 
+                    type="text" 
+                    maxLength={8}
+                    placeholder="Ej: 5500 (Mendoza), 1050 (CABA), 3100 (Paraná)..." 
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                    className="w-full bg-ore-card border border-white/15 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wider text-ore-gold font-semibold mb-1.5">
+                    2. Modalidad de Entrega
+                  </label>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryType('domicilio')}
+                      className={`p-3 rounded border text-left transition cursor-pointer ${
+                        deliveryType === 'domicilio'
+                          ? 'bg-ore-gold/15 border-ore-gold text-ore-cream'
+                          : 'bg-ore-card border-white/10 text-ore-muted hover:border-white/30'
+                      }`}
+                    >
+                      <span className="block text-xs font-semibold uppercase tracking-wider">A Domicilio</span>
+                      <span className="block text-[10px] mt-0.5 opacity-85">
+                        {envioInfo.esMendoza ? 'Cadetería ($7.000)' : 'Andreani puerta a puerta'}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryType('sucursal')}
+                      className={`p-3 rounded border text-left transition cursor-pointer ${
+                        deliveryType === 'sucursal'
+                          ? 'bg-ore-gold/15 border-ore-gold text-ore-cream'
+                          : 'bg-ore-card border-white/10 text-ore-muted hover:border-white/30'
+                      }`}
+                    >
+                      <span className="block text-xs font-semibold uppercase tracking-wider">
+                        {envioInfo.esMendoza ? 'Retiro en ORE' : 'A Sucursal'}
+                      </span>
+                      <span className="block text-[10px] mt-0.5 opacity-85">
+                        {envioInfo.esMendoza ? 'Sin cargo ($0)' : 'Retiro en Andreani'}
+                      </span>
+                    </button>
                   </div>
-                ))}
-              </div>
-              <div className="border-t border-white/10 pt-2 flex justify-between items-center text-sm font-serif text-ore-cream">
-                <span>Total:</span>
-                <span className="text-ore-gold font-bold text-base">${cartTotal.toLocaleString('es-AR')}</span>
-              </div>
-            </div>
+                </div>
 
-            <div className="flex flex-col gap-3 pt-2">
-              <button 
-                onClick={async () => {
-                  try {
-                    const response = await fetch('/api/create-preference', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ items: cart })
-                    });
-                    const data = await response.json();
-                    if (data.init_point) {
-                      window.location.href = data.init_point;
-                    } else {
-                      alert('Error al iniciar el pago con MercadoPago. Intente nuevamente.');
+                {envioInfo.calculado && (
+                  <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs">
+                    <span className="text-ore-cream/90 font-medium">{envioInfo.zona}</span>
+                    <span className="text-ore-gold font-bold">
+                      {envioInfo.costo === 0 ? 'GRATIS' : `$${envioInfo.costo.toLocaleString('es-AR')}`}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* RESUMEN DE LA COMPRA */}
+              <div className="bg-ore-dark p-4 rounded border border-white/10 text-left space-y-2">
+                <p className="text-xs text-ore-muted uppercase tracking-wider font-semibold border-b border-white/10 pb-1">Resumen del pedido</p>
+                <div className="max-h-24 overflow-y-auto space-y-1 text-xs text-ore-cream">
+                  {cart.map(item => (
+                    <div key={item.cartKey} className="flex justify-between">
+                      <span>{item.qty}x {item.name}</span>
+                      <span className="text-ore-gold font-semibold">${Number(item.price * item.qty).toLocaleString('es-AR')}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between text-ore-muted pt-1.5 border-t border-white/5">
+                    <span>Costo de envío:</span>
+                    <span className="text-ore-cream font-medium">
+                      {!envioInfo.calculado
+                        ? 'Pendiente de CP'
+                        : envioInfo.costo === 0
+                          ? 'GRATIS ($0)'
+                          : `$${envioInfo.costo.toLocaleString('es-AR')}`}
+                    </span>
+                  </div>
+                </div>
+                <div className="border-t border-white/10 pt-2 flex justify-between items-center text-sm font-serif text-ore-cream">
+                  <span>Total Final:</span>
+                  <span className="text-ore-gold font-bold text-lg">${finalTotal.toLocaleString('es-AR')}</span>
+                </div>
+              </div>
+
+              {/* OPCIONES DE PAGO */}
+              <div className="flex flex-col gap-3 pt-1">
+                
+                {/* OPCIÓN 1: MERCADOPAGO */}
+                <button 
+                  disabled={!envioInfo.calculado}
+                  onClick={async () => {
+                    try {
+                      // Agregamos el envío como ítem adicional si tiene costo mayor a 0
+                      const itemsConEnvio = envioInfo.costo > 0
+                        ? [
+                            ...cart,
+                            {
+                              id: 'envio-logistica',
+                              name: envioInfo.zona,
+                              title: envioInfo.zona,
+                              price: envioInfo.costo,
+                              qty: 1
+                            }
+                          ]
+                        : cart;
+
+                      const response = await fetch('/api/create-preference', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ items: itemsConEnvio })
+                      });
+                      
+                      const data = await response.json();
+                      
+                      if (data.init_point) {
+                        window.location.href = data.init_point;
+                      } else {
+                        alert('Error al iniciar el pago con MercadoPago. Intente nuevamente.');
+                      }
+                    } catch (err) {
+                      console.error("Error al conectar con MercadoPago:", err);
+                      alert("Ocurrió un error al procesar el pago.");
                     }
-                  } catch (err) {
-                    console.error("Error al conectar con MercadoPago:", err);
-                    alert("Ocurrió un error al procesar el pago.");
-                  }
-                }}
-                className="w-full bg-[#009EE3] hover:bg-[#0089C7] text-white font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
-              >
-                <span>Pagar con MercadoPago</span>
-              </button>
+                  }}
+                  className={`w-full font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg ${
+                    envioInfo.calculado
+                      ? 'bg-[#009EE3] hover:bg-[#0089C7] text-white cursor-pointer'
+                      : 'bg-white/10 text-ore-muted cursor-not-allowed'
+                  }`}
+                >
+                  <span>{envioInfo.calculado ? 'Pagar Total con MercadoPago' : 'Ingresá tu CP para habilitar pago'}</span>
+                </button>
 
-              <button 
-                onClick={() => {
-                  const phone = "5492613737159"; 
-                  const itemsList = cart.map(i => {
-                    const codigo = `ORE-${String(i.id).padStart(4, '0')}`;
-                    const medida = i.measure ? ` | Medida: ${i.measure}` : '';
-                    return `- [${codigo}] ${i.qty}x ${i.name}${medida} ($${(i.price * i.qty).toLocaleString('es-AR')})`;
-                  }).join('%0A');
-                  const message = `Hola ORE Joyería! Quisiera finalizar la compra de los siguientes productos:%0A%0A${itemsList}%0A%0A*Total: $${cartTotal.toLocaleString('es-AR')}*%0A%0AQuedo a la espera de la atención de un asesor comercial.`;
-                  window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-                  setCheckoutModalOpen(false);
-                }}
-                className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark font-bold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
-              >
-                <span>Finalizar con Asesor por WhatsApp</span>
-              </button>
+                {/* OPCIÓN 2: ATENCIÓN PERSONALIZADA VIA WHATSAPP */}
+                <button 
+                  onClick={() => {
+                    const phone = "5492613737159"; 
+                    const itemsList = cart.map(i => {
+                      const codigo = `ORE-${String(i.id).padStart(4, '0')}`;
+                      const medida = i.measure ? ` | Medida: ${i.measure}` : '';
+                      return `- [${codigo}] ${i.qty}x ${i.name}${medida} ($${(i.price * i.qty).toLocaleString('es-AR')})`;
+                    }).join('%0A');
 
-              <button 
-                onClick={() => setCheckoutModalOpen(false)}
-                className="text-xs text-ore-muted hover:text-ore-cream uppercase tracking-wider pt-2 cursor-pointer"
-              >
-                Volver al carrito
-              </button>
+                    const envioTexto = envioInfo.calculado
+                      ? `*Entrega:* ${envioInfo.zona} (${envioInfo.costo === 0 ? 'GRATIS' : `$${envioInfo.costo.toLocaleString('es-AR')}`})`
+                      : `*Entrega:* A coordinar según CP`;
+
+                    const message = `Hola ORE Joyería! Quisiera finalizar la compra de los siguientes productos:%0A%0A${itemsList}%0A%0A${envioTexto}%0A*Total Final: $${finalTotal.toLocaleString('es-AR')}*%0A%0AQuedo a la espera de la atención de un asesor comercial.`;
+                    
+                    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+                    setCheckoutModalOpen(false);
+                  }}
+                  className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark font-bold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                >
+                  <span>Finalizar con Asesor por WhatsApp</span>
+                </button>
+
+                {/* CANCELAR O VOLVER */}
+                <button 
+                  onClick={() => setCheckoutModalOpen(false)}
+                  className="text-xs text-ore-muted hover:text-ore-cream uppercase tracking-wider pt-1 cursor-pointer"
+                >
+                  Volver al carrito
+                </button>
+              </div>
+
             </div>
-
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* PIE DE PÁGINA */}
       <footer className="bg-ore-card border-t border-white/10 py-12 mt-20">
