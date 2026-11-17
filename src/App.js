@@ -261,18 +261,18 @@ export default function App() {
           </nav>
 
           {/* ACCIONES */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
+            
             {/* INSTAGRAM OFICIAL */}
             <a
               href="https://instagram.com/ore.joyeria"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram de ORE Joyería"
-              title="Seguinos en Instagram"
-              className="text-ore-cream hover:text-ore-gold transition p-2 cursor-pointer"
+              className="relative py-2 text-[11px] uppercase tracking-[0.22em] font-medium text-ore-cream/85 hover:text-ore-gold transition-colors duration-300 cursor-pointer group flex items-center gap-2"
             >
               <svg
-                className="w-[22px] h-[22px]"
+                className="w-[18px] h-[18px] transition-transform duration-300 group-hover:scale-110"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.8"
@@ -284,26 +284,34 @@ export default function App() {
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
                 <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
               </svg>
+              <span className="hidden lg:inline">Instagram</span>
+              
+              {/* LÍNEA DORADA INFERIOR ANIMADA */}
+              <span className="absolute bottom-0 left-0 h-[1.5px] w-0 bg-gradient-to-r from-transparent via-ore-gold to-transparent transition-all duration-300 group-hover:w-full opacity-80" />
             </a>
 
-            {/* BOTÓN CARRITO CON TÍTULO */}
+            {/* CARRITO */}
             <button 
               onClick={() => setCartOpen(true)} 
-              className="relative text-ore-cream hover:text-ore-gold transition p-2 flex items-center gap-2 cursor-pointer group"
+              className="relative py-2 text-[11px] uppercase tracking-[0.22em] font-medium text-ore-cream/85 hover:text-ore-gold transition-colors duration-300 cursor-pointer group flex items-center gap-2"
+              aria-label="Ver carrito"
             >
-              <ShoppingBag size={22} />
-              <span className="hidden sm:inline text-[11px] uppercase tracking-[0.18em] font-medium text-ore-cream/85 group-hover:text-ore-gold transition">
-                Carrito
-              </span>
-              {cartCount > 0 && (
-                <span className="absolute -top-1 right-0 sm:right-auto sm:left-4 bg-ore-gold text-ore-dark text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
+              <div className="relative">
+                <ShoppingBag size={20} className="transition-transform duration-300 group-hover:scale-110" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 bg-ore-gold text-ore-dark text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow">
+                    {cartCount}
+                  </span>
+                )}
+              </div>
+              <span className="hidden lg:inline">Carrito</span>
+
+              {/* LÍNEA DORADA INFERIOR ANIMADA */}
+              <span className="absolute bottom-0 left-0 h-[1.5px] w-0 bg-gradient-to-r from-transparent via-ore-gold to-transparent transition-all duration-300 group-hover:w-full opacity-80" />
             </button>
+
           </div>
-            
-        </div>
+          </div>
       </header>
 
       {/* MENÚ MÓVIL DESPLEGABLE */}
@@ -1396,9 +1404,30 @@ export default function App() {
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-white/5 mt-12 pt-6 text-center text-xs text-ore-muted">
           © 2026 ORE Joyería. Todos los derechos reservados. Mendoza, Argentina.
-        </div>
-      </footer>
+          </div>
+  </footer>
 
+  {/* WIDGET FLOTANTE DE WHATSAPP PERSISTENTE */}
+  <div className="fixed bottom-6 right-6 z-50 flex items-center group">
+    {/* MENSAJE FLOTANTE DE BIENVENIDA */}
+    <div className="absolute right-full mr-3 bg-ore-card border border-ore-gold/40 text-ore-cream text-xs px-3 py-2 rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap font-sans">
+      <span className="text-ore-gold font-semibold">¿Necesitás asesoramiento?</span> Escribinos
     </div>
+
+    {/* BOTÓN FLOTANTE */}
+    <a
+      href="https://wa.me/5492613737159?text=Hola%20ORE%20Joyería!%20Quisiera%20realizar%20una%20consulta%20sobre%20sus%20piezas."
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Consultar por WhatsApp"
+      className="w-14 h-14 bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 cursor-pointer border-2 border-ore-dark"
+    >
+      <svg className="w-7 h-7 fill-current" viewBox="0 0 24 24">
+        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+      </svg>
+    </a>
+  </div>
+
+</div>
   );
 }
