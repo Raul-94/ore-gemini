@@ -262,8 +262,6 @@ export default function App() {
 
           {/* ACCIONES */}
           <div className="flex items-center gap-4">
-            {/* ACCIONES */}
-          <div className="flex items-center gap-4">
             {/* INSTAGRAM OFICIAL */}
             <a
               href="https://instagram.com/ore.joyeria"
@@ -288,16 +286,23 @@ export default function App() {
               </svg>
             </a>
 
-            <button onClick={() => setCartOpen(true)} className="relative text-ore-cream hover:text-ore-gold transition p-2">
+            {/* BOTÓN CARRITO CON TÍTULO */}
+            <button 
+              onClick={() => setCartOpen(true)} 
+              className="relative text-ore-cream hover:text-ore-gold transition p-2 flex items-center gap-2 cursor-pointer group"
+            >
               <ShoppingBag size={22} />
+              <span className="hidden sm:inline text-[11px] uppercase tracking-[0.18em] font-medium text-ore-cream/85 group-hover:text-ore-gold transition">
+                Carrito
+              </span>
               {cartCount > 0 && (
-                <span className="absolute top-0 right-0 bg-ore-gold text-ore-dark text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-1 right-0 sm:right-auto sm:left-4 bg-ore-gold text-ore-dark text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
             </button>
-            </div>
-            </div>    
+          </div>
+            
         </div>
       </header>
 
@@ -332,10 +337,10 @@ export default function App() {
                 <h1 className="font-serif text-4xl sm:text-6xl font-normal tracking-wide leading-tight">Joyas que acompañan tu historia</h1>
                 <p className="text-ore-cream/80 text-sm sm:text-base max-w-xl mx-auto font-light">Diseños exclusivos en Plata, Plata con Oro y Oro 18k creados para perdurar en el tiempo.</p>
                 <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
-                  <button onClick={() => setCurrentView('shop')} className="bg-ore-gold text-ore-dark font-semibold px-8 py-3.5 tracking-wider uppercase text-xs hover:bg-ore-gold-light transition shadow-lg">
+                  <button onClick={() => setCurrentView('shop')} className="bg-ore-gold text-ore-dark font-semibold px-8 py-3.5 tracking-wider uppercase text-xs hover:bg-ore-gold-light transition shadow-lg cursor-pointer">
                     Ver Catalogo
                   </button>
-                  <button onClick={() => setCurrentView('gold')} className="border border-ore-gold text-ore-gold hover:bg-ore-gold/10 font-semibold px-8 py-3.5 tracking-wider uppercase text-xs transition">
+                  <button onClick={() => setCurrentView('gold')} className="border border-ore-gold text-ore-gold hover:bg-ore-gold/10 font-semibold px-8 py-3.5 tracking-wider uppercase text-xs transition cursor-pointer">
                     Vender mi oro
                   </button>
                 </div>
@@ -350,7 +355,7 @@ export default function App() {
                     <span className="text-ore-gold text-xs uppercase tracking-[0.2em] font-semibold">Nuestra Selección</span>
                     <h2 className="font-serif text-3xl mt-1">Piezas Recientes</h2>
                   </div>
-                  <button onClick={() => setCurrentView('shop')} className="text-xs uppercase tracking-widest text-ore-gold hover:underline flex items-center gap-1">
+                  <button onClick={() => setCurrentView('shop')} className="text-xs uppercase tracking-widest text-ore-gold hover:underline flex items-center gap-1 cursor-pointer">
                     Explorar Colección <ArrowRight size={14} />
                   </button>
                 </div>
@@ -398,13 +403,13 @@ export default function App() {
                   <div className="flex gap-2">
                     <button 
                       onClick={() => setFilterMaterial('Todos')}
-                      className="text-xs bg-ore-dark border border-white/10 text-ore-cream px-3 py-2 rounded hover:border-ore-gold transition uppercase tracking-wider"
+                      className="text-xs bg-ore-dark border border-white/10 text-ore-cream px-3 py-2 rounded hover:border-ore-gold transition uppercase tracking-wider cursor-pointer"
                     >
-                      ↺ Cambiar Material
+                      ← Cambiar Material
                     </button>
                     <button 
                       onClick={() => { setFilterCategory('Todos'); setFilterMaterial('Todos'); }}
-                      className="text-xs bg-ore-gold/20 border border-ore-gold/40 text-ore-gold px-3 py-2 rounded hover:bg-ore-gold hover:text-ore-dark transition uppercase tracking-wider"
+                      className="text-xs bg-ore-gold/20 border border-ore-gold/40 text-ore-gold px-3 py-2 rounded hover:bg-ore-gold hover:text-ore-dark transition uppercase tracking-wider cursor-pointer"
                     >
                       Ver todas las Categorías
                     </button>
@@ -467,7 +472,7 @@ export default function App() {
                   </div>
                   <button 
                     onClick={() => setFilterCategory('Todos')}
-                    className="text-xs bg-ore-dark border border-white/10 text-ore-cream px-4 py-2 rounded hover:border-ore-gold transition uppercase tracking-wider"
+                    className="text-xs bg-ore-dark border border-white/10 text-ore-cream px-4 py-2 rounded hover:border-ore-gold transition uppercase tracking-wider cursor-pointer"
                   >
                     ← Volver a Categorías
                   </button>
@@ -624,8 +629,66 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* INSIGNIAS DE CONFIANZA Y GARANTÍA (UBICACIÓN SUPERIOR PREMIUM) */}
+                <div className="grid grid-cols-3 gap-2 py-4 my-3 border-y border-white/10 bg-ore-card/40 rounded-lg px-3">
+                  
+                  {/* GARANTÍA */}
+                  <div className="flex flex-col items-center text-center space-y-1 px-1">
+                    <div className="w-8 h-8 rounded-full bg-ore-gold/10 border border-ore-gold/30 flex items-center justify-center text-ore-gold">
+                      <Shield size={15} />
+                    </div>
+                    <span className="text-[10px] sm:text-[11px] font-semibold text-ore-cream uppercase tracking-wider leading-tight">
+                      Garantía Escrita
+                    </span>
+                    <span className="text-[9px] text-ore-muted hidden sm:block">
+                      Metal noble certificado
+                    </span>
+                  </div>
+
+                  {/* ESTUCHE */}
+                  <div className="flex flex-col items-center text-center space-y-1 px-1 border-x border-white/10">
+                    <div className="w-8 h-8 rounded-full bg-ore-gold/10 border border-ore-gold/30 flex items-center justify-center text-ore-gold">
+                      <svg
+                        className="w-[15px] h-[15px]"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        viewBox="0 0 24 24"
+                      >
+                        <polyline points="20 12 20 22 4 22 4 12" />
+                        <rect width="20" height="5" x="2" y="7" />
+                        <line x1="12" x2="12" y1="22" y2="7" />
+                        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
+                        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+                      </svg>
+                    </div>
+                    <span className="text-[10px] sm:text-[11px] font-semibold text-ore-cream uppercase tracking-wider leading-tight">
+                      Estuche ORE
+                    </span>
+                    <span className="text-[9px] text-ore-muted hidden sm:block">
+                      Presentación de lujo
+                    </span>
+                  </div>
+
+                  {/* ENVÍO */}
+                  <div className="flex flex-col items-center text-center space-y-1 px-1">
+                    <div className="w-8 h-8 rounded-full bg-ore-gold/10 border border-ore-gold/30 flex items-center justify-center text-ore-gold">
+                      <Truck size={15} />
+                    </div>
+                    <span className="text-[10px] sm:text-[11px] font-semibold text-ore-cream uppercase tracking-wider leading-tight">
+                      Envío Asegurado
+                    </span>
+                    <span className="text-[9px] text-ore-muted hidden sm:block">
+                      A todo el país
+                    </span>
+                  </div>
+
+                </div>
+
                 {/* BOTONES DE ACCIÓN */}
-                <div className="space-y-3 pt-4">
+                <div className="space-y-3 pt-2">
                   {/* BOTÓN AGREGAR AL CARRITO */}
                   <button 
                     onClick={() => {
@@ -637,7 +700,7 @@ export default function App() {
                     <span>Agregar al carrito</span>
                   </button>
 
-                  {/* BOTÓN CONSULTAR POR ESTE PRODUCTO (CON CÓDIGO Y MEDIDA) */}
+                  {/* BOTÓN CONSULTAR POR ESTE PRODUCTO */}
                   <button 
                     onClick={() => {
                       const phone = "5492613737159"; 
@@ -651,53 +714,6 @@ export default function App() {
                   >
                    <span>Consultar por este producto</span>
                   </button>
-                </div>
-
-                {/* INSIGNIAS DE GARANTÍA Y CONFIANZA */}
-                <div className="pt-5 border-t border-white/10 grid grid-cols-3 gap-3 text-center">
-                  <div className="bg-ore-card/60 border border-white/5 rounded-lg p-3 flex flex-col items-center justify-center space-y-1.5">
-                    <Shield size={18} className="text-ore-gold" />
-                    <span className="text-[11px] font-semibold text-ore-cream uppercase tracking-wider leading-tight">
-                      Garantía Escrita
-                    </span>
-                    <span className="text-[10px] text-ore-muted leading-tight">
-                      Metales nobles certificados
-                    </span>
-                  </div>
-
-                  <div className="bg-ore-card/60 border border-white/5 rounded-lg p-3 flex flex-col items-center justify-center space-y-1.5">
-                    <svg
-                      className="w-[18px] h-[18px] text-ore-gold"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      viewBox="0 0 24 24"
-                    >
-                      <polyline points="20 12 20 22 4 22 4 12" />
-                      <rect width="20" height="5" x="2" y="7" />
-                      <line x1="12" x2="12" y1="22" y2="7" />
-                      <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
-                      <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
-                    </svg>
-                    <span className="text-[11px] font-semibold text-ore-cream uppercase tracking-wider leading-tight">
-                      Estuche ORE
-                    </span>
-                    <span className="text-[10px] text-ore-muted leading-tight">
-                      Presentación de regalo
-                    </span>
-                  </div>
-
-                  <div className="bg-ore-card/60 border border-white/5 rounded-lg p-3 flex flex-col items-center justify-center space-y-1.5">
-                    <Truck size={18} className="text-ore-gold" />
-                    <span className="text-[11px] font-semibold text-ore-cream uppercase tracking-wider leading-tight">
-                      Envío Asegurado
-                    </span>
-                    <span className="text-[10px] text-ore-muted leading-tight">
-                      Entregas a todo el país
-                    </span>
-                  </div>
                 </div>
 
               </div>
@@ -780,7 +796,7 @@ export default function App() {
                 </div>
                 <button 
                   onClick={() => setGoldSuccess(false)} 
-                  className="bg-ore-gold text-ore-dark font-semibold px-8 py-3.5 uppercase text-xs tracking-wider rounded hover:bg-ore-cream transition shadow-lg"
+                  className="bg-ore-gold text-ore-dark font-semibold px-8 py-3.5 uppercase text-xs tracking-wider rounded hover:bg-ore-cream transition shadow-lg cursor-pointer"
                 >
                   Enviar otra consulta
                 </button>
@@ -1049,13 +1065,13 @@ export default function App() {
                     <button 
                       type="button" 
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3.5 text-ore-muted hover:text-ore-gold text-xs"
+                      className="absolute right-3 top-3.5 text-ore-muted hover:text-ore-gold text-xs cursor-pointer"
                     >
                       {showPassword ? "Ocultar" : "Ver"}
                     </button>
                   </div>
 
-                  <button type="submit" className="w-full bg-ore-gold text-ore-dark font-semibold py-3 uppercase text-xs tracking-wider">
+                  <button type="submit" className="w-full bg-ore-gold text-ore-dark font-semibold py-3 uppercase text-xs tracking-wider cursor-pointer">
                     Desbloquear Panel
                   </button>
                 </form>
@@ -1086,7 +1102,7 @@ export default function App() {
           <div className="w-full max-w-md bg-ore-card h-full flex flex-col border-l border-white/10 p-6 shadow-2xl">
             <div className="flex justify-between items-center border-b border-white/10 pb-4">
               <h2 className="font-serif text-xl text-ore-cream">Tu Carrito ({cartCount})</h2>
-              <button onClick={() => setCartOpen(false)} className="text-ore-cream hover:text-ore-gold"><X size={20}/></button>
+              <button onClick={() => setCartOpen(false)} className="text-ore-cream hover:text-ore-gold cursor-pointer"><X size={20}/></button>
             </div>
 
             <div className="flex-grow overflow-y-auto py-6 space-y-4">
@@ -1101,11 +1117,11 @@ export default function App() {
                       <p className="text-ore-gold font-semibold text-sm mt-1">${Number(item.price * item.qty).toLocaleString('es-AR')}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <button onClick={() => removeFromCart(item.cartKey)} className="text-ore-muted hover:text-red-400"><Trash2 size={16}/></button>
+                      <button onClick={() => removeFromCart(item.cartKey)} className="text-ore-muted hover:text-red-400 cursor-pointer"><Trash2 size={16}/></button>
                       <div className="flex items-center gap-2 border border-white/10 rounded px-2 py-1 text-xs text-ore-cream">
-                        <button onClick={() => updateQty(item.cartKey, -1)}>-</button>
+                        <button onClick={() => updateQty(item.cartKey, -1)} className="cursor-pointer">-</button>
                         <span>{item.qty}</span>
-                        <button onClick={() => updateQty(item.cartKey, 1)}>+</button>
+                        <button onClick={() => updateQty(item.cartKey, 1)} className="cursor-pointer">+</button>
                       </div>
                     </div>
                   </div>
@@ -1124,7 +1140,7 @@ export default function App() {
                     setCartOpen(false); 
                     setCheckoutModalOpen(true); 
                   }}
-                  className="w-full bg-ore-gold text-ore-dark font-semibold py-4 uppercase text-xs tracking-widest hover:bg-ore-gold-light transition shadow-lg rounded"
+                  className="w-full bg-ore-gold text-ore-dark font-semibold py-4 uppercase text-xs tracking-widest hover:bg-ore-gold-light transition shadow-lg rounded cursor-pointer"
                 >
                   Iniciar compra
                 </button>
@@ -1133,8 +1149,9 @@ export default function App() {
           </div>
         </div>
       )}
-{/* MODAL: GUÍA DE TALLES Y MEDIDAS INTERACTIVA */}
-{sizeModalOpen && selectedProduct && (() => {
+
+      {/* MODAL: GUÍA DE TALLES Y MEDIDAS INTERACTIVA */}
+      {sizeModalOpen && selectedProduct && (() => {
         const guideType = getSizeGuideType(selectedProduct);
         if (!guideType) return null;
 
@@ -1368,8 +1385,8 @@ export default function App() {
           <div>
             <h4 className="font-serif text-sm uppercase tracking-wider mb-4 text-ore-gold">Navegación</h4>
             <ul className="space-y-2 text-xs text-ore-muted">
-              <li><button onClick={() => setCurrentView('shop')} className="hover:text-ore-cream">Tienda</button></li>
-              <li><button onClick={() => setCurrentView('gold')} className="hover:text-ore-cream">Compramos oro</button></li>
+              <li><button onClick={() => setCurrentView('shop')} className="hover:text-ore-cream cursor-pointer">Tienda</button></li>
+              <li><button onClick={() => setCurrentView('gold')} className="hover:text-ore-cream cursor-pointer">Compramos oro</button></li>
             </ul>
           </div>
           <div>
