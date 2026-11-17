@@ -262,6 +262,32 @@ export default function App() {
 
           {/* ACCIONES */}
           <div className="flex items-center gap-4">
+            {/* ACCIONES */}
+          <div className="flex items-center gap-4">
+            {/* INSTAGRAM OFICIAL */}
+            <a
+              href="https://instagram.com/ore.joyeria"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram de ORE Joyería"
+              title="Seguinos en Instagram"
+              className="text-ore-cream hover:text-ore-gold transition p-2 cursor-pointer"
+            >
+              <svg
+                className="w-[22px] h-[22px]"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+              >
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+              </svg>
+            </a>
+
             <button onClick={() => setCartOpen(true)} className="relative text-ore-cream hover:text-ore-gold transition p-2">
               <ShoppingBag size={22} />
               {cartCount > 0 && (
@@ -270,7 +296,8 @@ export default function App() {
                 </span>
               )}
             </button>
-          </div>
+            </div>
+            </div>    
         </div>
       </header>
 
@@ -622,9 +649,57 @@ export default function App() {
                     }} 
                     className="w-full bg-transparent hover:bg-[#25D366]/10 text-[#25D366] border border-[#25D366] font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>Consultar por este producto</span>
+                   <span>Consultar por este producto</span>
                   </button>
                 </div>
+
+                {/* INSIGNIAS DE GARANTÍA Y CONFIANZA */}
+                <div className="pt-5 border-t border-white/10 grid grid-cols-3 gap-3 text-center">
+                  <div className="bg-ore-card/60 border border-white/5 rounded-lg p-3 flex flex-col items-center justify-center space-y-1.5">
+                    <Shield size={18} className="text-ore-gold" />
+                    <span className="text-[11px] font-semibold text-ore-cream uppercase tracking-wider leading-tight">
+                      Garantía Escrita
+                    </span>
+                    <span className="text-[10px] text-ore-muted leading-tight">
+                      Metales nobles certificados
+                    </span>
+                  </div>
+
+                  <div className="bg-ore-card/60 border border-white/5 rounded-lg p-3 flex flex-col items-center justify-center space-y-1.5">
+                    <svg
+                      className="w-[18px] h-[18px] text-ore-gold"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      viewBox="0 0 24 24"
+                    >
+                      <polyline points="20 12 20 22 4 22 4 12" />
+                      <rect width="20" height="5" x="2" y="7" />
+                      <line x1="12" x2="12" y1="22" y2="7" />
+                      <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
+                      <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+                    </svg>
+                    <span className="text-[11px] font-semibold text-ore-cream uppercase tracking-wider leading-tight">
+                      Estuche ORE
+                    </span>
+                    <span className="text-[10px] text-ore-muted leading-tight">
+                      Presentación de regalo
+                    </span>
+                  </div>
+
+                  <div className="bg-ore-card/60 border border-white/5 rounded-lg p-3 flex flex-col items-center justify-center space-y-1.5">
+                    <Truck size={18} className="text-ore-gold" />
+                    <span className="text-[11px] font-semibold text-ore-cream uppercase tracking-wider leading-tight">
+                      Envío Asegurado
+                    </span>
+                    <span className="text-[10px] text-ore-muted leading-tight">
+                      Entregas a todo el país
+                    </span>
+                  </div>
+                </div>
+
               </div>
             </div>
 
