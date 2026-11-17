@@ -218,14 +218,42 @@ export default function App() {
           </div>
 
           {/* MENÚ DE NAVEGACIÓN */}
-          <nav className="hidden md:flex items-center space-x-8 text-sm tracking-wide">
-            <button onClick={() => setCurrentView('shop')} className={`transition hover:text-ore-gold ${currentView === 'shop' ? 'text-ore-gold border-b border-ore-gold pb-1' : 'text-ore-cream/80'}`}>Tienda</button>
-            <button onClick={() => setCurrentView('gold')} className={`transition hover:text-ore-gold ${currentView === 'gold' ? 'text-ore-gold border-b border-ore-gold pb-1' : 'text-ore-cream/80'}`}>Compramos oro</button>
-            <button onClick={() => setCurrentView('about')} className={`transition hover:text-ore-gold ${currentView === 'about' ? 'text-ore-gold border-b border-ore-gold pb-1' : 'text-ore-cream/80'}`}>Nosotros</button>
-            <button onClick={() => setCurrentView('contact')} className={`transition hover:text-ore-gold ${currentView === 'contact' ? 'text-ore-gold border-b border-ore-gold pb-1' : 'text-ore-cream/80'}`}>Contacto</button>
+          <nav className="hidden md:flex items-center space-x-9">
+            {[
+              { id: 'shop', label: 'Tienda' },
+              { id: 'gold', label: 'Compramos Oro' },
+              { id: 'about', label: 'Nosotros' },
+              { id: 'contact', label: 'Contacto' }
+            ].map((item) => {
+              const isActive = currentView === item.id || (item.id === 'shop' && currentView === 'product-detail');
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setCurrentView(item.id);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className={`relative py-2 text-[11px] uppercase tracking-[0.22em] font-medium transition-colors duration-300 cursor-pointer group ${
+                    isActive
+                      ? 'text-ore-gold'
+                      : 'text-ore-cream/85 hover:text-ore-gold-light'
+                  }`}
+                >
+                  <span>{item.label}</span>
+                  {/* LÍNEA DORADA INFERIOR ANIMADA */}
+                  <span
+                    className={`absolute bottom-0 left-0 h-[1.5px] bg-gradient-to-r from-transparent via-ore-gold to-transparent transition-all duration-300 ${
+                      isActive ? 'w-full opacity-100' : 'w-0 opacity-0 group-hover:w-full group-hover:opacity-80'
+                    }`}
+                  />
+                </button>
+              );
+            })}
+
             {isAdminAuthenticated && (
-              <button onClick={() => { setCurrentView('admin'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
-                className="bg-ore-gold/20 text-ore-gold border border-ore-gold/40 px-3 py-1 rounded text-xs uppercase tracking-wider font-semibold hover:bg-ore-gold hover:text-ore-dark transition"
+              <button 
+                onClick={() => { setCurrentView('admin'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className="bg-ore-gold/20 text-ore-gold border border-ore-gold/40 px-3 py-1 rounded text-[11px] uppercase tracking-widest hover:bg-ore-gold/30 transition cursor-pointer"
               >
                 Panel Admin
               </button>
