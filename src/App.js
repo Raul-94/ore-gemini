@@ -187,6 +187,16 @@ export default function App() {
     return null;
   };
 
+  // NUEVA FUNCIÓN PARA DETECTAR SI UN PRODUCTO ES NUEVO (ÚLTIMOS 14 DÍAS)
+  const isProductNew = (product) => {
+    if (!product.created_at) return false;
+    const createdDate = new Date(product.created_at);
+    const currentDate = new Date();
+    const diffTime = Math.abs(currentDate - createdDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 14;
+  };
+
   return (
     <div className="min-h-screen bg-ore-dark text-ore-cream flex flex-col font-sans selection:bg-ore-gold selection:text-ore-dark">
       
@@ -311,7 +321,7 @@ export default function App() {
             </button>
 
           </div>
-          </div>
+        </div>
       </header>
 
       {/* MENÚ MÓVIL DESPLEGABLE */}
@@ -335,6 +345,7 @@ export default function App() {
                 <img 
                   src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1920&q=80" 
                   alt="Joyería ORE" 
+                  loading="lazy"
                   className="w-full h-full object-cover opacity-40 brightness-75 scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-ore-dark via-ore-dark/40 to-transparent"></div>
@@ -372,7 +383,20 @@ export default function App() {
                   {products.slice(0, 4).map(product => (
                     <div key={product.id} className="group cursor-pointer bg-ore-card rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition border border-white/5 flex flex-col" onClick={() => { setSelectedProduct(product); setCurrentView('product-detail'); }}>
                       <div className="relative h-72 overflow-hidden bg-ore-dark">
-                        <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500"/>
+                        <img 
+                          src={product.image} 
+                          alt={product.name} 
+                          loading="lazy"
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        />
+                        
+                        {/* ETIQUETA NUEVO */}
+                        {isProductNew(product) && (
+                          <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded shadow-md">
+                            Nuevo
+                          </span>
+                        )}
+
                         <span className="absolute top-3 left-3 bg-ore-dark/80 backdrop-blur text-ore-gold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded">
                           {product.material}
                         </span>
@@ -449,10 +473,18 @@ export default function App() {
                           className="bg-ore-card border border-white/5 rounded-lg overflow-hidden shadow-lg hover:border-ore-gold transition group cursor-pointer"
                         >
                           <div className="h-64 overflow-hidden relative bg-ore-dark flex items-center justify-center">
+                            
+                            {isProductNew(p) && (
+                              <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded shadow-md">
+                                Nuevo
+                              </span>
+                            )}
+
                             {productImg ? (
                               <img 
                                 src={productImg} 
                                 alt={p.title || p.name} 
+                                loading="lazy"
                                 className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
                               />
                             ) : (
@@ -507,6 +539,7 @@ export default function App() {
                           <img 
                             src={matCoverImg} 
                             alt={mat.name} 
+                            loading="lazy"
                             className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" 
                           />
                         ) : (
@@ -548,6 +581,7 @@ export default function App() {
                           <img 
                             src={coverImg} 
                             alt={cat.name} 
+                            loading="lazy"
                             className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" 
                           />
                         ) : (
@@ -577,7 +611,12 @@ export default function App() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
               {/* IMAGEN DEL PRODUCTO */}
               <div className="rounded-lg overflow-hidden border border-white/10 bg-ore-card shadow-xl">
-                <img src={selectedProduct.image} alt={selectedProduct.name} className="w-full h-[500px] object-cover" />
+                <img 
+                  src={selectedProduct.image} 
+                  alt={selectedProduct.name} 
+                  loading="lazy"
+                  className="w-full h-[500px] object-cover" 
+                />
               </div>
 
               {/* INFORMACIÓN Y ACCIONES */}
@@ -637,10 +676,8 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* INSIGNIAS DE CONFIANZA Y GARANTÍA (UBICACIÓN SUPERIOR PREMIUM) */}
+                {/* INSIGNIAS DE CONFIANZA Y GARANTÍA */}
                 <div className="grid grid-cols-3 gap-2 py-4 my-3 border-y border-white/10 bg-ore-card/40 rounded-lg px-3">
-                  
-                  {/* GARANTÍA */}
                   <div className="flex flex-col items-center text-center space-y-1 px-1">
                     <div className="w-8 h-8 rounded-full bg-ore-gold/10 border border-ore-gold/30 flex items-center justify-center text-ore-gold">
                       <Shield size={15} />
@@ -653,18 +690,9 @@ export default function App() {
                     </span>
                   </div>
 
-                  {/* ESTUCHE */}
                   <div className="flex flex-col items-center text-center space-y-1 px-1 border-x border-white/10">
                     <div className="w-8 h-8 rounded-full bg-ore-gold/10 border border-ore-gold/30 flex items-center justify-center text-ore-gold">
-                      <svg
-                        className="w-[15px] h-[15px]"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        viewBox="0 0 24 24"
-                      >
+                      <svg className="w-[15px] h-[15px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                         <polyline points="20 12 20 22 4 22 4 12" />
                         <rect width="20" height="5" x="2" y="7" />
                         <line x1="12" x2="12" y1="22" y2="7" />
@@ -680,7 +708,6 @@ export default function App() {
                     </span>
                   </div>
 
-                  {/* ENVÍO */}
                   <div className="flex flex-col items-center text-center space-y-1 px-1">
                     <div className="w-8 h-8 rounded-full bg-ore-gold/10 border border-ore-gold/30 flex items-center justify-center text-ore-gold">
                       <Truck size={15} />
@@ -692,12 +719,10 @@ export default function App() {
                       A todo el país
                     </span>
                   </div>
-
                 </div>
 
                 {/* BOTONES DE ACCIÓN */}
                 <div className="space-y-3 pt-2">
-                  {/* BOTÓN AGREGAR AL CARRITO */}
                   <button 
                     onClick={() => {
                       addToCart(selectedProduct);
@@ -708,7 +733,6 @@ export default function App() {
                     <span>Agregar al carrito</span>
                   </button>
 
-                  {/* BOTÓN CONSULTAR POR ESTE PRODUCTO */}
                   <button 
                     onClick={() => {
                       const phone = "5492613737159"; 
@@ -748,10 +772,18 @@ export default function App() {
                         }}
                         className="bg-ore-card border border-white/5 rounded-lg overflow-hidden group cursor-pointer hover:border-ore-gold/50 transition shadow-xl flex flex-col justify-between"
                       >
-                        <div className="aspect-square w-full overflow-hidden bg-ore-dark">
+                        <div className="aspect-square w-full overflow-hidden bg-ore-dark relative">
+                          
+                          {isProductNew(relatedProduct) && (
+                            <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded shadow-md">
+                              Nuevo
+                            </span>
+                          )}
+
                           <img 
                             src={relatedImg} 
                             alt={relatedProduct.title || relatedProduct.name} 
+                            loading="lazy"
                             className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                           />
                         </div>
@@ -1119,7 +1151,7 @@ export default function App() {
               ) : (
                 cart.map(item => (
                   <div key={item.cartKey} className="flex gap-4 items-center bg-ore-dark p-4 rounded-lg border border-white/5">
-                    <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
+                    <img src={item.image} alt={item.name} loading="lazy" className="w-16 h-16 object-cover rounded" />
                     <div className="flex-grow">
                       <h4 className="font-serif text-sm text-ore-cream">{item.name}</h4>
                       <p className="text-ore-gold font-semibold text-sm mt-1">${Number(item.price * item.qty).toLocaleString('es-AR')}</p>
@@ -1167,7 +1199,6 @@ export default function App() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
             <div className="w-full max-w-lg bg-ore-card border border-ore-gold/40 rounded-lg p-6 sm:p-8 shadow-2xl space-y-6 text-left animate-in fade-in zoom-in duration-200">
               
-              {/* ENCABEZADO DINÁMICO */}
               <div className="flex justify-between items-center border-b border-white/10 pb-4">
                 <div>
                   <span className="text-xs uppercase tracking-[0.25em] text-ore-gold font-semibold">Guía Práctica ORE</span>
@@ -1185,15 +1216,10 @@ export default function App() {
                 </button>
               </div>
 
-              {/* CONTENIDO SEGÚN CATEGORÍA */}
               <div className="space-y-4 text-xs sm:text-sm text-ore-cream/90 leading-relaxed">
-                
-                {/* OPCIÓN 1: ANILLOS Y ALIANZAS */}
                 {guideType === 'ring' && (
                   <>
-                    <p className="font-light">
-                      Si tenés un anillo o alianza que te quede cómodo en el dedo que querés usar, medí su interior siguiendo estos pasos:
-                    </p>
+                    <p className="font-light">Si tenés un anillo o alianza que te quede cómodo en el dedo que querés usar, medí su interior siguiendo estos pasos:</p>
                     <div className="bg-ore-dark p-4 rounded border border-white/10 space-y-3">
                       <div className="flex items-start gap-3">
                         <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">1</span>
@@ -1201,7 +1227,7 @@ export default function App() {
                       </div>
                       <div className="flex items-start gap-3">
                         <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">2</span>
-                        <p>Con una regla milimetrada, medí el <strong className="text-ore-gold">diámetro interno</strong> de lado a lado pasando por el centro (sin incluir el espesor del metal).</p>
+                        <p>Con una regla milimetrada, medí el <strong className="text-ore-gold">diámetro interno</strong> de lado a lado pasando por el centro.</p>
                       </div>
                       <div className="flex items-start gap-3">
                         <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">3</span>
@@ -1211,12 +1237,9 @@ export default function App() {
                   </>
                 )}
 
-                {/* OPCIÓN 2: CADENAS Y COLLARES */}
                 {guideType === 'chain' && (
                   <>
-                    <p className="font-light">
-                      Elegí el largo ideal según cómo te gustaría que luzca la caída de la cadena o el dije:
-                    </p>
+                    <p className="font-light">Elegí el largo ideal según cómo te gustaría que luzca la caída de la cadena o el dije:</p>
                     <div className="bg-ore-dark p-4 rounded border border-white/10 divide-y divide-white/5 text-xs sm:text-sm">
                       <div className="py-2.5 flex justify-between items-center gap-4">
                         <span className="font-mono font-bold text-ore-gold shrink-0">40 cm</span>
@@ -1224,11 +1247,11 @@ export default function App() {
                       </div>
                       <div className="py-2.5 flex justify-between items-center gap-4">
                         <span className="font-mono font-bold text-ore-gold shrink-0">45 cm</span>
-                        <span className="text-ore-cream/90 text-right">Medida clásica femenina; descansa sobre la clavícula (ideal para dijes).</span>
+                        <span className="text-ore-cream/90 text-right">Medida clásica femenina; descansa sobre la clavícula.</span>
                       </div>
                       <div className="py-2.5 flex justify-between items-center gap-4">
                         <span className="font-mono font-bold text-ore-gold shrink-0">50 cm</span>
-                        <span className="text-ore-cream/90 text-right">Caída media; llega ligeramente por debajo de la clavícula (estándar unisex).</span>
+                        <span className="text-ore-cream/90 text-right">Caída media; llega ligeramente por debajo de la clavícula.</span>
                       </div>
                       <div className="py-2.5 flex justify-between items-center gap-4">
                         <span className="font-mono font-bold text-ore-gold shrink-0">60 cm</span>
@@ -1238,20 +1261,17 @@ export default function App() {
                   </>
                 )}
 
-                {/* OPCIÓN 3: PULSERAS Y ESCLAVAS */}
                 {guideType === 'bracelet' && (
                   <>
-                    <p className="font-light">
-                      Para asegurar un calce cómodo y que el cierre no tire, calculá tu medida de muñeca así:
-                    </p>
+                    <p className="font-light">Para asegurar un calce cómodo y que el cierre no tire, calculá tu medida de muñeca así:</p>
                     <div className="bg-ore-dark p-4 rounded border border-white/10 space-y-3">
                       <div className="flex items-start gap-3">
                         <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">1</span>
-                        <p>Rodeá tu muñeca justo debajo del hueso con un centímetro flexible (o una tira de papel que luego midas con regla).</p>
+                        <p>Rodeá tu muñeca justo debajo del hueso con un centímetro flexible.</p>
                       </div>
                       <div className="flex items-start gap-3">
                         <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">2</span>
-                        <p>Sumale entre <strong className="text-ore-gold">1 cm y 1,5 cm</strong> a la medida justa de tu contorno según qué tan suelta prefieras llevarla.</p>
+                        <p>Sumale entre <strong className="text-ore-gold">1 cm y 1,5 cm</strong> a la medida justa de tu contorno.</p>
                       </div>
                       <div className="flex items-start gap-3">
                         <span className="w-6 h-6 rounded-full bg-ore-gold/20 text-ore-gold font-bold flex items-center justify-center shrink-0 text-xs">3</span>
@@ -1262,7 +1282,7 @@ export default function App() {
                 )}
 
                 <p className="text-xs text-ore-muted italic pt-1">
-                  * ¿Tenés dudas sobre el calce o necesitás un ajuste a medida? Escribinos por WhatsApp y te asesoramos antes de despachar tu pieza.
+                  * ¿Tenés dudas sobre el calce o necesitás un ajuste a medida? Escribinos por WhatsApp y te asesoramos.
                 </p>
               </div>
 
@@ -1280,7 +1300,7 @@ export default function App() {
         );
       })()}
 
-      {/* MODAL DE FINALIZACIÓN DE COMPRA (MERCADOPAGO Y WHATSAPP) */}
+      {/* MODAL DE FINALIZACIÓN DE COMPRA */}
       {checkoutModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="w-full max-w-lg bg-ore-card border border-ore-gold/40 rounded-lg p-8 shadow-2xl space-y-6 text-center animate-in fade-in zoom-in duration-200">
@@ -1297,7 +1317,6 @@ export default function App() {
               </p>
             </div>
 
-            {/* RESUMEN DE LA COMPRA */}
             <div className="bg-ore-dark p-4 rounded border border-white/10 text-left space-y-2">
               <p className="text-xs text-ore-muted uppercase tracking-wider font-semibold border-b border-white/10 pb-1">Resumen del pedido</p>
               <div className="max-h-32 overflow-y-auto space-y-1 text-xs text-ore-cream">
@@ -1314,10 +1333,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* OPCIONES DE PAGO */}
             <div className="flex flex-col gap-3 pt-2">
-              
-              {/* OPCIÓN 1: MERCADOPAGO */}
               <button 
                 onClick={async () => {
                   try {
@@ -1326,9 +1342,7 @@ export default function App() {
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ items: cart })
                     });
-                    
                     const data = await response.json();
-                    
                     if (data.init_point) {
                       window.location.href = data.init_point;
                     } else {
@@ -1344,7 +1358,6 @@ export default function App() {
                 <span>Pagar con MercadoPago</span>
               </button>
 
-              {/* OPCIÓN 2: ATENCIÓN PERSONALIZADA VIA WHATSAPP */}
               <button 
                 onClick={() => {
                   const phone = "5492613737159"; 
@@ -1354,7 +1367,6 @@ export default function App() {
                     return `- [${codigo}] ${i.qty}x ${i.name}${medida} ($${(i.price * i.qty).toLocaleString('es-AR')})`;
                   }).join('%0A');
                   const message = `Hola ORE Joyería! Quisiera finalizar la compra de los siguientes productos:%0A%0A${itemsList}%0A%0A*Total: $${cartTotal.toLocaleString('es-AR')}*%0A%0AQuedo a la espera de la atención de un asesor comercial.`;
-                  
                   window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
                   setCheckoutModalOpen(false);
                 }}
@@ -1363,7 +1375,6 @@ export default function App() {
                 <span>Finalizar con Asesor por WhatsApp</span>
               </button>
 
-              {/* CANCELAR O VOLVER */}
               <button 
                 onClick={() => setCheckoutModalOpen(false)}
                 className="text-xs text-ore-muted hover:text-ore-cream uppercase tracking-wider pt-2 cursor-pointer"
@@ -1404,30 +1415,27 @@ export default function App() {
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-white/5 mt-12 pt-6 text-center text-xs text-ore-muted">
           © 2026 ORE Joyería. Todos los derechos reservados. Mendoza, Argentina.
-          </div>
-  </footer>
+        </div>
+      </footer>
 
-  {/* WIDGET FLOTANTE DE WHATSAPP PERSISTENTE */}
-  <div className="fixed bottom-6 right-6 z-50 flex items-center group">
-    {/* MENSAJE FLOTANTE DE BIENVENIDA */}
-    <div className="absolute right-full mr-3 bg-ore-card border border-ore-gold/40 text-ore-cream text-xs px-3 py-2 rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap font-sans">
-      <span className="text-ore-gold font-semibold">¿Necesitás asesoramiento?</span> Escribinos
+      {/* WIDGET FLOTANTE DE WHATSAPP PERSISTENTE */}
+      <div className="fixed bottom-6 right-6 z-50 flex items-center group">
+        <div className="absolute right-full mr-3 bg-ore-card border border-ore-gold/40 text-ore-cream text-xs px-3 py-2 rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap font-sans">
+          <span className="text-ore-gold font-semibold">¿Necesitás asesoramiento?</span> Escribinos
+        </div>
+        <a
+          href="https://wa.me/5492613737159?text=Hola%20ORE%20Joyería!%20Quisiera%20realizar%20una%20consulta%20sobre%20sus%20piezas."
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Consultar por WhatsApp"
+          className="w-14 h-14 bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 cursor-pointer border-2 border-ore-dark"
+        >
+          <svg className="w-7 h-7 fill-current" viewBox="0 0 24 24">
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+          </svg>
+        </a>
+      </div>
+
     </div>
-
-    {/* BOTÓN FLOTANTE */}
-    <a
-      href="https://wa.me/5492613737159?text=Hola%20ORE%20Joyería!%20Quisiera%20realizar%20una%20consulta%20sobre%20sus%20piezas."
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Consultar por WhatsApp"
-      className="w-14 h-14 bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 cursor-pointer border-2 border-ore-dark"
-    >
-      <svg className="w-7 h-7 fill-current" viewBox="0 0 24 24">
-        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-      </svg>
-    </a>
-  </div>
-
-</div>
   );
 }
