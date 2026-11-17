@@ -14,6 +14,10 @@ export default function AdminDashboard({
   const [newCategory, setNewCategory] = useState('');
   const [newMaterial, setNewMaterial] = useState('');
 
+  // Estados para búsqueda y filtrado en inventario
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('Todos');
+
   // Formulario Producto
   const [editingId, setEditingId] = useState(null);
   const [title, setTitle] = useState('');
@@ -101,7 +105,7 @@ export default function AdminDashboard({
     setStock(product.stock);
     setSelectedCategory(product.category_id || '');
     setSelectedMaterial(product.material_id || '');
-    setMeasure(product.measure || ''); // <--- ¡AQUÍ ESTABA EL DETALLE QUE FALTABA!
+    setMeasure(product.measure || ''); 
     
     // Capturamos la imagen actual del producto para mostrarla en el panel
     const existingImg = product.image_url || product.image || '';
@@ -183,6 +187,20 @@ export default function AdminDashboard({
       setMessage(`No se puede eliminar el material si hay productos asociados: ${error.message}`);
     }
   };
+
+  // Lógica de filtrado en tiempo real para el inventario
+  const filteredProducts = products.filter(product => {
+    const codigoStr = `ORE-${String(product.id).padStart(4, '0')}`.toLowerCase();
+    const nombreStr = (product.title || product.name || '').toLowerCase();
+    const searchLower = searchTerm.toLowerCase().trim();
+
+    const matchesSearch = codigoStr.includes(searchLower) || nombreStr.includes(searchLower);
+    const matchesCategory = selectedCategoryFilter === 'Todos' || 
+      (product.category && product.category.toLowerCase().trim() === selectedCategoryFilter.toLowerCase().trim()) ||
+      (categories.find(c => c.name === selectedCategoryFilter)?.id === product.category_id);
+
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="space-y-10">
@@ -457,11 +475,47 @@ export default function AdminDashboard({
 
       {/* LISTADO DE INVENTARIO ACTUAL */}
       <div className="space-y-4">
-        <h3 className="font-serif text-2xl text-ore-cream">Inventario Actual ({products.length} products)</h3>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <h3 className="font-serif text-2xl text-ore-cream">
+            Inventario Actual ({filteredProducts.length} de {products.length} productos)
+          </h3>
+        </div>
+
+        {/* BARRA DE BÚSQUEDA RÁPIDA Y FILTROS DE INVENTARIO */}
+        <div className="bg-ore-card p-4 rounded-lg border border-white/10 flex flex-col sm:flex-row gap-4 items-center justify-between shadow">
+          
+          {/* Buscador por código o nombre */}
+          <div className="w-full sm:w-1/2 relative">
+            <input 
+              type="text"
+              placeholder="Buscar por código (ej: ORE-0001) o nombre..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-ore-dark border border-white/15 rounded p-2.5 pl-9 text-xs text-ore-cream focus:outline-none focus:border-ore-gold"
+            />
+            <span className="absolute left-3 top-3 text-ore-muted text-xs">🔍</span>
+          </div>
+
+          {/* Filtro por Categoría */}
+          <div className="w-full sm:w-1/3 flex items-center gap-2">
+            <span className="text-[11px] uppercase tracking-wider text-ore-muted shrink-0">Categoría:</span>
+            <select
+              value={selectedCategoryFilter}
+              onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+              className="w-full bg-ore-dark border border-white/15 rounded p-2.5 text-xs text-ore-cream focus:outline-none focus:border-ore-gold cursor-pointer"
+            >
+              <option value="Todos">Todas las categorías</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.name}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
+
+        </div>
         
         <div className="space-y-3">
-          {products && products.length > 0 ? (
-            products.map((p) => {
+          {filteredProducts && filteredProducts.length > 0 ? (
+            filteredProducts.map((p) => {
               const prodImg = p.image || p.image_url;
               return (
                 <div key={p.id} className="bg-ore-card p-4 rounded-lg border border-white/5 flex items-center justify-between gap-4 shadow">
@@ -472,12 +526,12 @@ export default function AdminDashboard({
                       <div className="w-14 h-14 bg-ore-dark border border-white/10 rounded flex items-center justify-center text-[10px] text-ore-muted italic">Sin foto</div>
                     )}
                     <div>
-                    <h4 className="font-serif text-base text-ore-cream flex items-center">
-                      <span className="text-xs font-mono bg-ore-dark border border-ore-gold/30 text-ore-gold px-2 py-0.5 rounded mr-2">
-                        ORE-{String(p.id).padStart(4, '0')}
-                      </span>
-                      {p.title || p.name}
-                    </h4>
+                      <h4 className="font-serif text-base text-ore-cream flex items-center">
+                        <span className="text-xs font-mono bg-ore-dark border border-ore-gold/30 text-ore-gold px-2 py-0.5 rounded mr-2">
+                          ORE-{String(p.id).padStart(4, '0')}
+                        </span>
+                        {p.title || p.name}
+                      </h4>
                       <p className="text-xs text-ore-muted mt-0.5">
                         Precio: <strong className="text-ore-gold">${Number(p.price || 0).toLocaleString('es-AR')}</strong> | 
                         Stock: <strong>{p.stock} u.</strong> | 
@@ -490,13 +544,13 @@ export default function AdminDashboard({
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(p)}
-                      className="bg-sky-600 hover:bg-sky-500 text-white px-3.5 py-2 rounded text-xs transition uppercase tracking-wider font-semibold"
+                      className="bg-sky-600 hover:bg-sky-500 text-white px-3.5 py-2 rounded text-xs transition uppercase tracking-wider font-semibold cursor-pointer"
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => handleDelete(p.id)}
-                      className="bg-red-600/80 hover:bg-red-600 text-white px-3.5 py-2 rounded text-xs transition uppercase tracking-wider font-semibold"
+                      className="bg-red-600/80 hover:bg-red-600 text-white px-3.5 py-2 rounded text-xs transition uppercase tracking-wider font-semibold cursor-pointer"
                     >
                       Eliminar
                     </button>
@@ -505,7 +559,7 @@ export default function AdminDashboard({
               );
             })
           ) : (
-            <p className="text-ore-muted text-sm italic py-8 text-center bg-ore-card rounded-lg border border-white/5">No hay productos registrados en el inventario.</p>
+            <p className="text-ore-muted text-sm italic py-8 text-center bg-ore-card rounded-lg border border-white/5">No se encontraron productos que coincidan con la búsqueda.</p>
           )}
         </div>
       </div>
