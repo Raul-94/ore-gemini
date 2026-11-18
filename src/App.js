@@ -28,11 +28,10 @@ export default function App() {
   const [postalCode, setPostalCode] = useState('');
   const [deliveryType, setDeliveryType] = useState('domicilio'); // 'domicilio' | 'sucursal'
 
-  const calcularEnvioAndreani = (cp, tipoEntrega) => {
+  const calcularEnvioAndreani = (cp, tipoEntrega, subtotalCarrito) => {
     const cpClean = (cp || '').replace(/\D/g, '');
     const cpNum = Number(cpClean);
 
-    // Si todavía no ingresó un CP válido (mínimo 4 dígitos)
     if (cpClean.length < 4 || !cpNum) {
       return {
         costo: 0,
@@ -42,19 +41,22 @@ export default function App() {
       };
     }
 
-    // 1. Gran Mendoza (CPs 5500 a 5549)
+    // 1. Gran Mendoza (CPs 5500 a 5549) -> Envío gratis local a partir de $50.000
     if (cpNum >= 5500 && cpNum <= 5549) {
+      const esGratisMendoza = subtotalCarrito >= 50000;
+      const costoEnvio = tipoEntrega === 'domicilio' ? (esGratisMendoza ? 0 : 7000) : 0;
+      
       return {
-        costo: tipoEntrega === 'domicilio' ? 7000 : 0,
-        zona: tipoEntrega === 'domicilio'
-          ? `Gran Mendoza (CP ${cpClean}) - Envío a Domicilio`
-          : `Gran Mendoza (CP ${cpClean}) - Retiro en Domicilio ORE`,
+        costo: costoEnvio,
+        zona: esGratisMendoza 
+          ? `Gran Mendoza (CP ${cpClean}) - ¡Envío Local GRATIS (Superaste $50.000)!` 
+          : (tipoEntrega === 'domicilio' ? `Gran Mendoza (CP ${cpClean}) - Envío a Domicilio ($7.000)` : `Gran Mendoza (CP ${cpClean}) - Retiro en ORE ($0)`),
         calculado: true,
         esMendoza: true
       };
     }
 
-    // 2. CABA y Gran Buenos Aires (CABA: 1000-1440, GBA: 1600-1999)
+    // 2. Resto del país -> Costo habitual de Andreani según la región
     if ((cpNum >= 1000 && cpNum <= 1440) || (cpNum >= 1600 && cpNum <= 1999)) {
       return {
         costo: tipoEntrega === 'domicilio' ? 13900 : 11500,
@@ -64,7 +66,6 @@ export default function App() {
       };
     }
 
-    // 3. Entre Ríos / Paraná / Santa Fe / Córdoba (Región Litoral / Centro)
     if ((cpNum >= 2000 && cpNum <= 3999) || (cpNum >= 5000 && cpNum <= 5880)) {
       return {
         costo: tipoEntrega === 'domicilio' ? 15200 : 12500,
@@ -74,7 +75,6 @@ export default function App() {
       };
     }
 
-    // 4. Patagonia / Tierra del Fuego (Ushuaia, etc., CPs 8300 a 9490)
     if (cpNum >= 8300 && cpNum <= 9490) {
       return {
         costo: tipoEntrega === 'domicilio' ? 16000 : 13800,
@@ -84,7 +84,6 @@ export default function App() {
       };
     }
 
-    // 5. Resto del país (Tarifa estándar de respaldo)
     return {
       costo: tipoEntrega === 'domicilio' ? 14500 : 12000,
       zona: `Resto del País (CP ${cpClean}) - Andreani ${tipoEntrega === 'domicilio' ? 'Domicilio' : 'Sucursal'}`,
@@ -103,16 +102,13 @@ export default function App() {
     }
   });
 
-  // Persistencia del carrito
   useEffect(() => {
     localStorage.setItem('ore_cart', JSON.stringify(cart));
   }, [cart]);
 
-  // Estados de categorías y materiales globales
   const [categories, setCategories] = useState([]);
   const [materials, setMaterials] = useState([]);
 
-  // Cargar categorías y materiales desde Supabase al iniciar la tienda
   useEffect(() => {
     fetchCategoriesAndMaterials();
     fetchProductsFromSupabase();
@@ -126,7 +122,6 @@ export default function App() {
     if (matData) setMaterials(matData);
   };
   
-  // DETECCIÓN DE RUTA SECRETA /#admin o /admin
   useEffect(() => {
     const checkAdminPath = () => {
       if (
@@ -138,7 +133,6 @@ export default function App() {
     };
 
     checkAdminPath();
-
     window.addEventListener('popstate', checkAdminPath);
     window.addEventListener('hashchange', checkAdminPath);
 
@@ -148,7 +142,6 @@ export default function App() {
     };
   }, []);
 
-  // Productos iniciales de respaldo (fallback)
   const sampleProducts = [
     {
       id: 1,
@@ -158,7 +151,7 @@ export default function App() {
       price: 285000,
       image_url: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=800&q=80',
       description: 'Elegante anillo solitario en oro amarillo de 18 kilates con acabado pulido a mano.',
-      stock: 5,
+      stock: 1,
       featured: true
     },
     {
@@ -176,7 +169,6 @@ export default function App() {
 
   const [products, setProducts] = useState(sampleProducts);
   
-  // Cargar productos desde Supabase
   const fetchProductsFromSupabase = async () => {
     const { data, error } = await supabase
       .from('products')
@@ -195,11 +187,9 @@ export default function App() {
     }
   };
 
-  // Filtros de Tienda
   const [filterCategory, setFilterCategory] = useState('Todos');
   const [filterMaterial, setFilterMaterial] = useState('Todos');
 
-  // Consultas de Compra de Oro
   const [goldForm, setGoldForm] = useState({
     name: '', phone: '', email: '', pieceType: 'Anillo', karat: '18k', weight: '', description: '' , acceptedTerms: false
   });
@@ -211,7 +201,6 @@ export default function App() {
     setGoldForm({ name: '', phone: '', email: '', pieceType: 'Anillo', karat: '18k', weight: '', description: '' , acceptedTerms: false });
   };
 
-  // Carrito helpers
   const addToCart = (product, selectedSize) => {
     const itemKey = `${product.id}-${selectedSize || 'unico'}`;
     const existing = cart.find(item => item.cartKey === itemKey);
@@ -256,7 +245,6 @@ export default function App() {
     return null;
   };
 
-  // Detección de producto nuevo (últimos 14 días)
   const isProductNew = (product) => {
     if (!product.created_at) return false;
     const createdDate = new Date(product.created_at);
@@ -266,7 +254,6 @@ export default function App() {
     return diffDays <= 14;
   };
 
-  // Funciones auxiliares de validación estricta
   const validarSoloTexto = (valor) => valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
   const validarSoloNumerosPeso = (valor) => valor.replace(/[^0-9.,]/g, '');
   const validarSoloTelefono = (valor) => valor.replace(/[^0-9+\s-]/g, '');
@@ -274,13 +261,11 @@ export default function App() {
   return (
     <div className="min-h-screen bg-ore-dark text-ore-cream flex flex-col font-sans selection:bg-ore-gold selection:text-ore-dark">
       
-      {/* AVISO DE DEMOSTRACIÓN */}
       <div className="bg-ore-gold text-ore-dark text-xs font-semibold py-1.5 px-4 text-center tracking-wider flex items-center justify-center gap-2">
         <AlertCircle size={14} />
         <span>ENTORNO DE DEMOSTRACIÓN — Gestión y catálogo sincronizados con Supabase</span>
       </div>
 
-      {/* ENCABEZADO */}
       <header className="sticky top-0 z-40 bg-ore-dark/95 backdrop-blur border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           
@@ -288,7 +273,6 @@ export default function App() {
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
 
-          {/* LOGO INSTITUCIONAL ORE */}
           <div onClick={() => setCurrentView('home')} className="cursor-pointer flex items-center gap-3">
             <div className="w-10 h-10 rounded-full border border-ore-gold flex items-center justify-center p-0.5 shadow-lg">
               <div className="w-full h-full rounded-full border border-ore-gold/50 flex flex-col items-center justify-center bg-ore-card">
@@ -301,7 +285,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* MENÚ DE NAVEGACIÓN */}
           <nav className="hidden md:flex items-center space-x-9">
             {[
               { id: 'shop', label: 'Tienda' },
@@ -343,7 +326,6 @@ export default function App() {
             )}
           </nav>
 
-          {/* ACCIONES */}
           <div className="flex items-center gap-6">
             <a
               href="https://instagram.com/ore.joyeria"
@@ -387,9 +369,31 @@ export default function App() {
             </button>
           </div>
         </div>
+
+        {/* BARRA DE PROGRESO GLOBAL DE ENVÍO GRATIS (Diseño elegante de alta gama) */}
+        <div className="bg-ore-card border-t border-white/5 py-2 px-4 text-center">
+          <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-2 text-[11px] tracking-wider uppercase">
+            {cartTotal >= 50000 ? (
+              <span className="text-ore-gold font-semibold flex items-center gap-1.5">
+                <span>✨</span> ¡Envío Local GRATIS desbloqueado en Gran Mendoza!
+              </span>
+            ) : (
+              <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-3">
+                <span className="text-ore-cream/80">
+                  Te faltan <strong className="text-ore-gold font-bold">${(50000 - cartTotal).toLocaleString('es-AR')}</strong> para obtener <strong className="text-ore-gold">Envío Local GRATIS</strong> (Gran Mendoza desde $50.000)
+                </span>
+                <div className="w-32 bg-ore-dark h-1.5 rounded-full overflow-hidden border border-white/10 hidden sm:block">
+                  <div 
+                    className="bg-ore-gold h-full transition-all duration-300"
+                    style={{ width: `${Math.min((cartTotal / 50000) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </header>
 
-      {/* MENÚ MÓVIL DESPLEGABLE */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-ore-card border-b border-white/10 px-6 py-4 space-y-4">
           <button onClick={() => { setCurrentView('shop'); setMobileMenuOpen(false); }} className="block py-2 text-ore-cream">Tienda</button>
@@ -399,10 +403,8 @@ export default function App() {
         </div>
       )}
 
-      {/* CONTENIDO PRINCIPAL */}
       <main className="flex-grow">
         
-        {/* VISTA: INICIO */}
         {currentView === 'home' && (
           <div>
             <section className="relative h-[80vh] flex items-center justify-center text-center px-4 overflow-hidden">
@@ -431,7 +433,6 @@ export default function App() {
               </div>
             </section>
 
-            {/* PRODUCTOS DESTACADOS */}
             <section className="py-16 bg-ore-card/50 border-t border-b border-white/5">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-end mb-10">
@@ -447,8 +448,6 @@ export default function App() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                   {products.slice(0, 4).map(product => (
                     <div key={product.id} className="group cursor-pointer bg-ore-card rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition border border-white/5 flex flex-col" onClick={() => { setSelectedProduct(product); setCurrentView('product-detail'); }}>
-                      
-                      {/* CONTENEDOR DE IMAGEN OPTIMIZADO */}
                       <div className="relative h-72 overflow-hidden bg-ore-dark flex items-center justify-center">
                         <img 
                           src={product.image} 
@@ -457,11 +456,15 @@ export default function App() {
                           className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500"
                         />
                         
-                        {isProductNew(product) && (
+                        {product.stock === 1 ? (
+                          <span className="absolute top-3 right-3 z-10 bg-ore-dark/90 border border-ore-gold/60 text-ore-gold text-[9px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded shadow-md backdrop-blur">
+                            Última Unidad
+                          </span>
+                        ) : isProductNew(product) ? (
                           <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded shadow-md">
                             Nuevo
                           </span>
-                        )}
+                        ) : null}
 
                         <span className="absolute top-3 left-3 bg-ore-dark/80 backdrop-blur text-ore-gold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded">
                           {product.material}
@@ -486,7 +489,6 @@ export default function App() {
           </div>
         )}
 
-        {/* VISTA DE LA TIENDA */}
         {currentView === 'shop' && (
           <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
 
@@ -539,13 +541,16 @@ export default function App() {
                           }}
                           className="bg-ore-card border border-white/5 rounded-lg overflow-hidden shadow-lg hover:border-ore-gold transition group cursor-pointer"
                         >
-                          {/* CONTENEDOR DE IMAGEN OPTIMIZADO */}
                           <div className="h-64 overflow-hidden relative bg-ore-dark flex items-center justify-center">
-                            {isProductNew(p) && (
+                            {p.stock === 1 ? (
+                              <span className="absolute top-3 right-3 z-10 bg-ore-dark/90 border border-ore-gold/60 text-ore-gold text-[9px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded shadow-md backdrop-blur">
+                                Última Unidad
+                              </span>
+                            ) : isProductNew(p) ? (
                               <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded shadow-md">
                                 Nuevo
                               </span>
-                            )}
+                            ) : null}
 
                             {productImg ? (
                               <img 
@@ -668,7 +673,6 @@ export default function App() {
           </div>
         )}
 
-        {/* VISTA: FICHA DE PRODUCTO */}
         {currentView === 'product-detail' && selectedProduct && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <button onClick={() => setCurrentView('shop')} className="text-xs uppercase tracking-widest text-ore-gold mb-8 flex items-center gap-2 hover:underline cursor-pointer">
@@ -676,7 +680,7 @@ export default function App() {
             </button>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-              {/* IMAGEN DEL PRODUCTO PRINCIPAL */}
+              
               <div className="rounded-lg overflow-hidden border border-white/10 bg-ore-dark shadow-xl flex items-center justify-center">
                 <img 
                   src={selectedProduct.image} 
@@ -686,7 +690,7 @@ export default function App() {
                 />
               </div>
 
-              {/* INFORMACIÓN Y ACCIONES */}
+              {/* INFORMACIÓN Y ACCIONES CON 15% OFF Y NUEVA GARANTÍA */}
               <div className="space-y-6">
                 <div>
                   <span className="text-xs text-ore-gold uppercase tracking-widest font-semibold">
@@ -697,7 +701,7 @@ export default function App() {
                     {selectedProduct.name}
                   </h1>
                   
-                  {/* PRECIO CONTADO Y GANCHO DE TRANSFERENCIA */}
+                  {/* PRECIO CONTADO Y GANCHO DE 15% OFF */}
                   <div className="mt-3 space-y-1.5">
                     <div className="flex items-baseline gap-3">
                       <span className="text-2xl sm:text-3xl font-semibold text-ore-gold">
@@ -709,7 +713,7 @@ export default function App() {
                     </div>
 
                     <div className="inline-block bg-ore-gold/10 border border-ore-gold/30 px-3 py-1 rounded text-xs text-ore-gold font-medium">
-                      🔥 10% de descuento abonando por transferencia o efectivo: <strong className="font-bold">${Math.round(selectedProduct.price * 0.9).toLocaleString('es-AR')}</strong>
+                      🔥 15% de descuento abonando por transferencia o efectivo: <strong className="font-bold">${Math.round(selectedProduct.price * 0.85).toLocaleString('es-AR')}</strong>
                     </div>
                   </div>
 
@@ -771,16 +775,17 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* INSIGNIAS CON AJUSTE SIN CARGO 15 DÍAS */}
                 <div className="grid grid-cols-3 gap-2 py-4 my-3 border-y border-white/10 bg-ore-card/40 rounded-lg px-3">
                   <div className="flex flex-col items-center text-center space-y-1 px-1">
                     <div className="w-8 h-8 rounded-full bg-ore-gold/10 border border-ore-gold/30 flex items-center justify-center text-ore-gold">
-                      <Shield size={15} />
+                      <span className="text-[11px] font-bold">15d</span>
                     </div>
                     <span className="text-[10px] sm:text-[11px] font-semibold text-ore-cream uppercase tracking-wider leading-tight">
-                      Garantía Escrita
+                      Ajuste sin Cargo
                     </span>
-                    <span className="text-[9px] text-ore-muted hidden sm:block">
-                      Metal noble certificado
+                    <span className="text-[9px] text-ore-muted leading-tight">
+                      1 modificación por pieza (15 días)
                     </span>
                   </div>
 
@@ -831,13 +836,13 @@ export default function App() {
                     onClick={() => {
                       const phone = "5492613737159"; 
                       const codigo = `ORE-${String(selectedProduct.id).padStart(4, '0')}`;
-                      const precioEfectivo = Math.round(selectedProduct.price * 0.9);
-                      const message = `Hola ORE Joyería! Me interesa comprar ahora con el 10% off por transferencia la pieza *[${codigo}] ${selectedProduct.name}* a $${precioEfectivo.toLocaleString('es-AR')}. ¿Cómo coordinamos el pago y envío?`;
+                      const precioEfectivo = Math.round(selectedProduct.price * 0.85);
+                      const message = `Hola ORE Joyería! Me interesa comprar ahora con el 15% off por transferencia la pieza *[${codigo}] ${selectedProduct.name}* a $${precioEfectivo.toLocaleString('es-AR')}. ¿Cómo coordinamos el pago y envío?`;
                       window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
                     }} 
                     className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark font-bold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                   >
-                    <span>💬 Reservar por WhatsApp (10% OFF Transferencia)</span>
+                    <span>💬 Reservar por WhatsApp (15% OFF Transferencia)</span>
                   </button>
 
                   <button 
@@ -875,13 +880,16 @@ export default function App() {
                         }}
                         className="bg-ore-card border border-white/5 rounded-lg overflow-hidden group cursor-pointer hover:border-ore-gold/50 transition shadow-xl flex flex-col justify-between"
                       >
-                        {/* CONTENEDOR DE IMAGEN OPTIMIZADO */}
                         <div className="aspect-square w-full overflow-hidden bg-ore-dark relative flex items-center justify-center">
-                          {isProductNew(relatedProduct) && (
+                          {relatedProduct.stock === 1 ? (
+                            <span className="absolute top-3 right-3 z-10 bg-ore-dark/90 border border-ore-gold/60 text-ore-gold text-[9px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded shadow-md backdrop-blur">
+                              Última Unidad
+                            </span>
+                          ) : isProductNew(relatedProduct) ? (
                             <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded shadow-md">
                               Nuevo
                             </span>
-                          )}
+                          ) : null}
 
                           <img 
                             src={relatedImg} 
@@ -917,7 +925,7 @@ export default function App() {
 
           </div>
         )}
-        {/* VISTA: COMPRAMOS ORO */}
+
         {currentView === 'gold' && (
           <div className="max-w-3xl mx-auto px-4 py-12">
             <div className="text-center space-y-4 mb-10">
@@ -1052,7 +1060,6 @@ export default function App() {
                   />
                 </div>
 
-                {/* CASILLA DE CONSENTIMIENTO LEGAL */}
                 <div className="bg-ore-dark/60 border border-white/10 rounded-lg p-4">
                   <label className="flex items-start gap-3 cursor-pointer select-none">
                     <input 
@@ -1091,7 +1098,6 @@ export default function App() {
           </div>
         )}
 
-        {/* VISTA: NOSOTROS */}
         {currentView === 'about' && (
           <div className="max-w-4xl mx-auto px-4 py-12 space-y-8">
             <h1 className="font-serif text-4xl">Nosotros</h1>
@@ -1107,7 +1113,6 @@ export default function App() {
           </div>
         )}
 
-        {/* VISTA: CONTACTO */}
         {currentView === 'contact' && (
           <div className="max-w-4xl mx-auto px-4 py-12 space-y-8">
             <div className="space-y-2">
@@ -1160,7 +1165,6 @@ export default function App() {
           </div>
         )}
 
-        {/* VISTA: PANEL DE ADMINISTRACIÓN SEGURO */}
         {currentView === 'admin' && (
           <div className="max-w-6xl mx-auto px-4 py-12">
             {!isAdminAuthenticated ? (
@@ -1221,7 +1225,6 @@ export default function App() {
 
       </main>
 
-      {/* CARRITO LATERAL */}
       {cartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm">
           <div className="w-full max-w-md bg-ore-card h-full flex flex-col border-l border-white/10 p-6 shadow-2xl">
@@ -1275,7 +1278,6 @@ export default function App() {
         </div>
       )}
 
-      {/* MODAL: GUÍA DE TALLES */}
       {sizeModalOpen && selectedProduct && (() => {
         const guideType = getSizeGuideType(selectedProduct);
         if (!guideType) return null;
@@ -1373,9 +1375,8 @@ export default function App() {
         );
       })()}
 
-      {/* MODAL DE FINALIZACIÓN DE COMPRA */}
       {checkoutModalOpen && (() => {
-        const envioInfo = calcularEnvioAndreani(postalCode, deliveryType);
+        const envioInfo = calcularEnvioAndreani(postalCode, deliveryType, cartTotal);
         const finalTotal = cartTotal + envioInfo.costo;
 
         return (
@@ -1389,7 +1390,7 @@ export default function App() {
                 <span className="text-xs uppercase tracking-[0.25em] text-ore-gold font-semibold">Envío y Finalización</span>
                 <h3 className="font-serif text-2xl sm:text-3xl text-ore-cream">Calculá tu entrega</h3>
                 <p className="text-ore-muted text-xs sm:text-sm leading-relaxed max-w-md mx-auto">
-                  Ingresá tu Código Postal para calcular el envío asegurado o seleccioná retiro sin cargo en Mendoza.
+                  Ingresá tu Código Postal para calcular el envío asegurado o retiro en Gran Mendoza (Envío local sin cargo superando $50.000).
                 </p>
               </div>
 
@@ -1424,7 +1425,7 @@ export default function App() {
                     >
                       <span className="block text-xs font-semibold uppercase tracking-wider">A Domicilio</span>
                       <span className="block text-[10px] mt-0.5 opacity-85">
-                        {envioInfo.esMendoza ? 'Cadetería ($7.000)' : 'Andreani puerta a puerta'}
+                        {envioInfo.esMendoza ? (cartTotal >= 50000 ? 'GRATIS (Superó $50k)' : 'Cadetería ($7.000)') : 'Andreani puerta a puerta'}
                       </span>
                     </button>
 
@@ -1561,7 +1562,6 @@ export default function App() {
         );
       })()}
 
-      {/* PIE DE PÁGINA */}
       <footer className="bg-ore-card border-t border-white/10 py-12 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
@@ -1592,7 +1592,6 @@ export default function App() {
         </div>
       </footer>
 
-      {/* WIDGET WHATSAPP FLOTANTE */}
       <div className="fixed bottom-6 right-6 z-50 flex items-center group">
         <div className="absolute right-full mr-3 bg-ore-card border border-ore-gold/40 text-ore-cream text-xs px-3 py-2 rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap font-sans">
           <span className="text-ore-gold font-semibold">¿Necesitás asesoramiento?</span> Escribinos
