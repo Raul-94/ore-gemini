@@ -697,11 +697,40 @@ export default function App() {
                     {selectedProduct.name}
                   </h1>
                   
-                  <p className="text-2xl font-semibold text-ore-gold mt-3">
-                    ${Number(selectedProduct.price).toLocaleString('es-AR')}
-                  </p>
+                  {/* PRECIO CONTADO Y GANCHO DE TRANSFERENCIA */}
+                  <div className="mt-3 space-y-1.5">
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-2xl sm:text-3xl font-semibold text-ore-gold">
+                        ${Number(selectedProduct.price).toLocaleString('es-AR')}
+                      </span>
+                      <span className="text-xs text-ore-muted uppercase tracking-wider">
+                        (Precio Regular)
+                      </span>
+                    </div>
+
+                    <div className="inline-block bg-ore-gold/10 border border-ore-gold/30 px-3 py-1 rounded text-xs text-ore-gold font-medium">
+                      🔥 10% de descuento abonando por transferencia o efectivo: <strong className="font-bold">${Math.round(selectedProduct.price * 0.9).toLocaleString('es-AR')}</strong>
+                    </div>
+                  </div>
+
+                  {/* INDICADOR DE STOCK / ESCASEZ ELEGANTE */}
+                  <div className="mt-3">
+                    {selectedProduct.stock === 1 ? (
+                      <p className="text-xs text-ore-gold flex items-center gap-1.5 font-medium">
+                        <span>✨</span> Pieza única disponible en taller — Lista para entrega inmediata.
+                      </p>
+                    ) : selectedProduct.stock > 1 && selectedProduct.stock <= 3 ? (
+                      <p className="text-xs text-amber-400 flex items-center gap-1.5 font-medium">
+                        <span>⚠️</span> Disponibilidad limitada: Quedan solo {selectedProduct.stock} unidades.
+                      </p>
+                    ) : (
+                      <p className="text-xs text-ore-muted">
+                        ✓ Stock disponible para envío asegurado a todo el país.
+                      </p>
+                    )}
+                  </div>
                   
-                  <p className="text-ore-muted mt-4 leading-relaxed">
+                  <p className="text-ore-muted mt-3 leading-relaxed">
                     {selectedProduct.description || 'Pieza elaborada con los más altos estándares de calidad y acabado artesanal.'}
                   </p>
 
@@ -786,29 +815,39 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* BOTONES DE ACCIÓN DE ALTA CONVERSIÓN */}
                 <div className="space-y-3 pt-2">
                   <button 
                     onClick={() => {
                       addToCart(selectedProduct);
-                      setCartOpen(true);
+                      setCheckoutModalOpen(true);
                     }} 
-                    className="w-full bg-ore-gold hover:bg-ore-gold-light text-ore-dark font-semibold py-4 px-6 uppercase text-xs tracking-widest rounded transition shadow-lg cursor-pointer flex items-center justify-center gap-2"
+                    className="w-full bg-ore-gold hover:bg-ore-gold-light text-ore-dark font-bold py-4 px-6 uppercase text-xs tracking-widest rounded transition shadow-xl cursor-pointer flex items-center justify-center gap-2 animate-pulse"
                   >
-                    <span>Agregar al carrito</span>
+                    <span>⚡ Comprar Ahora — $</span><span>{Number(selectedProduct.price).toLocaleString('es-AR')}</span>
                   </button>
 
                   <button 
                     onClick={() => {
                       const phone = "5492613737159"; 
                       const codigo = `ORE-${String(selectedProduct.id).padStart(4, '0')}`;
-                      const medidaText = selectedProduct.measure ? `*Medida:* ${selectedProduct.measure}%0A` : '';
-                      const materialText = selectedProduct.material ? `*Material:* ${selectedProduct.material}%0A` : '';
-                      const message = `Hola ORE Joyería! Quisiera realizar una consulta sobre la siguiente pieza:%0A%0A*Código:* ${codigo}%0A*Producto:* ${selectedProduct.name}%0A${materialText}${medidaText}*Precio:* $${Number(selectedProduct.price).toLocaleString('es-AR')}%0A%0A¿Tienen disponibilidad?`;
+                      const precioEfectivo = Math.round(selectedProduct.price * 0.9);
+                      const message = `Hola ORE Joyería! Me interesa comprar ahora con el 10% off por transferencia la pieza *[${codigo}] ${selectedProduct.name}* a $${precioEfectivo.toLocaleString('es-AR')}. ¿Cómo coordinamos el pago y envío?`;
                       window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
                     }} 
-                    className="w-full bg-transparent hover:bg-[#25D366]/10 text-[#25D366] border border-[#25D366] font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark font-bold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                   >
-                   <span>Consultar por este producto</span>
+                    <span>💬 Reservar por WhatsApp (10% OFF Transferencia)</span>
+                  </button>
+
+                  <button 
+                    onClick={() => {
+                      addToCart(selectedProduct);
+                      setCartOpen(true);
+                    }} 
+                    className="w-full bg-transparent hover:bg-white/5 text-ore-cream/80 border border-white/15 font-semibold py-3 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>Agregar al carrito y seguir viendo</span>
                   </button>
                 </div>
 
@@ -878,7 +917,6 @@ export default function App() {
 
           </div>
         )}
-
         {/* VISTA: COMPRAMOS ORO */}
         {currentView === 'gold' && (
           <div className="max-w-3xl mx-auto px-4 py-12">
