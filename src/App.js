@@ -434,8 +434,8 @@ export default function App() {
                         />
                         
                         {product.stock === 1 ? (
-                          <span className="absolute top-3 right-3 z-10 bg-ore-dark/90 border border-ore-gold/60 text-ore-gold text-[9px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded shadow-md backdrop-blur">
-                            Última Unidad
+                          <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[10px] font-extrabold uppercase tracking-[0.18em] px-3 py-1.5 rounded-md shadow-xl border border-white/40 flex items-center gap-1 animate-pulse">
+                            <span>✨</span> ÚLTIMA UNIDAD
                           </span>
                         ) : isProductNew(product) ? (
                           <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded shadow-md">
@@ -520,8 +520,8 @@ export default function App() {
                         >
                           <div className="h-64 overflow-hidden relative bg-ore-dark flex items-center justify-center">
                             {p.stock === 1 ? (
-                              <span className="absolute top-3 right-3 z-10 bg-ore-dark/90 border border-ore-gold/60 text-ore-gold text-[9px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded shadow-md backdrop-blur">
-                                Última Unidad
+                              <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[10px] font-extrabold uppercase tracking-[0.18em] px-3 py-1.5 rounded-md shadow-xl border border-white/40 flex items-center gap-1 animate-pulse">
+                                <span>✨</span> ÚLTIMA UNIDAD
                               </span>
                             ) : isProductNew(p) ? (
                               <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded shadow-md">
@@ -658,7 +658,12 @@ export default function App() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
               
-              <div className="rounded-lg overflow-hidden border border-white/10 bg-ore-dark shadow-xl flex items-center justify-center">
+              <div className="rounded-lg overflow-hidden border border-white/10 bg-ore-dark shadow-xl flex items-center justify-center relative">
+                {selectedProduct.stock === 1 && (
+                  <div className="absolute top-4 right-4 z-10 bg-ore-gold text-ore-dark text-xs font-extrabold uppercase tracking-[0.18em] px-3.5 py-1.5 rounded-md shadow-xl border border-white/40 flex items-center gap-1.5 animate-pulse">
+                    <span>✨</span> ÚLTIMA UNIDAD DISPONIBLE
+                  </div>
+                )}
                 <img 
                   src={selectedProduct.image} 
                   alt={selectedProduct.name} 
@@ -859,8 +864,8 @@ export default function App() {
                       >
                         <div className="aspect-square w-full overflow-hidden bg-ore-dark relative flex items-center justify-center">
                           {relatedProduct.stock === 1 ? (
-                            <span className="absolute top-3 right-3 z-10 bg-ore-dark/90 border border-ore-gold/60 text-ore-gold text-[9px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded shadow-md backdrop-blur">
-                              Última Unidad
+                            <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[10px] font-extrabold uppercase tracking-[0.18em] px-3 py-1.5 rounded-md shadow-xl border border-white/40 flex items-center gap-1 animate-pulse">
+                              <span>✨</span> ÚLTIMA UNIDAD
                             </span>
                           ) : isProductNew(relatedProduct) ? (
                             <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded shadow-md">
@@ -1211,7 +1216,7 @@ export default function App() {
             </span>
             <p className="text-xs text-ore-cream leading-snug font-medium">
               {cartTotal >= 50000 ? (
-                <span className="text-ore-gold font-bold">✨ ¡Felicitaciones! TIENES EL ENVIO GRATIS!!.</span>
+                <span className="text-ore-gold font-bold">✨ ¡Felicitaciones! Tienes Envio Gratis!! ✨</span>
               ) : (
                 <>
                   Agregá <strong className="text-ore-gold">${(50000 - cartTotal).toLocaleString('es-AR')}</strong> más y obtené <strong className="text-ore-gold">Envío Local Gratis</strong>.
