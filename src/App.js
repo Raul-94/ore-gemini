@@ -371,20 +371,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* ETIQUETA FLOTANTE SUPERIOR MINIMALISTA Y ELEGANTE */}
-      <div className="bg-ore-dark border-b border-white/5 py-2 px-4 flex justify-center">
-        <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-ore-card border border-ore-gold/40 text-[11px] uppercase tracking-wider text-ore-cream shadow-md">
-          <span className="text-ore-gold">✨</span>
-          {cartTotal >= 50000 ? (
-            <span className="text-ore-gold font-semibold">¡Envío Local Gratuito desbloqueado en Gran Mendoza!</span>
-          ) : (
-            <span>
-              Envío Local Gratuito en Gran Mendoza desde $50.000 <span className="text-ore-gold font-semibold">({`faltan $${(50000 - cartTotal).toLocaleString('es-AR')}`})</span>
-            </span>
-          )}
-        </div>
-      </div>
-
       {mobileMenuOpen && (
         <div className="md:hidden bg-ore-card border-b border-white/10 px-6 py-4 space-y-4">
           <button onClick={() => { setCurrentView('shop'); setMobileMenuOpen(false); }} className="block py-2 text-ore-cream">Tienda</button>
@@ -1215,6 +1201,40 @@ export default function App() {
         )}
 
       </main>
+
+      {/* CAJA FLOTANTE ELEGANTE CON BARRA DE PROGRESO DE ENVÍO GRATIS */}
+      <div className="fixed bottom-6 left-6 z-40 max-w-xs bg-ore-card/95 backdrop-blur-md border border-ore-gold/40 rounded-xl p-4 shadow-2xl space-y-2.5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-1">
+            <span className="text-[10px] uppercase tracking-widest text-ore-gold font-semibold block">
+              Beneficio Exclusivo Gran Mendoza
+            </span>
+            <p className="text-xs text-ore-cream leading-snug font-medium">
+              {cartTotal >= 50000 ? (
+                <span className="text-ore-gold font-bold">✨ ¡Felicitaciones! Desbloqueaste Envío Local Sin Cargo.</span>
+              ) : (
+                <>
+                  Agregá <strong className="text-ore-gold">${(50000 - cartTotal).toLocaleString('es-AR')}</strong> más y obtené <strong className="text-ore-gold">Envío Local Gratis</strong>.
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* BARRA DE PROGRESO RELLENABLE */}
+        <div className="space-y-1">
+          <div className="w-full bg-ore-dark h-2 rounded-full overflow-hidden border border-white/10">
+            <div 
+              className="bg-ore-gold h-full transition-all duration-500 ease-out"
+              style={{ width: `${Math.min((cartTotal / 50000) * 100, 100)}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[9px] text-ore-muted uppercase tracking-wider">
+            <span>$0</span>
+            <span className={cartTotal >= 50000 ? "text-ore-gold font-bold" : ""}>Meta: $50.000</span>
+          </div>
+        </div>
+      </div>
 
       {cartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm">
