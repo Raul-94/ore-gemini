@@ -259,7 +259,7 @@ export default function App() {
   const validarSoloTelefono = (valor) => valor.replace(/[^0-9+\s-]/g, '');
 
   return (
-    <div className="min-h-screen bg-ore-dark text-ore-cream flex flex-col font-sans selection:bg-ore-gold selection:text-ore-dark pb-12">
+    <div className="min-h-screen bg-ore-dark text-ore-cream flex flex-col font-sans selection:bg-ore-gold selection:text-ore-dark">
       
       <div className="bg-ore-gold text-ore-dark text-xs font-semibold py-1.5 px-4 text-center tracking-wider flex items-center justify-center gap-2">
         <AlertCircle size={14} />
@@ -370,6 +370,20 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      {/* ETIQUETA FLOTANTE SUPERIOR MINIMALISTA Y ELEGANTE */}
+      <div className="bg-ore-dark border-b border-white/5 py-2 px-4 flex justify-center">
+        <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-ore-card border border-ore-gold/40 text-[11px] uppercase tracking-wider text-ore-cream shadow-md">
+          <span className="text-ore-gold">✨</span>
+          {cartTotal >= 50000 ? (
+            <span className="text-ore-gold font-semibold">¡Envío Local Gratuito desbloqueado en Gran Mendoza!</span>
+          ) : (
+            <span>
+              Envío Local Gratuito en Gran Mendoza desde $50.000 <span className="text-ore-gold font-semibold">({`faltan $${(50000 - cartTotal).toLocaleString('es-AR')}`})</span>
+            </span>
+          )}
+        </div>
+      </div>
 
       {mobileMenuOpen && (
         <div className="md:hidden bg-ore-card border-b border-white/10 px-6 py-4 space-y-4">
@@ -1201,21 +1215,6 @@ export default function App() {
         )}
 
       </main>
-
-      {/* CINTA FLOTANTE INFERIOR PERSISTENTE (Elegante, sutil y no invasiva) */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-ore-card/95 backdrop-blur-md border-t border-ore-gold/30 py-2.5 px-4 text-center shadow-2xl">
-        <div className="max-w-4xl mx-auto flex items-center justify-center gap-3 text-[11px] tracking-widest uppercase font-medium">
-          {cartTotal >= 50000 ? (
-            <span className="text-ore-gold flex items-center gap-2">
-              <span>✨</span> ¡Envío Local Gratuito desbloqueado en Gran Mendoza!
-            </span>
-          ) : (
-            <span className="text-ore-cream/90 flex items-center gap-2">
-              <span>💎</span> Te faltan <strong className="text-ore-gold font-bold">${(50000 - cartTotal).toLocaleString('es-AR')}</strong> para obtener <strong className="text-ore-gold">Envío Local Gratuito</strong> en Gran Mendoza (desde $50.000)
-            </span>
-          )}
-        </div>
-      </div>
 
       {cartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm">
