@@ -259,7 +259,7 @@ export default function App() {
   const validarSoloTelefono = (valor) => valor.replace(/[^0-9+\s-]/g, '');
 
   return (
-    <div className="min-h-screen bg-ore-dark text-ore-cream flex flex-col font-sans selection:bg-ore-gold selection:text-ore-dark">
+    <div className="min-h-screen bg-ore-dark text-ore-cream flex flex-col font-sans selection:bg-ore-gold selection:text-ore-dark pb-12">
       
       <div className="bg-ore-gold text-ore-dark text-xs font-semibold py-1.5 px-4 text-center tracking-wider flex items-center justify-center gap-2">
         <AlertCircle size={14} />
@@ -367,29 +367,6 @@ export default function App() {
               <span className="hidden lg:inline">Carrito</span>
               <span className="absolute bottom-0 left-0 h-[1.5px] w-0 bg-gradient-to-r from-transparent via-ore-gold to-transparent transition-all duration-300 group-hover:w-full opacity-80" />
             </button>
-          </div>
-        </div>
-
-        {/* BARRA DE PROGRESO GLOBAL DE ENVÍO GRATIS (Diseño elegante de alta gama) */}
-        <div className="bg-ore-card border-t border-white/5 py-2 px-4 text-center">
-          <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-2 text-[11px] tracking-wider uppercase">
-            {cartTotal >= 50000 ? (
-              <span className="text-ore-gold font-semibold flex items-center gap-1.5">
-                <span>✨</span> ¡Envío Local GRATIS desbloqueado en Gran Mendoza!
-              </span>
-            ) : (
-              <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-3">
-                <span className="text-ore-cream/80">
-                  Te faltan <strong className="text-ore-gold font-bold">${(50000 - cartTotal).toLocaleString('es-AR')}</strong> para obtener <strong className="text-ore-gold">Envío Local GRATIS</strong> (Gran Mendoza desde $50.000)
-                </span>
-                <div className="w-32 bg-ore-dark h-1.5 rounded-full overflow-hidden border border-white/10 hidden sm:block">
-                  <div 
-                    className="bg-ore-gold h-full transition-all duration-300"
-                    style={{ width: `${Math.min((cartTotal / 50000) * 100, 100)}%` }}
-                  />
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </header>
@@ -1224,6 +1201,21 @@ export default function App() {
         )}
 
       </main>
+
+      {/* CINTA FLOTANTE INFERIOR PERSISTENTE (Elegante, sutil y no invasiva) */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-ore-card/95 backdrop-blur-md border-t border-ore-gold/30 py-2.5 px-4 text-center shadow-2xl">
+        <div className="max-w-4xl mx-auto flex items-center justify-center gap-3 text-[11px] tracking-widest uppercase font-medium">
+          {cartTotal >= 50000 ? (
+            <span className="text-ore-gold flex items-center gap-2">
+              <span>✨</span> ¡Envío Local Gratuito desbloqueado en Gran Mendoza!
+            </span>
+          ) : (
+            <span className="text-ore-cream/90 flex items-center gap-2">
+              <span>💎</span> Te faltan <strong className="text-ore-gold font-bold">${(50000 - cartTotal).toLocaleString('es-AR')}</strong> para obtener <strong className="text-ore-gold">Envío Local Gratuito</strong> en Gran Mendoza (desde $50.000)
+            </span>
+          )}
+        </div>
+      </div>
 
       {cartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm">
