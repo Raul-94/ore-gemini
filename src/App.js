@@ -1211,7 +1211,7 @@ export default function App() {
             </span>
             <p className="text-xs text-ore-cream leading-snug font-medium">
               {cartTotal >= 50000 ? (
-                <span className="text-ore-gold font-bold">✨ ¡Felicitaciones! Desbloqueaste Envío Local Sin Cargo.</span>
+                <span className="text-ore-gold font-bold">✨ ¡Felicitaciones! TIENES EL ENVIO GRATIS!!.</span>
               ) : (
                 <>
                   Agregá <strong className="text-ore-gold">${(50000 - cartTotal).toLocaleString('es-AR')}</strong> más y obtené <strong className="text-ore-gold">Envío Local Gratis</strong>.
