@@ -389,37 +389,43 @@ export default function App() {
       </header>
 
       {/* BARRA DE PROGRESO DE ENVÍO GRATIS UBICADA EN EL BORDE SUPERIOR DERECHO, CERCA DEL CARRITO */}
-        {currentView !== 'admin' && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 flex justify-end">
-            <div className="w-full max-w-[260px] sm:w-72 bg-ore-card/95 backdrop-blur-md border border-ore-gold/35 rounded-xl px-3.5 py-2.5 shadow-xl space-y-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[9px] uppercase tracking-[0.18em] text-ore-gold font-semibold">
-                  Envío Gran Mendoza
-                </span>
-                <span className="text-[9px] font-mono text-ore-muted">
-                  {Math.min(Math.round((cartTotal / 50000) * 100), 100)}%
-                </span>
-              </div>
+        {/* BARRA DE PROGRESO DE ENVÍO GRATIS FLOTANTE Y RESPONSIVE */}
+{currentView !== 'admin' && (
+  <div className="fixed top-28 sm:top-24 right-3 sm:right-6 z-30 w-[235px] sm:w-72 bg-[#FAF6EE]/95 backdrop-blur-md border border-[#C5A059]/35 rounded-xl px-3.5 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.22)] space-y-1.5 transition-all duration-300">
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-[9px] uppercase tracking-[0.18em] text-[#8E6D2F] font-semibold">
+        Envío Gran Mendoza
+      </span>
+      <span className="text-[9px] font-mono text-[#6E6557]">
+        {Math.min(Math.round((cartTotal / 50000) * 100), 100)}%
+      </span>
+    </div>
 
-              <p className="text-[11px] text-ore-cream leading-snug">
-                {cartTotal >= 50000 ? (
-                  <span className="text-ore-gold font-semibold">✨ ¡Envío local gratis desbloqueado!</span>
-                ) : (
-                  <>
-                    Sumá <strong className="text-ore-gold">${(50000 - cartTotal).toLocaleString('es-AR')}</strong> para <strong className="text-ore-gold">envío gratis</strong>.
-                  </>
-                )}
-              </p>
+    <p className="text-[11px] text-[#26221C] leading-snug">
+      {cartTotal >= 50000 ? (
+        <span className="text-[#8E6D2F] font-semibold">✨ ¡Felicitaciones! Envío local gratis!</span>
+      ) : (
+        <>
+          Sumá{' '}
+          <strong className="text-[#8E6D2F] font-semibold">
+            ${(50000 - cartTotal).toLocaleString('es-AR')}
+          </strong>{' '}
+          para{' '}
+          <strong className="text-[#8E6D2F] font-semibold">
+            envío gratis
+          </strong>.
+        </>
+      )}
+    </p>
 
-              <div className="w-full bg-ore-dark h-1.5 rounded-full overflow-hidden border border-white/10">
-                <div 
-                  className="bg-ore-gold h-full transition-all duration-500 ease-out"
-                  style={{ width: `${Math.min((cartTotal / 50000) * 100, 100)}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
+    <div className="w-full bg-[#E8E0D0] h-1.5 rounded-full overflow-hidden border border-[#C5A059]/20">
+      <div
+        className="bg-gradient-to-r from-[#B69148] to-[#D4B475] h-full transition-all duration-500 ease-out"
+        style={{ width: `${Math.min((cartTotal / 50000) * 100, 100)}%` }}
+      />
+    </div>
+  </div>
+)}
       {mobileMenuOpen && (
         <div className="md:hidden bg-ore-card border-b border-white/10 px-6 py-4 space-y-4">
           <button onClick={() => { setCurrentView('shop'); setMobileMenuOpen(false); }} className="block py-2 text-ore-cream">Tienda</button>
