@@ -410,31 +410,28 @@ export default function AdminDashboard({
               </div>
               <div>
               <label className="block text-xs uppercase tracking-wider text-ore-muted mb-1">Stock {editingId ? 'Actual' : 'Inicial'} *</label>
-<input 
-  type="number" 
-  min="0"
-  step="1"
-  value={stock} 
-  onChange={e => {
-    const val = e.target.value;
-    if (val === '') {
-      setStock('');
-      return;
-    }
-    const parsed = parseInt(val, 10);
-    if (!Number.isNaN(parsed) && parsed >= 0) {
-      setStock(parsed);
-    }
-  }}
-  onBlur={() => {
-    if (stock === '') setStock(0);
-  }}
-  className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
-  required
-/>
-<p className="text-[11px] text-ore-muted mt-1">
-  Si el stock es <strong className="text-ore-cream">0</strong>, no se mostrará en la tienda del cliente pero seguirá visible aquí como <strong className="text-red-400">Sin stock</strong>.
-</p>
+              <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={stock}
+            onChange={(e) => {
+                const soloNumeros = e.target.value.replace(/\D/g, '');
+                if (soloNumeros === '') {
+                setStock('');
+                return;
+                }
+                setStock(parseInt(soloNumeros, 10));
+            }}
+            onBlur={() => {
+                if (stock === '') setStock(0);
+            }}
+            className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
+            required
+            />
+            <p className="text-[11px] text-ore-muted mt-1">
+            Si el stock es <strong className="text-ore-cream">0</strong>, no se mostrará en la tienda del cliente pero seguirá visible aquí como <strong className="text-red-400">Sin stock</strong>.
+            </p>
               </div>
             </div>
 
