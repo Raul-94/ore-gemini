@@ -391,7 +391,7 @@ export default function App() {
       {/* BARRA DE PROGRESO DE ENVÍO GRATIS UBICADA EN EL BORDE SUPERIOR DERECHO, CERCA DEL CARRITO */}
         {/* BARRA DE PROGRESO DE ENVÍO GRATIS FLOTANTE ARRIBA A LA IZQUIERDA */}
 {currentView !== 'admin' && (
-  <div className="fixed top-32 sm:top-28 left-3 sm:left-6 z-30 w-[230px] sm:w-72 bg-[#C8A96E]/95 backdrop-blur-md border border-[#141414]/25 rounded-xl px-3.5 py-2.5 shadow-[0_10px_28px_rgba(0,0,0,0.3)] space-y-1.5 transition-all duration-300">
+  <div className="fixed top-32 sm:top-28 right-3 sm:right-6 z-30 w-[230px] sm:w-72 bg-[#C8A96E]/95 backdrop-blur-md border border-[#141414]/25 rounded-xl px-3.5 py-2.5 shadow-[0_10px_28px_rgba(0,0,0,0.3)] space-y-1.5 transition-all duration-300">
     <div className="flex items-center justify-between gap-2">
       <span className="text-[9px] uppercase tracking-[0.18em] text-[#111111] font-semibold">
         Envío Gran Mendoza
