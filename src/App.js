@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-    ShoppingBag, Search, Menu, X, Shield, Truck, Phone, Mail,
-    ArrowRight, CheckCircle, AlertCircle, Settings, Trash2, 
-    Plus, Edit, Eye, Filter, RefreshCw, ChevronRight, Lock, User
+    ShoppingBag, Menu, X, Truck, Phone, Mail,
+    ArrowRight, CheckCircle, AlertCircle, Trash2, Lock
   } from 'lucide-react';
 import { supabase } from './supabase';
 import AdminDashboard from './AdminDashboard';
@@ -168,6 +167,9 @@ export default function App() {
   ];
 
   const [products, setProducts] = useState(sampleProducts);
+
+  // Solo productos con stock mayor a 0 son visibles para el cliente en el catálogo
+  const availableProducts = products.filter(p => Number(p.stock ?? 0) > 0);
   
   const fetchProductsFromSupabase = async () => {
     const { data, error } = await supabase
@@ -202,6 +204,8 @@ export default function App() {
   };
 
   const addToCart = (product, selectedSize) => {
+    if (!product || Number(product.stock ?? 0) <= 0) return;
+
     const itemKey = `${product.id}-${selectedSize || 'unico'}`;
     const existing = cart.find(item => item.cartKey === itemKey);
     if (existing) {
@@ -257,6 +261,19 @@ export default function App() {
   const validarSoloTexto = (valor) => valor.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
   const validarSoloNumerosPeso = (valor) => valor.replace(/[^0-9.,]/g, '');
   const validarSoloTelefono = (valor) => valor.replace(/[^0-9+\s-]/g, '');
+
+  const renderLastUnitBadge = (product, large = false) => {
+    if (Number(product?.stock ?? 0) !== 1) return null;
+
+    return (
+      <span
+        className={`absolute ${large ? 'top-4 right-4 px-3 py-1.5 gap-1.5' : 'top-3 right-3 px-2.5 py-1 gap-1'} z-10 bg-ore-dark/90 backdrop-blur-md border border-ore-gold/60 text-ore-gold text-[10px] font-medium tracking-[0.15em] rounded shadow-md flex items-center select-none`}
+      >
+        <span className="text-xs leading-none">✨</span>
+        <span>{large ? 'Última unidad disponible' : 'Última unidad'}</span>
+      </span>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-ore-dark text-ore-cream flex flex-col font-sans selection:bg-ore-gold selection:text-ore-dark">
@@ -371,6 +388,37 @@ export default function App() {
         </div>
       </header>
 
+      {/* BARRA DE PROGRESO DE ENVÍO GRATIS UBICADA EN EL BORDE SUPERIOR DERECHO, CERCA DEL CARRITO */}
+      {currentView !== 'admin' && (
+        <div className="fixed top-24 right-4 sm:right-6 z-30 w-64 sm:w-72 bg-ore-card/95 backdrop-blur-md border border-ore-gold/35 rounded-xl px-3.5 py-2.5 shadow-xl space-y-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[9px] uppercase tracking-[0.18em] text-ore-gold font-semibold">
+              Envío Gran Mendoza
+            </span>
+            <span className="text-[9px] font-mono text-ore-muted">
+              {Math.min(Math.round((cartTotal / 50000) * 100), 100)}%
+            </span>
+          </div>
+
+          <p className="text-[11px] text-ore-cream leading-snug">
+            {cartTotal >= 50000 ? (
+              <span className="text-ore-gold font-semibold">✨ ¡Envío local gratis desbloqueado!</span>
+            ) : (
+              <>
+                Sumá <strong className="text-ore-gold">${(50000 - cartTotal).toLocaleString('es-AR')}</strong> para <strong className="text-ore-gold">envío gratis</strong>.
+              </>
+            )}
+          </p>
+
+          <div className="w-full bg-ore-dark h-1.5 rounded-full overflow-hidden border border-white/10">
+            <div 
+              className="bg-ore-gold h-full transition-all duration-500 ease-out"
+              style={{ width: `${Math.min((cartTotal / 50000) * 100, 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {mobileMenuOpen && (
         <div className="md:hidden bg-ore-card border-b border-white/10 px-6 py-4 space-y-4">
           <button onClick={() => { setCurrentView('shop'); setMobileMenuOpen(false); }} className="block py-2 text-ore-cream">Tienda</button>
@@ -423,7 +471,7 @@ export default function App() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {products.slice(0, 4).map(product => (
+                  {availableProducts.slice(0, 4).map(product => (
                     <div key={product.id} className="group cursor-pointer bg-ore-card rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition border border-white/5 flex flex-col" onClick={() => { setSelectedProduct(product); setCurrentView('product-detail'); }}>
                       <div className="relative h-72 overflow-hidden bg-ore-dark flex items-center justify-center">
                         <img 
@@ -433,15 +481,12 @@ export default function App() {
                           className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500"
                         />
                         
-                        {product.stock === 1 ? (
-                          <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[10px] font-extrabold uppercase tracking-[0.18em] px-3 py-1.5 rounded-md shadow-xl border border-white/40 flex items-center gap-1 animate-pulse">
-                            <span>✨</span> ÚLTIMA UNIDAD
-                          </span>
-                        ) : isProductNew(product) ? (
+                        {renderLastUnitBadge(product)}
+                        {Number(product.stock) !== 1 && isProductNew(product) && (
                           <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded shadow-md">
                             Nuevo
                           </span>
-                        ) : null}
+                        )}
 
                         <span className="absolute top-3 left-3 bg-ore-dark/80 backdrop-blur text-ore-gold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded">
                           {product.material}
@@ -495,7 +540,7 @@ export default function App() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                  {products
+                  {availableProducts
                     .filter(p => {
                       const matchesCategoryName = p.category && p.category.toLowerCase().trim() === filterCategory.toLowerCase().trim();
                       const matchesCategoryId = categories.find(c => c.name === filterCategory)?.id === p.category_id;
@@ -519,15 +564,12 @@ export default function App() {
                           className="bg-ore-card border border-white/5 rounded-lg overflow-hidden shadow-lg hover:border-ore-gold transition group cursor-pointer"
                         >
                           <div className="h-64 overflow-hidden relative bg-ore-dark flex items-center justify-center">
-                            {p.stock === 1 ? (
-                              <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[10px] font-extrabold uppercase tracking-[0.18em] px-3 py-1.5 rounded-md shadow-xl border border-white/40 flex items-center gap-1 animate-pulse">
-                                <span>✨</span> ÚLTIMA UNIDAD
-                              </span>
-                            ) : isProductNew(p) ? (
+                            {renderLastUnitBadge(p)}
+                            {Number(p.stock) !== 1 && isProductNew(p) && (
                               <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded shadow-md">
                                 Nuevo
                               </span>
-                            ) : null}
+                            )}
 
                             {productImg ? (
                               <img 
@@ -570,7 +612,7 @@ export default function App() {
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                   {materials && materials.map(mat => {
-                    const catMatProducts = products.filter(p => {
+                    const catMatProducts = availableProducts.filter(p => {
                       const matchesCat = (p.category && p.category.toLowerCase().trim() === filterCategory.toLowerCase().trim()) || (categories.find(c => c.name === filterCategory)?.id === p.category_id);
                       const matchesMat = (p.material && p.material.toLowerCase().trim() === mat.name.toLowerCase().trim()) || (mat.id === p.material_id);
                       return matchesCat && matchesMat;
@@ -612,7 +654,7 @@ export default function App() {
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                   {categories && categories.map(cat => {
-                    const catProducts = products.filter(p => {
+                    const catProducts = availableProducts.filter(p => {
                       const matchesName = p.category && p.category.toLowerCase().trim() === cat.name.toLowerCase().trim();
                       const matchesId = p.category_id === cat.id;
                       return matchesName || matchesId;
@@ -659,11 +701,7 @@ export default function App() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
               
               <div className="rounded-lg overflow-hidden border border-white/10 bg-ore-dark shadow-xl flex items-center justify-center relative">
-                {selectedProduct.stock === 1 && (
-                  <div className="absolute top-4 right-4 z-10 bg-ore-gold text-ore-dark text-xs font-extrabold uppercase tracking-[0.18em] px-3.5 py-1.5 rounded-md shadow-xl border border-white/40 flex items-center gap-1.5 animate-pulse">
-                    <span>✨</span> ÚLTIMA UNIDAD DISPONIBLE
-                  </div>
-                )}
+                {renderLastUnitBadge(selectedProduct, true)}
                 <img 
                   src={selectedProduct.image} 
                   alt={selectedProduct.name} 
@@ -701,19 +739,39 @@ export default function App() {
 
                   {/* INDICADOR DE STOCK / ESCASEZ ELEGANTE */}
                   <div className="mt-3">
-                    {selectedProduct.stock === 1 ? (
-                      <p className="text-xs text-ore-gold flex items-center gap-1.5 font-medium">
-                        <span>✨</span> Pieza única disponible en taller — Lista para entrega inmediata.
-                      </p>
-                    ) : selectedProduct.stock > 1 && selectedProduct.stock <= 3 ? (
-                      <p className="text-xs text-amber-400 flex items-center gap-1.5 font-medium">
-                        <span>⚠️</span> Disponibilidad limitada: Quedan solo {selectedProduct.stock} unidades.
-                      </p>
-                    ) : (
-                      <p className="text-xs text-ore-muted">
-                        ✓ Stock disponible para envío asegurado a todo el país.
-                      </p>
-                    )}
+                    {(() => {
+                      const stockActual = Number(selectedProduct.stock ?? 0);
+
+                      if (stockActual <= 0) {
+                        return (
+                          <p className="text-xs text-red-400 flex items-center gap-1.5 font-medium">
+                            ✕ Sin stock disponible por el momento.
+                          </p>
+                        );
+                      }
+
+                      if (stockActual === 1) {
+                        return (
+                          <p className="text-xs text-ore-gold flex items-center gap-1.5 font-medium">
+                            <span>✨</span> Pieza única disponible en taller — Lista para entrega inmediata.
+                          </p>
+                        );
+                      }
+
+                      if (stockActual <= 3) {
+                        return (
+                          <p className="text-xs text-amber-400 flex items-center gap-1.5 font-medium">
+                            <span>⚠️</span> Disponibilidad limitada: Quedan solo {stockActual} unidades.
+                          </p>
+                        );
+                      }
+
+                      return (
+                        <p className="text-xs text-ore-muted">
+                          ✓ Stock disponible para envío asegurado a todo el país.
+                        </p>
+                      );
+                    })()}
                   </div>
                   
                   <p className="text-ore-muted mt-3 leading-relaxed">
@@ -805,37 +863,50 @@ export default function App() {
                 {/* BOTONES DE ACCIÓN DE ALTA CONVERSIÓN */}
                 <div className="space-y-3 pt-2">
                   <button 
+                    disabled={Number(selectedProduct.stock ?? 0) <= 0}
                     onClick={() => {
                       addToCart(selectedProduct);
                       setCheckoutModalOpen(true);
                     }} 
-                    className="w-full bg-ore-gold hover:bg-ore-gold-light text-ore-dark font-bold py-4 px-6 uppercase text-xs tracking-widest rounded transition shadow-xl cursor-pointer flex items-center justify-center gap-2 animate-pulse"
+                    className={`w-full font-bold py-4 px-6 uppercase text-xs tracking-widest rounded transition shadow-xl flex items-center justify-center gap-2 ${
+                      Number(selectedProduct.stock ?? 0) > 0
+                        ? 'bg-ore-gold hover:bg-ore-gold-light text-ore-dark cursor-pointer'
+                        : 'bg-white/10 text-ore-muted cursor-not-allowed'
+                    }`}
                   >
-                    <span>⚡ Comprar Ahora — $</span><span>{Number(selectedProduct.price).toLocaleString('es-AR')}</span>
+                    <span>
+                      {Number(selectedProduct.stock ?? 0) > 0
+                        ? `⚡ Comprar Ahora — $${Number(selectedProduct.price).toLocaleString('es-AR')}`
+                        : 'Sin stock disponible'}
+                    </span>
                   </button>
 
-                  <button 
-                    onClick={() => {
-                      const phone = "5492613737159"; 
-                      const codigo = `ORE-${String(selectedProduct.id).padStart(4, '0')}`;
-                      const precioEfectivo = Math.round(selectedProduct.price * 0.85);
-                      const message = `Hola ORE Joyería! Me interesa comprar ahora con el 15% off por transferencia la pieza *[${codigo}] ${selectedProduct.name}* a $${precioEfectivo.toLocaleString('es-AR')}. ¿Cómo coordinamos el pago y envío?`;
-                      window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-                    }} 
-                    className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark font-bold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
-                  >
-                    <span>💬 Reservar por WhatsApp (15% OFF Transferencia)</span>
-                  </button>
+                  {Number(selectedProduct.stock ?? 0) > 0 && (
+                    <>
+                      <button 
+                        onClick={() => {
+                          const phone = "5492613737159"; 
+                          const codigo = `ORE-${String(selectedProduct.id).padStart(4, '0')}`;
+                          const precioEfectivo = Math.round(selectedProduct.price * 0.85);
+                          const message = `Hola ORE Joyería! Me interesa comprar ahora con el 15% off por transferencia la pieza *[${codigo}] ${selectedProduct.name}* a $${precioEfectivo.toLocaleString('es-AR')}. ¿Cómo coordinamos el pago y envío?`;
+                          window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+                        }} 
+                        className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark font-bold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                      >
+                        <span>💬 Reservar por WhatsApp (15% OFF Transferencia)</span>
+                      </button>
 
-                  <button 
-                    onClick={() => {
-                      addToCart(selectedProduct);
-                      setCartOpen(true);
-                    }} 
-                    className="w-full bg-transparent hover:bg-white/5 text-ore-cream/80 border border-white/15 font-semibold py-3 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <span>Agregar al carrito y seguir viendo</span>
-                  </button>
+                      <button 
+                        onClick={() => {
+                          addToCart(selectedProduct);
+                          setCartOpen(true);
+                        }} 
+                        className="w-full bg-transparent hover:bg-white/5 text-ore-cream/80 border border-white/15 font-semibold py-3 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <span>Agregar al carrito y seguir viendo</span>
+                      </button>
+                    </>
+                  )}
                 </div>
 
               </div>
@@ -848,7 +919,7 @@ export default function App() {
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-                {products
+                {availableProducts
                   .filter(p => p.id !== selectedProduct.id && p.material_id === selectedProduct.material_id)
                   .slice(0, 4)
                   .map(relatedProduct => {
@@ -863,15 +934,12 @@ export default function App() {
                         className="bg-ore-card border border-white/5 rounded-lg overflow-hidden group cursor-pointer hover:border-ore-gold/50 transition shadow-xl flex flex-col justify-between"
                       >
                         <div className="aspect-square w-full overflow-hidden bg-ore-dark relative flex items-center justify-center">
-                          {relatedProduct.stock === 1 ? (
-                            <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[10px] font-extrabold uppercase tracking-[0.18em] px-3 py-1.5 rounded-md shadow-xl border border-white/40 flex items-center gap-1 animate-pulse">
-                              <span>✨</span> ÚLTIMA UNIDAD
-                            </span>
-                          ) : isProductNew(relatedProduct) ? (
+                          {renderLastUnitBadge(relatedProduct)}
+                          {Number(relatedProduct.stock) !== 1 && isProductNew(relatedProduct) && (
                             <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded shadow-md">
                               Nuevo
                             </span>
-                          ) : null}
+                          )}
 
                           <img 
                             src={relatedImg} 
@@ -1206,40 +1274,6 @@ export default function App() {
         )}
 
       </main>
-
-      {/* CAJA FLOTANTE ELEGANTE CON BARRA DE PROGRESO DE ENVÍO GRATIS */}
-      <div className="fixed bottom-6 left-6 z-40 max-w-xs bg-ore-card/95 backdrop-blur-md border border-ore-gold/40 rounded-xl p-4 shadow-2xl space-y-2.5">
-        <div className="flex items-start justify-between gap-2">
-          <div className="space-y-1">
-            <span className="text-[10px] uppercase tracking-widest text-ore-gold font-semibold block">
-              Beneficio Exclusivo Gran Mendoza
-            </span>
-            <p className="text-xs text-ore-cream leading-snug font-medium">
-              {cartTotal >= 50000 ? (
-                <span className="text-ore-gold font-bold">✨ ¡Felicitaciones! Tienes Envio Gratis!! ✨</span>
-              ) : (
-                <>
-                  Agregá <strong className="text-ore-gold">${(50000 - cartTotal).toLocaleString('es-AR')}</strong> más y obtené <strong className="text-ore-gold">Envío Local Gratis</strong>.
-                </>
-              )}
-            </p>
-          </div>
-        </div>
-
-        {/* BARRA DE PROGRESO RELLENABLE */}
-        <div className="space-y-1">
-          <div className="w-full bg-ore-dark h-2 rounded-full overflow-hidden border border-white/10">
-            <div 
-              className="bg-ore-gold h-full transition-all duration-500 ease-out"
-              style={{ width: `${Math.min((cartTotal / 50000) * 100, 100)}%` }}
-            />
-          </div>
-          <div className="flex justify-between text-[9px] text-ore-muted uppercase tracking-wider">
-            <span>$0</span>
-            <span className={cartTotal >= 50000 ? "text-ore-gold font-bold" : ""}>Meta: $50.000</span>
-          </div>
-        </div>
-      </div>
 
       {cartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm">

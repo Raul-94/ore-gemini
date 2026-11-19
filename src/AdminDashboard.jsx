@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from './supabase';
-import { Trash2, Edit, Plus, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Trash2, CheckCircle } from 'lucide-react';
 
 export default function AdminDashboard({ 
   categories, 
@@ -17,6 +17,7 @@ export default function AdminDashboard({
   // Estados para búsqueda y filtrado en inventario
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('Todos');
+  const [stockFilter, setStockFilter] = useState('Todos'); // 'Todos' | 'ConStock' | 'SinStock'
 
   // Formulario Producto
   const [editingId, setEditingId] = useState(null);
@@ -33,6 +34,12 @@ export default function AdminDashboard({
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const normalizeStock = (val) => {
+    if (val === '' || val === null || val === undefined) return 0;
+    const parsed = parseInt(val, 10);
+    return Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
+  };
 
   // Crear o Editar Producto
   const handleSubmitProduct = async (e) => {
@@ -60,11 +67,14 @@ export default function AdminDashboard({
         imageUrl = publicUrlData.publicUrl;
       }
 
+      const cleanStock = normalizeStock(stock);
+      const cleanPrice = parseFloat(price);
+
       const productData = {
-        title,
+        title: title.trim(),
         description,
-        price: parseFloat(price),
-        stock: parseInt(stock, 10),
+        price: Number.isNaN(cleanPrice) ? 0 : cleanPrice,
+        stock: cleanStock,
         category_id: selectedCategory ? parseInt(selectedCategory, 10) : null,
         material_id: selectedMaterial ? parseInt(selectedMaterial, 10) : null,
         measure: measure || null,
@@ -72,14 +82,22 @@ export default function AdminDashboard({
       };
 
       if (editingId) {
-        // Actualizar producto existente
-        const { error } = await supabase
+        // Actualizar producto existente y verificar fila devuelta
+        const { data, error } = await supabase
           .from('products')
           .update(productData)
-          .eq('id', editingId);
+          .eq('id', editingId)
+          .select()
+          .single();
     
         if (error) throw error;
-        setMessage('¡Producto actualizado con éxito!');
+        if (!data) throw new Error('No se pudo confirmar la actualización del producto.');
+
+        setMessage(
+          cleanStock === 0
+            ? '¡Producto actualizado! Como su stock es 0, se ocultó automáticamente del catálogo del cliente y quedó marcado como SIN STOCK en el inventario.'
+            : '¡Producto actualizado con éxito!'
+        );
       } else {
         // Crear nuevo producto
         const { error } = await supabase.from('products').insert([productData]);
@@ -89,7 +107,7 @@ export default function AdminDashboard({
     
       setIsSuccess(true);
       resetForm();
-      fetchProductsFromSupabase();
+      await fetchProductsFromSupabase();
     } catch (err) {
       setMessage(`Error: ${err.message}`);
     } finally {
@@ -99,10 +117,10 @@ export default function AdminDashboard({
 
   const handleEdit = (product) => {
     setEditingId(product.id);
-    setTitle(product.title || product.name);
+    setTitle(product.title || product.name || '');
     setDescription(product.description || '');
-    setPrice(product.price);
-    setStock(product.stock);
+    setPrice(product.price ?? '');
+    setStock(normalizeStock(product.stock));
     setSelectedCategory(product.category_id || '');
     setSelectedMaterial(product.material_id || '');
     setMeasure(product.measure || ''); 
@@ -123,7 +141,7 @@ export default function AdminDashboard({
       setMessage(`Error al eliminar: ${error.message}`);
     } else {
       setMessage('Producto eliminado correctamente');
-      fetchProductsFromSupabase();
+      await fetchProductsFromSupabase();
     }
   };
 
@@ -188,6 +206,8 @@ export default function AdminDashboard({
     }
   };
 
+  const outOfStockCount = products.filter(p => normalizeStock(p.stock) === 0).length;
+
   // Lógica de filtrado en tiempo real para el inventario
   const filteredProducts = products.filter(product => {
     const codigoStr = `ORE-${String(product.id).padStart(4, '0')}`.toLowerCase();
@@ -199,7 +219,13 @@ export default function AdminDashboard({
       (product.category && product.category.toLowerCase().trim() === selectedCategoryFilter.toLowerCase().trim()) ||
       (categories.find(c => c.name === selectedCategoryFilter)?.id === product.category_id);
 
-    return matchesSearch && matchesCategory;
+    const prodStock = normalizeStock(product.stock);
+    const matchesStock =
+      stockFilter === 'Todos' ||
+      (stockFilter === 'SinStock' && prodStock === 0) ||
+      (stockFilter === 'ConStock' && prodStock > 0);
+
+    return matchesSearch && matchesCategory && matchesStock;
   });
 
   return (
@@ -339,7 +365,7 @@ export default function AdminDashboard({
               {editingId ? 'Editar Producto' : 'Cargar Nuevo Producto con Foto'}
             </h3>
             {editingId && (
-              <button onClick={resetForm} className="text-xs text-ore-muted hover:text-ore-gold underline uppercase tracking-wider">
+              <button type="button" onClick={resetForm} className="text-xs text-ore-muted hover:text-ore-gold underline uppercase tracking-wider">
                 Cancelar edición
               </button>
             )}
@@ -363,6 +389,7 @@ export default function AdminDashboard({
                 <input 
                   type="number" 
                   step="0.01" 
+                  min="0"
                   value={price} 
                   onChange={e => setPrice(e.target.value)} 
                   className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold" 
@@ -370,14 +397,29 @@ export default function AdminDashboard({
                 />
               </div>
               <div>
-                <label className="block text-xs uppercase tracking-wider text-ore-muted mb-1">Stock Inicial *</label>
+                <label className="block text-xs uppercase tracking-wider text-ore-muted mb-1">Stock {editingId ? 'Actual' : 'Inicial'} *</label>
                 <input 
                   type="number" 
+                  min="0"
+                  step="1"
                   value={stock} 
-                  onChange={e => setStock(e.target.value)} 
+                  onChange={e => {
+                    const val = e.target.value;
+                    if (val === '') {
+                      setStock('');
+                      return;
+                    }
+                    const parsed = parseInt(val, 10);
+                    if (!Number.isNaN(parsed) && parsed >= 0) {
+                      setStock(parsed);
+                    }
+                  }} 
                   className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold" 
                   required 
                 />
+                <p className="text-[11px] text-ore-muted mt-1">
+                  Si el stock es <strong className="text-ore-cream">0</strong>, no se mostrará en la tienda del cliente pero seguirá visible aquí como <strong className="text-red-400">Sin stock</strong>.
+                </p>
               </div>
             </div>
 
@@ -479,13 +521,22 @@ export default function AdminDashboard({
           <h3 className="font-serif text-2xl text-ore-cream">
             Inventario Actual ({filteredProducts.length} de {products.length} productos)
           </h3>
+          {outOfStockCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setStockFilter(stockFilter === 'SinStock' ? 'Todos' : 'SinStock')}
+              className="text-xs bg-red-500/15 border border-red-500/40 text-red-300 px-3 py-1.5 rounded-full hover:bg-red-500/25 transition cursor-pointer"
+            >
+              {outOfStockCount} {outOfStockCount === 1 ? 'producto sin stock' : 'productos sin stock'}
+            </button>
+          )}
         </div>
 
         {/* BARRA DE BÚSQUEDA RÁPIDA Y FILTROS DE INVENTARIO */}
-        <div className="bg-ore-card p-4 rounded-lg border border-white/10 flex flex-col sm:flex-row gap-4 items-center justify-between shadow">
+        <div className="bg-ore-card p-4 rounded-lg border border-white/10 grid grid-cols-1 md:grid-cols-3 gap-4 items-center shadow">
           
           {/* Buscador por código o nombre */}
-          <div className="w-full sm:w-1/2 relative">
+          <div className="relative">
             <input 
               type="text"
               placeholder="Buscar por código (ej: ORE-0001) o nombre..."
@@ -497,7 +548,7 @@ export default function AdminDashboard({
           </div>
 
           {/* Filtro por Categoría */}
-          <div className="w-full sm:w-1/3 flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <span className="text-[11px] uppercase tracking-wider text-ore-muted shrink-0">Categoría:</span>
             <select
               value={selectedCategoryFilter}
@@ -511,44 +562,77 @@ export default function AdminDashboard({
             </select>
           </div>
 
+          {/* Filtro por Estado de Stock */}
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] uppercase tracking-wider text-ore-muted shrink-0">Stock:</span>
+            <select
+              value={stockFilter}
+              onChange={(e) => setStockFilter(e.target.value)}
+              className="w-full bg-ore-dark border border-white/15 rounded p-2.5 text-xs text-ore-cream focus:outline-none focus:border-ore-gold cursor-pointer"
+            >
+              <option value="Todos">Todos los productos</option>
+              <option value="ConStock">Con stock disponible</option>
+              <option value="SinStock">Sin stock (0 unidades)</option>
+            </select>
+          </div>
+
         </div>
         
         <div className="space-y-3">
           {filteredProducts && filteredProducts.length > 0 ? (
             filteredProducts.map((p) => {
               const prodImg = p.image || p.image_url;
+              const prodStock = normalizeStock(p.stock);
+              const isOutOfStock = prodStock === 0;
+
               return (
-                <div key={p.id} className="bg-ore-card p-4 rounded-lg border border-white/5 flex items-center justify-between gap-4 shadow">
+                <div 
+                  key={p.id} 
+                  className={`bg-ore-card p-4 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow ${
+                    isOutOfStock ? 'border-red-500/35 bg-red-950/10' : 'border-white/5'
+                  }`}
+                >
                   <div className="flex items-center gap-4">
                     {prodImg ? (
-                      <img src={prodImg} alt={p.title || p.name} className="w-14 h-14 object-cover rounded border border-white/10" />
+                      <img 
+                        src={prodImg} 
+                        alt={p.title || p.name} 
+                        className={`w-14 h-14 object-cover rounded border border-white/10 ${isOutOfStock ? 'opacity-60' : ''}`} 
+                      />
                     ) : (
                       <div className="w-14 h-14 bg-ore-dark border border-white/10 rounded flex items-center justify-center text-[10px] text-ore-muted italic">Sin foto</div>
                     )}
                     <div>
-                      <h4 className="font-serif text-base text-ore-cream flex items-center">
-                        <span className="text-xs font-mono bg-ore-dark border border-ore-gold/30 text-ore-gold px-2 py-0.5 rounded mr-2">
+                      <h4 className="font-serif text-base text-ore-cream flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-mono bg-ore-dark border border-ore-gold/30 text-ore-gold px-2 py-0.5 rounded">
                           ORE-{String(p.id).padStart(4, '0')}
                         </span>
-                        {p.title || p.name}
+                        <span>{p.title || p.name}</span>
+                        {isOutOfStock && (
+                          <span className="bg-red-500/20 text-red-300 border border-red-500/50 text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded">
+                            Sin stock
+                          </span>
+                        )}
                       </h4>
-                      <p className="text-xs text-ore-muted mt-0.5">
+                      <p className="text-xs text-ore-muted mt-1">
                         Precio: <strong className="text-ore-gold">${Number(p.price || 0).toLocaleString('es-AR')}</strong> | 
-                        Stock: <strong>{p.stock} u.</strong> | 
+                        Stock: <strong className={isOutOfStock ? 'text-red-400' : 'text-ore-cream'}>{prodStock} u.</strong> | 
                         Cat: {p.category || p.categories?.name || 'N/A'} | 
                         Mat: {p.material || p.materials?.name || 'N/A'} {p.measure ? `| Medida: ${p.measure}` : ''}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 self-end sm:self-center">
                     <button
+                      type="button"
                       onClick={() => handleEdit(p)}
                       className="bg-sky-600 hover:bg-sky-500 text-white px-3.5 py-2 rounded text-xs transition uppercase tracking-wider font-semibold cursor-pointer"
                     >
                       Editar
                     </button>
                     <button
+                      type="button"
                       onClick={() => handleDelete(p.id)}
                       className="bg-red-600/80 hover:bg-red-600 text-white px-3.5 py-2 rounded text-xs transition uppercase tracking-wider font-semibold cursor-pointer"
                     >
@@ -559,7 +643,9 @@ export default function AdminDashboard({
               );
             })
           ) : (
-            <p className="text-ore-muted text-sm italic py-8 text-center bg-ore-card rounded-lg border border-white/5">No se encontraron productos que coincidan con la búsqueda.</p>
+            <p className="text-ore-muted text-sm italic py-8 text-center bg-ore-card rounded-lg border border-white/5">
+              No se encontraron productos que coincidan con la búsqueda o el filtro.
+            </p>
           )}
         </div>
       </div>
