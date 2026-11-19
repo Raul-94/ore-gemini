@@ -389,36 +389,37 @@ export default function App() {
       </header>
 
       {/* BARRA DE PROGRESO DE ENVÍO GRATIS UBICADA EN EL BORDE SUPERIOR DERECHO, CERCA DEL CARRITO */}
-      {currentView !== 'admin' && (
-        <div className="fixed top-24 right-4 sm:right-6 z-30 w-64 sm:w-72 bg-ore-card/95 backdrop-blur-md border border-ore-gold/35 rounded-xl px-3.5 py-2.5 shadow-xl space-y-1.5">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[9px] uppercase tracking-[0.18em] text-ore-gold font-semibold">
-              Envío Gran Mendoza
-            </span>
-            <span className="text-[9px] font-mono text-ore-muted">
-              {Math.min(Math.round((cartTotal / 50000) * 100), 100)}%
-            </span>
+        {currentView !== 'admin' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 flex justify-end">
+            <div className="w-full max-w-[260px] sm:w-72 bg-ore-card/95 backdrop-blur-md border border-ore-gold/35 rounded-xl px-3.5 py-2.5 shadow-xl space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[9px] uppercase tracking-[0.18em] text-ore-gold font-semibold">
+                  Envío Gran Mendoza
+                </span>
+                <span className="text-[9px] font-mono text-ore-muted">
+                  {Math.min(Math.round((cartTotal / 50000) * 100), 100)}%
+                </span>
+              </div>
+
+              <p className="text-[11px] text-ore-cream leading-snug">
+                {cartTotal >= 50000 ? (
+                  <span className="text-ore-gold font-semibold">✨ ¡Envío local gratis desbloqueado!</span>
+                ) : (
+                  <>
+                    Sumá <strong className="text-ore-gold">${(50000 - cartTotal).toLocaleString('es-AR')}</strong> para <strong className="text-ore-gold">envío gratis</strong>.
+                  </>
+                )}
+              </p>
+
+              <div className="w-full bg-ore-dark h-1.5 rounded-full overflow-hidden border border-white/10">
+                <div 
+                  className="bg-ore-gold h-full transition-all duration-500 ease-out"
+                  style={{ width: `${Math.min((cartTotal / 50000) * 100, 100)}%` }}
+                />
+              </div>
+            </div>
           </div>
-
-          <p className="text-[11px] text-ore-cream leading-snug">
-            {cartTotal >= 50000 ? (
-              <span className="text-ore-gold font-semibold">✨ ¡Envío local gratis desbloqueado!</span>
-            ) : (
-              <>
-                Sumá <strong className="text-ore-gold">${(50000 - cartTotal).toLocaleString('es-AR')}</strong> para <strong className="text-ore-gold">envío gratis</strong>.
-              </>
-            )}
-          </p>
-
-          <div className="w-full bg-ore-dark h-1.5 rounded-full overflow-hidden border border-white/10">
-            <div 
-              className="bg-ore-gold h-full transition-all duration-500 ease-out"
-              style={{ width: `${Math.min((cartTotal / 50000) * 100, 100)}%` }}
-            />
-          </div>
-        </div>
-      )}
-
+        )}
       {mobileMenuOpen && (
         <div className="md:hidden bg-ore-card border-b border-white/10 px-6 py-4 space-y-4">
           <button onClick={() => { setCurrentView('shop'); setMobileMenuOpen(false); }} className="block py-2 text-ore-cream">Tienda</button>
