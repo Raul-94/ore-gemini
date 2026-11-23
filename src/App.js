@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
     ShoppingBag, Menu, X, Truck, Phone, Mail,
-    ArrowRight, CheckCircle, AlertCircle, Trash2, Lock
+    ArrowRight, CheckCircle, AlertCircle, Trash2, Lock, ShieldCheck, CreditCard, Landmark, Banknote, Plus
   } from 'lucide-react';
 import { supabase } from './supabase';
 import AdminDashboard from './AdminDashboard';
@@ -12,6 +12,8 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [cartToast, setCartToast] = useState(null);
+  const toastTimeoutRef = useRef(null);
   
   // Autenticación Admin
   const [adminPin, setAdminPin] = useState('');
@@ -105,6 +107,24 @@ export default function App() {
     localStorage.setItem('ore_cart', JSON.stringify(cart));
   }, [cart]);
 
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const triggerCartToast = (productName) => {
+    setCartToast(productName || 'Producto');
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+    toastTimeoutRef.current = setTimeout(() => {
+      setCartToast(null);
+    }, 2500);
+  };
+
   const [categories, setCategories] = useState([]);
   const [materials, setMaterials] = useState([]);
 
@@ -141,7 +161,10 @@ export default function App() {
     };
   }, []);
 
-  const sampleProducts = [
+  const sortByPriceAsc = (list) =>
+    [...list].sort((a, b) => Number(a?.price ?? 0) - Number(b?.price ?? 0));
+
+  const sampleProducts = sortByPriceAsc([
     {
       id: 1,
       title: 'Anillo Solitario Clásico',
@@ -164,12 +187,14 @@ export default function App() {
       stock: 3,
       featured: true
     }
-  ];
+  ]);
 
   const [products, setProducts] = useState(sampleProducts);
 
-  // Solo productos con stock mayor a 0 son visibles para el cliente en el catálogo
-  const availableProducts = products.filter(p => Number(p.stock ?? 0) > 0);
+  // Solo productos con stock mayor a 0 son visibles para el cliente en el catálogo, ordenados de menor a mayor precio
+  const availableProducts = sortByPriceAsc(
+    products.filter(p => Number(p.stock ?? 0) > 0)
+  );
   
   const fetchProductsFromSupabase = async () => {
     const { data, error } = await supabase
@@ -185,7 +210,7 @@ export default function App() {
         category: p.categories?.name || 'Joyas',
         material: p.materials?.name || 'General'
       }));
-      setProducts(formatted);
+      setProducts(sortByPriceAsc(formatted));
     }
   };
 
@@ -203,24 +228,35 @@ export default function App() {
     setGoldForm({ name: '', phone: '', email: '', pieceType: 'Anillo', karat: '18k', weight: '', description: '' , acceptedTerms: false });
   };
 
-  const addToCart = (product, selectedSize) => {
+  // Agrega el producto sin abrir el carrito y muestra un aviso temporal cuando no se abre
+  const addToCart = (product, selectedSize, options = { openCart: false, showToast: true }) => {
     if (!product || Number(product.stock ?? 0) <= 0) return;
 
+    const maxStock = Number(product.stock ?? 1);
     const itemKey = `${product.id}-${selectedSize || 'unico'}`;
     const existing = cart.find(item => item.cartKey === itemKey);
+
     if (existing) {
-      setCart(cart.map(item => item.cartKey === itemKey ? { ...item, qty: item.qty + 1 } : item));
+      const nextQty = Math.min(existing.qty + 1, maxStock);
+      setCart(cart.map(item => item.cartKey === itemKey ? { ...item, qty: nextQty } : item));
     } else {
       setCart([...cart, { ...product, selectedSize: selectedSize || 'Estándar', qty: 1, cartKey: itemKey }]);
     }
-    setCartOpen(true);
+
+    if (options.openCart) {
+      setCartOpen(true);
+    } else if (options.showToast !== false) {
+      triggerCartToast(product.name || product.title);
+    }
   };
 
   const updateQty = (cartKey, delta) => {
     setCart(cart.map(item => {
       if (item.cartKey === cartKey) {
+        const maxStock = Number(item.stock ?? 99);
         const newQty = item.qty + delta;
-        return newQty > 0 ? { ...item, qty: newQty } : null;
+        if (newQty <= 0) return null;
+        return newQty > maxStock ? item : { ...item, qty: newQty };
       }
       return item;
     }).filter(Boolean));
@@ -232,6 +268,13 @@ export default function App() {
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+  const transferDiscountAmount = Math.round(cartTotal * 0.15);
+  const cartTotalWithTransfer = Math.max(cartTotal - transferDiscountAmount, 0);
+
+  // Sugeridos ordenados de menor a mayor precio excluyendo lo ya cargado en el carrito
+  const suggestedProducts = sortByPriceAsc(
+    availableProducts.filter(p => !cart.some(item => item.id === p.id))
+  ).slice(0, 3);
 
   const getSizeGuideType = (product) => {
     if (!product) return null;
@@ -267,30 +310,116 @@ export default function App() {
 
     return (
       <span
-        className={`absolute ${large ? 'top-4 right-4 px-3 py-1.5 gap-1.5' : 'top-3 right-3 px-2.5 py-1 gap-1'} z-10 bg-ore-dark/90 backdrop-blur-md border border-ore-gold/60 text-ore-gold text-[10px] font-medium tracking-[0.15em] rounded shadow-md flex items-center select-none`}
+        className={`absolute ${large ? 'top-4 right-4 px-3 py-1.5 gap-1.5' : 'top-3 right-3 px-2.5 py-1 gap-1'} z-10 bg-[#C8A96E] border border-[#111111]/45 text-[#111111] ${large ? 'text-[10px]' : 'text-[9px]'} font-bold uppercase tracking-[0.18em] rounded shadow-md flex items-center select-none`}
       >
-        <span className="text-xs leading-none">✨</span>
         <span>{large ? 'Última unidad disponible' : 'Última unidad'}</span>
       </span>
     );
   };
 
+  const renderShippingProgressBlock = (subtotal, compact = false) => {
+    const goal = 50000;
+    const pct = Math.min(Math.round((subtotal / goal) * 100), 100);
+    const widthPct = Math.min((subtotal / goal) * 100, 100);
+    const remaining = Math.max(goal - subtotal, 0);
+
+    return (
+      <div className={`bg-[#C8A96E]/95 border border-[#141414]/25 rounded-xl ${compact ? 'p-3' : 'p-3.5'} shadow-md space-y-1.5 text-left`}>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[9px] uppercase tracking-[0.18em] text-[#111111] font-bold">
+            Envío Gran Mendoza
+          </span>
+          <span className="text-[9px] font-mono text-[#111111] font-bold">
+            {pct}%
+          </span>
+        </div>
+
+        <p className="text-[11px] text-[#111111] leading-snug">
+          {subtotal >= goal ? (
+            <span className="font-bold">¡Felicitaciones! Tenés envío gratis en Gran Mendoza ✨</span>
+          ) : (
+            <>
+              Sumá{' '}
+              <strong className="font-bold">
+                ${remaining.toLocaleString('es-AR')}
+              </strong>{' '}
+              para{' '}
+              <strong className="font-bold">
+                envío gratis
+              </strong>.
+            </>
+          )}
+        </p>
+
+        <div className="w-full bg-[#111111]/15 h-1.5 rounded-full overflow-hidden border border-[#111111]/20">
+          <div
+            className="bg-[#111111] h-full transition-all duration-500 ease-out"
+            style={{ width: `${widthPct}%` }}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const renderPaymentTrustBlock = () => (
+    <div className="bg-ore-dark/80 border border-white/10 rounded-lg p-3 space-y-2.5 text-left">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 text-ore-gold text-xs font-semibold">
+          <ShieldCheck size={15} className="shrink-0" />
+          <span>Compra Protegida</span>
+        </div>
+        <span className="text-[10px] text-ore-muted">Estuche y envío asegurado</span>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-ore-cream/90">
+        <span className="inline-flex items-center gap-1 bg-ore-card border border-white/10 px-2 py-1 rounded">
+          <CreditCard size={12} className="text-[#009EE3]" />
+          <span>MercadoPago</span>
+        </span>
+        <span className="inline-flex items-center gap-1 bg-ore-card border border-white/10 px-2 py-1 rounded">
+          <Landmark size={12} className="text-ore-gold" />
+          <span>Transferencia (-15%)</span>
+        </span>
+        <span className="inline-flex items-center gap-1 bg-ore-card border border-white/10 px-2 py-1 rounded">
+          <Banknote size={12} className="text-emerald-400" />
+          <span>Efectivo</span>
+        </span>
+        <span className="inline-flex items-center gap-1 bg-ore-card border border-white/10 px-2 py-1 rounded">
+          <Truck size={12} className="text-ore-gold" />
+          <span>Andreani / Local</span>
+        </span>
+      </div>
+    </div>
+  );
+
+  const navigateToView = (viewId) => {
+    setCurrentView(viewId);
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const showFloatingWhatsapp = !cartOpen && !checkoutModalOpen && !sizeModalOpen;
+
   return (
     <div className="min-h-screen bg-ore-dark text-ore-cream flex flex-col font-sans selection:bg-ore-gold selection:text-ore-dark">
       
       <div className="bg-ore-gold text-ore-dark text-xs font-semibold py-1.5 px-4 text-center tracking-wider flex items-center justify-center gap-2">
-        <AlertCircle size={14} />
+        <AlertCircle size={14} className="shrink-0" />
         <span>ENTORNO DE DEMOSTRACIÓN — Gestión y catálogo sincronizados con Supabase</span>
       </div>
 
       <header className="sticky top-0 z-40 bg-ore-dark/95 backdrop-blur border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden text-ore-cream p-2">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+            className="md:hidden text-ore-cream hover:text-ore-gold p-2 transition-colors cursor-pointer"
+          >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
 
-          <div onClick={() => setCurrentView('home')} className="cursor-pointer flex items-center gap-3">
+          <div onClick={() => navigateToView('home')} className="cursor-pointer flex items-center gap-3">
             <div className="w-10 h-10 rounded-full border border-ore-gold flex items-center justify-center p-0.5 shadow-lg">
               <div className="w-full h-full rounded-full border border-ore-gold/50 flex flex-col items-center justify-center bg-ore-card">
                 <span className="font-serif text-ore-gold font-bold text-xs tracking-tighter">ORE</span>
@@ -313,10 +442,7 @@ export default function App() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => {
-                    setCurrentView(item.id);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+                  onClick={() => navigateToView(item.id)}
                   className={`relative py-2 text-[11px] uppercase tracking-[0.22em] font-medium transition-colors duration-300 cursor-pointer group ${
                     isActive
                       ? 'text-ore-gold'
@@ -335,7 +461,7 @@ export default function App() {
 
             {isAdminAuthenticated && (
               <button 
-                onClick={() => { setCurrentView('admin'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                onClick={() => navigateToView('admin')}
                 className="bg-ore-gold/20 text-ore-gold border border-ore-gold/40 px-3 py-1 rounded text-[11px] uppercase tracking-widest hover:bg-ore-gold/30 transition cursor-pointer"
               >
                 Panel Admin
@@ -386,52 +512,66 @@ export default function App() {
             </button>
           </div>
         </div>
+
+        {/* MENÚ MÓVIL DESPLEGABLE DENTRO DEL HEADER STICKY (DISPONIBLE EN CUALQUIER ALTURA DEL SCROLL) */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-ore-card/98 backdrop-blur-md border-t border-white/10 px-6 py-4 space-y-1 shadow-2xl">
+            {[
+              { id: 'shop', label: 'Tienda' },
+              { id: 'gold', label: 'Compramos Oro' },
+              { id: 'about', label: 'Nosotros' },
+              { id: 'contact', label: 'Contacto' }
+            ].map((item) => {
+              const isActive = currentView === item.id || (item.id === 'shop' && currentView === 'product-detail');
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => navigateToView(item.id)}
+                  className={`block w-full text-left py-2.5 text-xs uppercase tracking-[0.2em] border-b border-white/5 last:border-b-0 transition-colors cursor-pointer ${
+                    isActive ? 'text-ore-gold font-semibold' : 'text-ore-cream hover:text-ore-gold'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+
+            {isAdminAuthenticated && (
+              <button
+                onClick={() => navigateToView('admin')}
+                className="block w-full text-left py-2.5 text-xs uppercase tracking-[0.2em] text-ore-gold font-semibold cursor-pointer"
+              >
+                Panel Admin
+              </button>
+            )}
+          </div>
+        )}
       </header>
 
-      {/* BARRA DE PROGRESO DE ENVÍO GRATIS UBICADA EN EL BORDE SUPERIOR DERECHO, CERCA DEL CARRITO */}
-        {/* BARRA DE PROGRESO DE ENVÍO GRATIS FLOTANTE ARRIBA A LA IZQUIERDA */}
-{currentView !== 'admin' && (
-  <div className="fixed top-32 sm:top-28 right-3 sm:right-6 z-30 w-[230px] sm:w-72 bg-[#C8A96E]/95 backdrop-blur-md border border-[#141414]/25 rounded-xl px-3.5 py-2.5 shadow-[0_10px_28px_rgba(0,0,0,0.3)] space-y-1.5 transition-all duration-300">
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-[9px] uppercase tracking-[0.18em] text-[#111111] font-semibold">
-        Envío Gran Mendoza
-      </span>
-      <span className="text-[9px] font-mono text-[#111111] font-semibold">
-        {Math.min(Math.round((cartTotal / 50000) * 100), 100)}%
-      </span>
-    </div>
-
-    <p className="text-[11px] text-[#111111] leading-snug">
-      {cartTotal >= 50000 ? (
-        <span className="text-[#111111] font-bold">✨ ¡Envío local gratis desbloqueado!</span>
-      ) : (
-        <>
-          Sumá{' '}
-          <strong className="text-[#111111] font-bold">
-            ${(50000 - cartTotal).toLocaleString('es-AR')}
-          </strong>{' '}
-          para{' '}
-          <strong className="text-[#111111] font-bold">
-            envío gratis
-          </strong>.
-        </>
-      )}
-    </p>
-
-    <div className="w-full bg-[#111111]/15 h-1.5 rounded-full overflow-hidden border border-[#111111]/20">
-      <div
-        className="bg-[#111111] h-full transition-all duration-500 ease-out"
-        style={{ width: `${Math.min((cartTotal / 50000) * 100, 100)}%` }}
-      />
-    </div>
-  </div>
-)}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-ore-card border-b border-white/10 px-6 py-4 space-y-4">
-          <button onClick={() => { setCurrentView('shop'); setMobileMenuOpen(false); }} className="block py-2 text-ore-cream">Tienda</button>
-          <button onClick={() => { setCurrentView('gold'); setMobileMenuOpen(false); }} className="block py-2 text-ore-cream">Compramos oro</button>
-          <button onClick={() => { setCurrentView('about'); setMobileMenuOpen(false); }} className="block py-2 text-ore-cream">Nosotros</button>
-          <button onClick={() => { setCurrentView('contact'); setMobileMenuOpen(false); }} className="block py-2 text-ore-cream">Contacto</button>
+      {/* AVISO TEMPORAL AL AGREGAR AL CARRITO SIN ABRIR EL CAJÓN */}
+      {cartToast && !cartOpen && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-6 z-50 w-[calc(100%-2rem)] max-w-sm bg-ore-card/98 backdrop-blur-md border border-ore-gold/60 text-ore-cream px-4 py-3 rounded-xl shadow-2xl flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <CheckCircle size={18} className="text-emerald-400 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-ore-cream leading-tight">
+                Producto agregado con éxito al carrito
+              </p>
+              <p className="text-[11px] text-ore-muted truncate mt-0.5">
+                {cartToast}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setCartToast(null);
+              setCartOpen(true);
+            }}
+            className="text-[10px] uppercase tracking-wider font-bold text-ore-gold hover:underline shrink-0 cursor-pointer"
+          >
+            Ver
+          </button>
         </div>
       )}
 
@@ -547,17 +687,19 @@ export default function App() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                  {availableProducts
-                    .filter(p => {
-                      const matchesCategoryName = p.category && p.category.toLowerCase().trim() === filterCategory.toLowerCase().trim();
-                      const matchesCategoryId = categories.find(c => c.name === filterCategory)?.id === p.category_id;
-                      return matchesCategoryName || matchesCategoryId;
-                    })
-                    .filter(p => {
-                      const matchesMaterialName = p.material && p.material.toLowerCase().trim() === filterMaterial.toLowerCase().trim();
-                      const matchesMaterialId = materials.find(m => m.name === filterMaterial)?.id === p.material_id;
-                      return matchesMaterialName || matchesMaterialId;
-                    })
+                  {sortByPriceAsc(
+                    availableProducts
+                      .filter(p => {
+                        const matchesCategoryName = p.category && p.category.toLowerCase().trim() === filterCategory.toLowerCase().trim();
+                        const matchesCategoryId = categories.find(c => c.name === filterCategory)?.id === p.category_id;
+                        return matchesCategoryName || matchesCategoryId;
+                      })
+                      .filter(p => {
+                        const matchesMaterialName = p.material && p.material.toLowerCase().trim() === filterMaterial.toLowerCase().trim();
+                        const matchesMaterialId = materials.find(m => m.name === filterMaterial)?.id === p.material_id;
+                        return matchesMaterialName || matchesMaterialId;
+                      })
+                  )
                     .map(p => {
                       const productImg = p.image || p.image_url;
                       return (
@@ -717,7 +859,7 @@ export default function App() {
                 />
               </div>
 
-              {/* INFORMACIÓN Y ACCIONES CON 15% OFF Y NUEVA GARANTÍA */}
+              {/* INFORMACIÓN Y ACCIONES CON 15% OFF Y BARRA DE ENVÍO DEBAJO DEL PRECIO */}
               <div className="space-y-6">
                 <div>
                   <span className="text-xs text-ore-gold uppercase tracking-widest font-semibold">
@@ -729,7 +871,7 @@ export default function App() {
                   </h1>
                   
                   {/* PRECIO CONTADO Y GANCHO DE 15% OFF */}
-                  <div className="mt-3 space-y-1.5">
+                  <div className="mt-3 space-y-2">
                     <div className="flex items-baseline gap-3">
                       <span className="text-2xl sm:text-3xl font-semibold text-ore-gold">
                         ${Number(selectedProduct.price).toLocaleString('es-AR')}
@@ -740,8 +882,15 @@ export default function App() {
                     </div>
 
                     <div className="inline-block bg-ore-gold/10 border border-ore-gold/30 px-3 py-1 rounded text-xs text-ore-gold font-medium">
-                      🔥 15% de descuento abonando por transferencia o efectivo: <strong className="font-bold">${Math.round(selectedProduct.price * 0.85).toLocaleString('es-AR')}</strong>
+                      ✨ 15% de descuento abonando por transferencia o efectivo: <strong className="font-bold">${Math.round(selectedProduct.price * 0.85).toLocaleString('es-AR')}</strong>
                     </div>
+
+                    {/* BARRA DE PROGRESO DE ENVÍO FIJA DEBAJO DEL PRECIO CUANDO HAY ITEMS EN EL CARRITO */}
+                    {cartCount > 0 && (
+                      <div className="pt-1">
+                        {renderShippingProgressBlock(cartTotal, true)}
+                      </div>
+                    )}
                   </div>
 
                   {/* INDICADOR DE STOCK / ESCASEZ ELEGANTE */}
@@ -752,7 +901,7 @@ export default function App() {
                       if (stockActual <= 0) {
                         return (
                           <p className="text-xs text-red-400 flex items-center gap-1.5 font-medium">
-                            ✕ Sin stock disponible por el momento.
+                            Sin stock disponible por el momento.
                           </p>
                         );
                       }
@@ -768,14 +917,14 @@ export default function App() {
                       if (stockActual <= 3) {
                         return (
                           <p className="text-xs text-amber-400 flex items-center gap-1.5 font-medium">
-                            <span>⚠️</span> Disponibilidad limitada: Quedan solo {stockActual} unidades.
+                            <span>⚡</span> Disponibilidad limitada: Quedan solo {stockActual} unidades.
                           </p>
                         );
                       }
 
                       return (
                         <p className="text-xs text-ore-muted">
-                          ✓ Stock disponible para envío asegurado a todo el país.
+                          Stock disponible para envío asegurado a todo el país.
                         </p>
                       );
                     })()}
@@ -822,7 +971,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* INSIGNIAS CON AJUSTE SIN CARGO 15 DÍAS */}
+                {/* INSIGNIAS CON AJUSTE SIN CARGO 15 DÍAS Y ENVÍO ASEGURADO VISIBLE */}
                 <div className="grid grid-cols-3 gap-2 py-4 my-3 border-y border-white/10 bg-ore-card/40 rounded-lg px-3">
                   <div className="flex flex-col items-center text-center space-y-1 px-1">
                     <div className="w-8 h-8 rounded-full bg-ore-gold/10 border border-ore-gold/30 flex items-center justify-center text-ore-gold">
@@ -867,12 +1016,12 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* BOTONES DE ACCIÓN DE ALTA CONVERSIÓN */}
+                {/* ORDEN SOLICITADO: 1) COMPRAR AHORA, 2) AGREGAR AL CARRITO Y SEGUIR VIENDO, 3) WHATSAPP */}
                 <div className="space-y-3 pt-2">
                   <button 
                     disabled={Number(selectedProduct.stock ?? 0) <= 0}
                     onClick={() => {
-                      addToCart(selectedProduct);
+                      addToCart(selectedProduct, undefined, { openCart: false, showToast: false });
                       setCheckoutModalOpen(true);
                     }} 
                     className={`w-full font-bold py-4 px-6 uppercase text-xs tracking-widest rounded transition shadow-xl flex items-center justify-center gap-2 ${
@@ -883,13 +1032,22 @@ export default function App() {
                   >
                     <span>
                       {Number(selectedProduct.stock ?? 0) > 0
-                        ? `⚡ Comprar Ahora — $${Number(selectedProduct.price).toLocaleString('es-AR')}`
+                        ? `Comprar Ahora — $${Number(selectedProduct.price).toLocaleString('es-AR')}`
                         : 'Sin stock disponible'}
                     </span>
                   </button>
 
                   {Number(selectedProduct.stock ?? 0) > 0 && (
                     <>
+                      <button 
+                        onClick={() => {
+                          addToCart(selectedProduct, undefined, { openCart: false, showToast: true });
+                        }} 
+                        className="w-full bg-ore-card hover:bg-white/10 text-ore-cream border border-ore-gold/40 font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <span>Agregar al carrito y seguir viendo</span>
+                      </button>
+
                       <button 
                         onClick={() => {
                           const phone = "5492613737159"; 
@@ -900,17 +1058,7 @@ export default function App() {
                         }} 
                         className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark font-bold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                       >
-                        <span>💬 Reservar por WhatsApp (15% OFF Transferencia)</span>
-                      </button>
-
-                      <button 
-                        onClick={() => {
-                          addToCart(selectedProduct);
-                          setCartOpen(true);
-                        }} 
-                        className="w-full bg-transparent hover:bg-white/5 text-ore-cream/80 border border-white/15 font-semibold py-3 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
-                      >
-                        <span>Agregar al carrito y seguir viendo</span>
+                        <span>Reservar por WhatsApp (15% OFF Transferencia)</span>
                       </button>
                     </>
                   )}
@@ -919,15 +1067,17 @@ export default function App() {
               </div>
             </div>
 
-            {/* SECCIÓN: TAMBIÉN TE PUEDE INTERESAR */}
+            {/* SECCIÓN: TAMBIÉN TE PUEDE INTERESAR (ORDENADO DE MENOR A MAYOR PRECIO) */}
             <div className="mt-20 border-t border-white/10 pt-14 w-full">
               <h3 className="font-serif text-3xl text-ore-cream mb-8 text-center">
                 También te puede interesar
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-                {availableProducts
-                  .filter(p => p.id !== selectedProduct.id && p.material_id === selectedProduct.material_id)
+                {sortByPriceAsc(
+                  availableProducts
+                    .filter(p => p.id !== selectedProduct.id && p.material_id === selectedProduct.material_id)
+                )
                   .slice(0, 4)
                   .map(relatedProduct => {
                     const relatedImg = relatedProduct.image_url || relatedProduct.image;
@@ -1282,27 +1432,33 @@ export default function App() {
 
       </main>
 
+      {/* CARRITO CON AHORRO 15% TRANSFERENCIA, BARRA ENVÍO GRATIS, SUGERIDOS POR PRECIO Y COMPRA PROTEGIDA */}
       {cartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-ore-card h-full flex flex-col border-l border-white/10 p-6 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-white/10 pb-4">
+          <div className="w-full max-w-md bg-ore-card h-full flex flex-col border-l border-white/10 p-5 sm:p-6 shadow-2xl">
+            <div className="flex justify-between items-center border-b border-white/10 pb-3.5">
               <h2 className="font-serif text-xl text-ore-cream">Tu Carrito ({cartCount})</h2>
               <button onClick={() => setCartOpen(false)} className="text-ore-cream hover:text-ore-gold cursor-pointer"><X size={20}/></button>
             </div>
 
-            <div className="flex-grow overflow-y-auto py-6 space-y-4">
+            <div className="flex-grow overflow-y-auto py-4 space-y-4">
+              {cart.length > 0 && renderShippingProgressBlock(cartTotal, true)}
+
               {cart.length === 0 ? (
-                <p className="text-center text-ore-muted text-sm py-12">Tu carrito está vacío.</p>
+                <p className="text-center text-ore-muted text-sm py-8">Tu carrito está vacío.</p>
               ) : (
                 cart.map(item => (
-                  <div key={item.cartKey} className="flex gap-4 items-center bg-ore-dark p-4 rounded-lg border border-white/5">
-                    <img src={item.image} alt={item.name} loading="lazy" className="w-16 h-16 object-cover rounded" />
-                    <div className="flex-grow">
-                      <h4 className="font-serif text-sm text-ore-cream">{item.name}</h4>
-                      <p className="text-ore-gold font-semibold text-sm mt-1">${Number(item.price * item.qty).toLocaleString('es-AR')}</p>
+                  <div key={item.cartKey} className="flex gap-3.5 items-center bg-ore-dark p-3.5 rounded-lg border border-white/5">
+                    <img src={item.image} alt={item.name} loading="lazy" className="w-16 h-16 object-cover rounded shrink-0" />
+                    <div className="flex-grow min-w-0">
+                      <h4 className="font-serif text-sm text-ore-cream truncate">{item.name}</h4>
+                      <p className="text-ore-gold font-semibold text-sm mt-0.5">${Number(item.price * item.qty).toLocaleString('es-AR')}</p>
+                      <p className="text-[10px] text-emerald-400/90 mt-0.5">
+                        Con -15% transf.: ${Math.round(item.price * item.qty * 0.85).toLocaleString('es-AR')}
+                      </p>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <button onClick={() => removeFromCart(item.cartKey)} className="text-ore-muted hover:text-red-400 cursor-pointer"><Trash2 size={16}/></button>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <button onClick={() => removeFromCart(item.cartKey)} className="text-ore-muted hover:text-red-400 cursor-pointer"><Trash2 size={15}/></button>
                       <div className="flex items-center gap-2 border border-white/10 rounded px-2 py-1 text-xs text-ore-cream">
                         <button onClick={() => updateQty(item.cartKey, -1)} className="cursor-pointer">-</button>
                         <span>{item.qty}</span>
@@ -1312,20 +1468,88 @@ export default function App() {
                   </div>
                 ))
               )}
+
+              {/* SUGERIDOS ORDENADOS DE MENOR A MAYOR PRECIO */}
+              {suggestedProducts.length > 0 && (
+                <div className="pt-3 border-t border-white/10 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase tracking-[0.18em] text-ore-gold font-semibold">
+                      También te puede sumar
+                    </span>
+                    <span className="text-[9px] text-ore-muted">Menor a mayor precio</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {suggestedProducts.map(sug => (
+                      <div
+                        key={sug.id}
+                        className="flex items-center justify-between gap-2.5 bg-ore-dark/70 border border-white/5 rounded-lg p-2.5"
+                      >
+                        <div
+                          onClick={() => {
+                            setSelectedProduct(sug);
+                            setCurrentView('product-detail');
+                            setCartOpen(false);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className="flex items-center gap-2.5 min-w-0 cursor-pointer group"
+                        >
+                          <img
+                            src={sug.image || sug.image_url}
+                            alt={sug.name || sug.title}
+                            loading="lazy"
+                            className="w-11 h-11 rounded object-cover shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <p className="text-xs font-serif text-ore-cream group-hover:text-ore-gold truncate">
+                              {sug.name || sug.title}
+                            </p>
+                            <p className="text-xs text-ore-gold font-semibold">
+                              ${Number(sug.price || 0).toLocaleString('es-AR')}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => addToCart(sug, undefined, { openCart: false, showToast: true })}
+                          className="shrink-0 bg-ore-gold/15 hover:bg-ore-gold text-ore-gold hover:text-ore-dark border border-ore-gold/40 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded transition inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus size={12} />
+                          <span>Sumar</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {cart.length > 0 && (
-              <div className="border-t border-white/10 pt-4 space-y-4">
-                <div className="flex justify-between text-lg font-serif text-ore-cream">
-                  <span>Total:</span>
-                  <span className="text-ore-gold">${cartTotal.toLocaleString('es-AR')}</span>
+              <div className="border-t border-white/10 pt-3.5 space-y-3">
+                <div className="bg-ore-dark/90 border border-ore-gold/30 rounded-lg p-3 space-y-1 text-xs">
+                  <div className="flex justify-between text-ore-cream/85">
+                    <span>Subtotal (precio regular):</span>
+                    <span className="font-semibold">${cartTotal.toLocaleString('es-AR')}</span>
+                  </div>
+                  <div className="flex justify-between text-emerald-400 font-semibold">
+                    <span>Ahorrás con 15% por transferencia:</span>
+                    <span>-${transferDiscountAmount.toLocaleString('es-AR')}</span>
+                  </div>
+                  <div className="flex justify-between text-ore-gold font-bold pt-1 border-t border-white/10">
+                    <span>Total con 15% OFF transferencia:</span>
+                    <span>${cartTotalWithTransfer.toLocaleString('es-AR')}</span>
+                  </div>
                 </div>
+
+                {renderPaymentTrustBlock()}
+
                 <button 
                   onClick={() => { 
                     setCartOpen(false); 
                     setCheckoutModalOpen(true); 
                   }}
-                  className="w-full bg-ore-gold text-ore-dark font-semibold py-4 uppercase text-xs tracking-widest hover:bg-ore-gold-light transition shadow-lg rounded cursor-pointer"
+                  className="w-full bg-ore-gold text-ore-dark font-bold py-4 uppercase text-xs tracking-widest hover:bg-ore-gold-light transition shadow-lg rounded cursor-pointer"
                 >
                   Iniciar compra
                 </button>
@@ -1435,6 +1659,8 @@ export default function App() {
       {checkoutModalOpen && (() => {
         const envioInfo = calcularEnvioAndreani(postalCode, deliveryType, cartTotal);
         const finalTotal = cartTotal + envioInfo.costo;
+        const modalTransferSavings = Math.round(cartTotal * 0.15);
+        const modalTotalWithTransfer = Math.max(cartTotal - modalTransferSavings, 0) + envioInfo.costo;
 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
@@ -1541,6 +1767,22 @@ export default function App() {
                 </div>
               </div>
 
+              {/* RECORDATORIO FINAL DE 15% OFF POR TRANSFERENCIA ANTES DE ELEGIR MEDIO DE PAGO */}
+              <div className="bg-emerald-950/35 border border-emerald-400/35 rounded-lg p-3.5 text-left space-y-1">
+                <p className="text-xs text-emerald-300 font-bold">
+                  ✨ Recordá: abonando por transferencia tenés 15% OFF en las joyas
+                </p>
+                <p className="text-xs text-ore-cream/90">
+                  Ahorrás <strong className="text-emerald-300">${modalTransferSavings.toLocaleString('es-AR')}</strong> en productos
+                  {envioInfo.calculado
+                    ? <> — Total estimado por transferencia{envioInfo.costo > 0 ? ' + envío' : ''}: <strong className="text-ore-gold">${modalTotalWithTransfer.toLocaleString('es-AR')}</strong></>
+                    : <> — Subtotal en joyas con beneficio: <strong className="text-ore-gold">${Math.max(cartTotal - modalTransferSavings, 0).toLocaleString('es-AR')}</strong></>
+                  }.
+                </p>
+              </div>
+
+              {renderPaymentTrustBlock()}
+
               <div className="flex flex-col gap-3 pt-1">
                 <button 
                   disabled={!envioInfo.calculado}
@@ -1599,7 +1841,7 @@ export default function App() {
                       ? `*Entrega:* ${envioInfo.zona} (${envioInfo.costo === 0 ? 'GRATIS' : `$${envioInfo.costo.toLocaleString('es-AR')}`})`
                       : `*Entrega:* A coordinar según CP`;
 
-                    const message = `Hola ORE Joyería! Quisiera finalizar la compra de los siguientes productos:%0A%0A${itemsList}%0A%0A${envioTexto}%0A*Total Final: $${finalTotal.toLocaleString('es-AR')}*%0A%0AQuedo a la espera de la atención de un asesor comercial.`;
+                    const message = `Hola ORE Joyería! Quisiera finalizar la compra de los siguientes productos:%0A%0A${itemsList}%0A%0A${envioTexto}%0A*Total Regular + Envío: $${finalTotal.toLocaleString('es-AR')}*%0A*Total con 15% OFF Transferencia en joyas: $${modalTotalWithTransfer.toLocaleString('es-AR')} (Ahorro: $${modalTransferSavings.toLocaleString('es-AR')})*%0A%0AQuedo a la espera de la atención de un asesor comercial.`;
                     
                     window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
                     setCheckoutModalOpen(false);
@@ -1649,22 +1891,24 @@ export default function App() {
         </div>
       </footer>
 
-      <div className="fixed bottom-6 right-6 z-50 flex items-center group">
-        <div className="absolute right-full mr-3 bg-ore-card border border-ore-gold/40 text-ore-cream text-xs px-3 py-2 rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap font-sans">
-          <span className="text-ore-gold font-semibold">¿Necesitás asesoramiento?</span> Escribinos
+      {showFloatingWhatsapp && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center group">
+          <div className="absolute right-full mr-3 bg-ore-card border border-ore-gold/40 text-ore-cream text-xs px-3 py-2 rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap font-sans">
+            <span className="text-ore-gold font-semibold">¿Necesitás asesoramiento?</span> Escribinos
+          </div>
+          <a
+            href="https://wa.me/5492613737159?text=Hola%20ORE%20Joyería!%20Quisiera%20realizar%20una%20consulta%20sobre%20sus%20piezas."
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Consultar por WhatsApp"
+            className="w-14 h-14 bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 cursor-pointer border-2 border-ore-dark"
+          >
+            <svg className="w-7 h-7 fill-current" viewBox="0 0 24 24">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+            </svg>
+          </a>
         </div>
-        <a
-          href="https://wa.me/5492613737159?text=Hola%20ORE%20Joyería!%20Quisiera%20realizar%20una%20consulta%20sobre%20sus%20piezas."
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Consultar por WhatsApp"
-          className="w-14 h-14 bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 cursor-pointer border-2 border-ore-dark"
-        >
-          <svg className="w-7 h-7 fill-current" viewBox="0 0 24 24">
-            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-          </svg>
-        </a>
-      </div>
+      )}
 
     </div>
   );
