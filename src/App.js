@@ -115,14 +115,17 @@ export default function App() {
     };
   }, []);
 
-  const triggerCartToast = (productName) => {
-    setCartToast(productName || 'Producto');
+  const triggerCartToast = (productName, nextSubtotal) => {
+    setCartToast({
+      productName: productName || 'Producto',
+      subtotal: Number(nextSubtotal ?? 0)
+    });
     if (toastTimeoutRef.current) {
       clearTimeout(toastTimeoutRef.current);
     }
     toastTimeoutRef.current = setTimeout(() => {
       setCartToast(null);
-    }, 2500);
+    }, 3600);
   };
 
   const [categories, setCategories] = useState([]);
@@ -191,7 +194,6 @@ export default function App() {
 
   const [products, setProducts] = useState(sampleProducts);
 
-  // Solo productos con stock mayor a 0 son visibles para el cliente en el catálogo, ordenados de menor a mayor precio
   const availableProducts = sortByPriceAsc(
     products.filter(p => Number(p.stock ?? 0) > 0)
   );
@@ -228,7 +230,7 @@ export default function App() {
     setGoldForm({ name: '', phone: '', email: '', pieceType: 'Anillo', karat: '18k', weight: '', description: '' , acceptedTerms: false });
   };
 
-  // Agrega el producto sin abrir el carrito y muestra un aviso temporal cuando no se abre
+  // Agrega el producto y dispara la etiqueta flotante con barra de progreso cuando corresponde
   const addToCart = (product, selectedSize, options = { openCart: false, showToast: true }) => {
     if (!product || Number(product.stock ?? 0) <= 0) return;
 
@@ -236,17 +238,21 @@ export default function App() {
     const itemKey = `${product.id}-${selectedSize || 'unico'}`;
     const existing = cart.find(item => item.cartKey === itemKey);
 
+    let nextCart;
     if (existing) {
       const nextQty = Math.min(existing.qty + 1, maxStock);
-      setCart(cart.map(item => item.cartKey === itemKey ? { ...item, qty: nextQty } : item));
+      nextCart = cart.map(item => item.cartKey === itemKey ? { ...item, qty: nextQty } : item);
     } else {
-      setCart([...cart, { ...product, selectedSize: selectedSize || 'Estándar', qty: 1, cartKey: itemKey }]);
+      nextCart = [...cart, { ...product, selectedSize: selectedSize || 'Estándar', qty: 1, cartKey: itemKey }];
     }
+
+    setCart(nextCart);
+    const nextSubtotal = nextCart.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.qty || 1)), 0);
 
     if (options.openCart) {
       setCartOpen(true);
     } else if (options.showToast !== false) {
-      triggerCartToast(product.name || product.title);
+      triggerCartToast(product.name || product.title, nextSubtotal);
     }
   };
 
@@ -271,7 +277,6 @@ export default function App() {
   const transferDiscountAmount = Math.round(cartTotal * 0.15);
   const cartTotalWithTransfer = Math.max(cartTotal - transferDiscountAmount, 0);
 
-  // Sugeridos ordenados de menor a mayor precio (2 piezas para mantener el carrito compacto sin scroll interno)
   const suggestedProducts = sortByPriceAsc(
     availableProducts.filter(p => !cart.some(item => item.id === p.id))
   ).slice(0, 2);
@@ -305,7 +310,6 @@ export default function App() {
   const validarSoloNumerosPeso = (valor) => valor.replace(/[^0-9.,]/g, '');
   const validarSoloTelefono = (valor) => valor.replace(/[^0-9+\s-]/g, '');
 
-  // Mismo color y estilo que la etiqueta de "Nuevo"
   const renderLastUnitBadge = (product, large = false) => {
     if (Number(product?.stock ?? 0) !== 1) return null;
 
@@ -318,66 +322,19 @@ export default function App() {
     );
   };
 
-  const renderShippingProgressBlock = (subtotal, compact = false) => {
-    const goal = 50000;
-    const pct = Math.min(Math.round((subtotal / goal) * 100), 100);
-    const widthPct = Math.min((subtotal / goal) * 100, 100);
-    const remaining = Math.max(goal - subtotal, 0);
-
-    return (
-      <div className={`bg-[#C8A96E]/95 border border-[#141414]/25 rounded-xl ${compact ? 'p-3' : 'p-3.5'} shadow-md space-y-1.5 text-left`}>
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[9px] uppercase tracking-[0.18em] text-[#111111] font-bold">
-            Envío Gran Mendoza
-          </span>
-          <span className="text-[9px] font-mono text-[#111111] font-bold">
-            {pct}%
-          </span>
-        </div>
-
-        <p className="text-[11px] text-[#111111] leading-snug">
-          {subtotal >= goal ? (
-            <span className="font-bold">¡Felicitaciones! Tenés envío gratis en Gran Mendoza ✨</span>
-          ) : (
-            <>
-              Sumá{' '}
-              <strong className="font-bold">
-                ${remaining.toLocaleString('es-AR')}
-              </strong>{' '}
-              para{' '}
-              <strong className="font-bold">
-                envío gratis
-              </strong>.
-            </>
-          )}
-        </p>
-
-        <div className="w-full bg-[#111111]/15 h-1.5 rounded-full overflow-hidden border border-[#111111]/20">
-          <div
-            className="bg-[#111111] h-full transition-all duration-500 ease-out"
-            style={{ width: `${widthPct}%` }}
-          />
-        </div>
-      </div>
-    );
-  };
-
-  // Aviso informativo elegante con candadito y color dorado de alta gama
-  const renderCompraProtegidaNotice = () => (
-    <div className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border border-ore-gold/35 bg-ore-gold/[0.06] text-ore-gold text-[11px] tracking-[0.2em] uppercase font-semibold">
-      <Lock size={13} className="text-ore-gold shrink-0" />
-      <span>Compra Protegida</span>
-    </div>
-  );
-
-  // Logos / íconos sobrios para MercadoPago y WhatsApp
+  // Logo visible de Mercado Pago
   const MercadoPagoLogo = () => (
-    <span className="inline-flex items-center gap-1.5">
-      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.8" />
-        <path d="M7.5 13.5c1.2-2.2 2.7-3.2 4.5-3.2 1.8 0 3.3 1 4.5 3.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <span className="inline-flex items-center gap-1.5" aria-label="Mercado Pago">
+      <svg className="w-5 h-5 shrink-0" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+        <ellipse cx="14" cy="14" rx="12" ry="8.5" stroke="currentColor" strokeWidth="2" />
+        <path
+          d="M7.5 15.2c1.2-2.6 2.8-3.8 4.4-3.8 1.4 0 2.3.8 2.9 2.1.6-1.3 1.5-2.1 2.9-2.1 1.6 0 3.2 1.2 4.4 3.8"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
-      <span className="font-serif font-bold tracking-wide normal-case text-sm">MercadoPago</span>
     </span>
   );
 
@@ -393,7 +350,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const showFloatingWhatsapp = !cartOpen && !checkoutModalOpen && !sizeModalOpen;
+  const showFloatingWhatsapp = !cartOpen && !checkoutModalOpen && !sizeModalOpen && !cartToast;
 
   return (
     <div className="min-h-screen bg-ore-dark text-ore-cream flex flex-col font-sans selection:bg-ore-gold selection:text-ore-dark">
@@ -508,7 +465,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* MENÚ MÓVIL DESPLEGABLE DENTRO DEL HEADER STICKY (DISPONIBLE EN CUALQUIER ALTURA DEL SCROLL) */}
+        {/* MENÚ MÓVIL DESPLEGABLE */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-ore-card/98 backdrop-blur-md border-t border-white/10 px-6 py-4 space-y-1 shadow-2xl">
             {[
@@ -543,32 +500,76 @@ export default function App() {
         )}
       </header>
 
-      {/* AVISO TEMPORAL AL AGREGAR AL CARRITO SIN ABRIR EL CAJÓN */}
-      {cartToast && !cartOpen && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-6 z-50 w-[calc(100%-2rem)] max-w-sm bg-ore-card/98 backdrop-blur-md border border-ore-gold/60 text-ore-cream px-4 py-3 rounded-xl shadow-2xl flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <CheckCircle size={18} className="text-emerald-400 shrink-0" />
-            <div className="min-w-0">
-              <p className="text-xs font-semibold text-ore-cream leading-tight">
-                Producto agregado con éxito al carrito
+      {/* ETIQUETA FLOTANTE CON BARRA DE PROGRESO: SOLO APARECE AL AGREGAR UN PRODUCTO AL CARRITO */}
+      {cartToast && !cartOpen && (() => {
+        const goal = 50000;
+        const pct = Math.min(Math.round((cartToast.subtotal / goal) * 100), 100);
+        const widthPct = Math.min((cartToast.subtotal / goal) * 100, 100);
+        const remaining = Math.max(goal - cartToast.subtotal, 0);
+
+        return (
+          <div className="fixed bottom-6 right-6 z-50 w-[calc(100%-3rem)] max-w-sm bg-ore-card/98 backdrop-blur-md border border-ore-gold/60 text-ore-cream p-4 rounded-xl shadow-2xl space-y-2.5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start gap-2.5 min-w-0">
+                <CheckCircle size={18} className="text-emerald-400 shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-ore-cream leading-tight">
+                    Agregado al carrito
+                  </p>
+                  <p className="text-[11px] text-ore-muted truncate mt-0.5">
+                    {cartToast.productName}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setCartToast(null);
+                  setCartOpen(true);
+                }}
+                className="text-[10px] uppercase tracking-wider font-bold text-ore-gold hover:underline shrink-0 cursor-pointer"
+              >
+                Ver carrito
+              </button>
+            </div>
+
+            <div className="bg-[#C8A96E] border border-[#141414]/25 rounded-lg p-2.5 space-y-1.5 text-left">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[9px] uppercase tracking-[0.18em] text-[#111111] font-bold">
+                  Envío Gran Mendoza
+                </span>
+                <span className="text-[9px] font-mono text-[#111111] font-bold">
+                  {pct}%
+                </span>
+              </div>
+
+              <p className="text-[11px] text-[#111111] leading-snug">
+                {cartToast.subtotal >= goal ? (
+                  <span className="font-bold">¡Felicitaciones! Tenés envío gratis en Gran Mendoza ✨</span>
+                ) : (
+                  <>
+                    Sumá{' '}
+                    <strong className="font-bold">
+                      ${remaining.toLocaleString('es-AR')}
+                    </strong>{' '}
+                    para{' '}
+                    <strong className="font-bold">
+                      envío gratis
+                    </strong>.
+                  </>
+                )}
               </p>
-              <p className="text-[11px] text-ore-muted truncate mt-0.5">
-                {cartToast}
-              </p>
+
+              <div className="w-full bg-[#111111]/15 h-1.5 rounded-full overflow-hidden border border-[#111111]/20">
+                <div
+                  className="bg-[#111111] h-full transition-all duration-500 ease-out"
+                  style={{ width: `${widthPct}%` }}
+                />
+              </div>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setCartToast(null);
-              setCartOpen(true);
-            }}
-            className="text-[10px] uppercase tracking-wider font-bold text-ore-gold hover:underline shrink-0 cursor-pointer"
-          >
-            Ver
-          </button>
-        </div>
-      )}
+        );
+      })()}
 
       <main className="flex-grow">
         
@@ -854,7 +855,7 @@ export default function App() {
                 />
               </div>
 
-              {/* INFORMACIÓN Y ACCIONES CON 15% OFF Y BARRA DE ENVÍO SOLO CUANDO HAY ITEMS EN EL CARRITO */}
+              {/* INFORMACIÓN Y ACCIONES: SOLO COMPRAR AHORA Y AGREGAR AL CARRITO */}
               <div className="space-y-6">
                 <div>
                   <span className="text-xs text-ore-gold uppercase tracking-widest font-semibold">
@@ -865,7 +866,6 @@ export default function App() {
                     {selectedProduct.name}
                   </h1>
                   
-                  {/* PRECIO CONTADO Y GANCHO DE 15% OFF */}
                   <div className="mt-3 space-y-2">
                     <div className="flex items-baseline gap-3">
                       <span className="text-2xl sm:text-3xl font-semibold text-ore-gold">
@@ -879,16 +879,8 @@ export default function App() {
                     <div className="inline-block bg-ore-gold/10 border border-ore-gold/30 px-3 py-1 rounded text-xs text-ore-gold font-medium">
                       ✨ 15% de descuento abonando por transferencia o efectivo: <strong className="font-bold">${Math.round(selectedProduct.price * 0.85).toLocaleString('es-AR')}</strong>
                     </div>
-
-                    {/* BARRA DE PROGRESO DE ENVÍO DEBAJO DEL PRECIO: SOLO VISIBLE SI HAY PRODUCTOS EN EL CARRITO */}
-                    {cartCount > 0 && (
-                      <div className="pt-1">
-                        {renderShippingProgressBlock(cartTotal, true)}
-                      </div>
-                    )}
                   </div>
 
-                  {/* INDICADOR DE STOCK / ESCASEZ ELEGANTE */}
                   <div className="mt-3">
                     {(() => {
                       const stockActual = Number(selectedProduct.stock ?? 0);
@@ -966,7 +958,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* INSIGNIAS CON AJUSTE SIN CARGO 15 DÍAS Y ENVÍO ASEGURADO VISIBLE */}
                 <div className="grid grid-cols-3 gap-2 py-4 my-3 border-y border-white/10 bg-ore-card/40 rounded-lg px-3">
                   <div className="flex flex-col items-center text-center space-y-1 px-1">
                     <div className="w-8 h-8 rounded-full bg-ore-gold/10 border border-ore-gold/30 flex items-center justify-center text-ore-gold">
@@ -1011,7 +1002,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* ORDEN SOLICITADO: 1) COMPRAR AHORA, 2) AGREGAR AL CARRITO Y SEGUIR VIENDO, 3) TRANSFERENCIA -15% */}
+                {/* SOLO COMPRAR AHORA Y AGREGAR AL CARRITO Y SEGUIR VIENDO */}
                 <div className="space-y-3 pt-2">
                   <button 
                     disabled={Number(selectedProduct.stock ?? 0) <= 0}
@@ -1033,37 +1024,20 @@ export default function App() {
                   </button>
 
                   {Number(selectedProduct.stock ?? 0) > 0 && (
-                    <>
-                      <button 
-                        onClick={() => {
-                          addToCart(selectedProduct, undefined, { openCart: false, showToast: true });
-                        }} 
-                        className="w-full bg-ore-card hover:bg-white/10 text-ore-cream border border-ore-gold/40 font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
-                      >
-                        <span>Agregar al carrito y seguir viendo</span>
-                      </button>
-
-                      <button 
-                        onClick={() => {
-                          const phone = "5492613737159"; 
-                          const codigo = `ORE-${String(selectedProduct.id).padStart(4, '0')}`;
-                          const precioEfectivo = Math.round(selectedProduct.price * 0.85);
-                          const message = `Hola ORE Joyería! Me interesa abonar por transferencia con el 15% OFF la pieza *[${codigo}] ${selectedProduct.name}* a $${precioEfectivo.toLocaleString('es-AR')}. ¿Cómo coordinamos el pago y envío?`;
-                          window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-                        }} 
-                        className="w-full bg-ore-dark hover:bg-white/5 text-ore-gold border border-ore-gold/50 font-bold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
-                      >
-                        <WhatsAppLogo className="w-4 h-4 shrink-0" />
-                        <span>Transferencia -15%</span>
-                      </button>
-                    </>
+                    <button 
+                      onClick={() => {
+                        addToCart(selectedProduct, undefined, { openCart: false, showToast: true });
+                      }} 
+                      className="w-full bg-ore-card hover:bg-white/10 text-ore-cream border border-ore-gold/40 font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span>Agregar al carrito y seguir viendo</span>
+                    </button>
                   )}
                 </div>
 
               </div>
             </div>
 
-            {/* SECCIÓN: TAMBIÉN TE PUEDE INTERESAR (ORDENADO DE MENOR A MAYOR PRECIO) */}
             <div className="mt-20 border-t border-white/10 pt-14 w-full">
               <h3 className="font-serif text-3xl text-ore-cream mb-8 text-center">
                 También te puede interesar
@@ -1428,7 +1402,7 @@ export default function App() {
 
       </main>
 
-      {/* CARRITO CON AHORRO 15% TRANSFERENCIA, SUGERIDOS SOBRIOS Y COMPRA PROTEGIDA */}
+      {/* CARRITO CON AVISO DE COMPRA PROTEGIDA SIN BORDE ABAJO */}
       {cartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm">
           <div className="w-full max-w-md bg-ore-card h-full flex flex-col border-l border-white/10 p-5 sm:p-6 shadow-2xl">
@@ -1463,7 +1437,6 @@ export default function App() {
                 ))
               )}
 
-              {/* TAMBIÉN TE PUEDE INTERESAR (SOBRIO, SIN SCROLL INTERNO NI ETIQUETAS DE PRECIO/SUMA) */}
               {suggestedProducts.length > 0 && (
                 <div className="pt-3 border-t border-white/10 space-y-2.5">
                   <h3 className="text-[11px] uppercase tracking-[0.2em] text-ore-gold font-semibold">
@@ -1517,7 +1490,7 @@ export default function App() {
             </div>
 
             {cart.length > 0 && (
-              <div className="border-t border-white/10 pt-3.5 space-y-3">
+              <div className="border-t border-white/10 pt-3.5 space-y-2.5">
                 <div className="bg-ore-dark/90 border border-ore-gold/30 rounded-lg p-3 space-y-1 text-xs">
                   <div className="flex justify-between text-ore-cream/85">
                     <span>Subtotal (precio regular):</span>
@@ -1533,8 +1506,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {renderCompraProtegidaNotice()}
-
                 <button 
                   onClick={() => { 
                     setCartOpen(false); 
@@ -1544,6 +1515,11 @@ export default function App() {
                 >
                   Iniciar compra
                 </button>
+
+                <p className="flex items-center justify-center gap-1.5 text-[11px] text-ore-muted pt-0.5">
+                  <Lock size={11} className="text-ore-muted shrink-0" />
+                  <span>Compra protegida · Envío asegurado y atención personalizada</span>
+                </p>
               </div>
             )}
           </div>
@@ -1772,14 +1748,8 @@ export default function App() {
                   <span>Total:</span>
                   <span className="text-ore-gold font-bold text-lg">${finalTotal.toLocaleString('es-AR')}</span>
                 </div>
-
-                {/* COMPRA PROTEGIDA DEBAJO DEL TOTAL A ABONAR */}
-                <div className="pt-1">
-                  {renderCompraProtegidaNotice()}
-                </div>
               </div>
 
-              {/* RECORDATORIO DE 15% OFF POR TRANSFERENCIA */}
               <div className="bg-emerald-950/35 border border-emerald-400/35 rounded-lg p-3.5 text-left space-y-1">
                 <p className="text-xs text-emerald-300 font-bold">
                   15% OFF abonando por transferencia
@@ -1793,7 +1763,7 @@ export default function App() {
                 </p>
               </div>
 
-              {/* 1) TRANSFERENCIA -15% (CON LOGO WHATSAPP)  |  2) PAGAR CON MERCADOPAGO  |  3) VOLVER AL CARRITO */}
+              {/* 1) TRANSFERENCIA -15% OFF CON VERDE WHATSAPP + LOGO  |  2) PAGAR AHORA + LOGO MP EN NEGRO CON FILO DORADO  |  3) VOLVER AL CARRITO */}
               <div className="flex flex-col gap-2.5 pt-1">
                 <button
                   type="button"
@@ -1801,7 +1771,7 @@ export default function App() {
                     window.open(buildTransferWhatsAppUrl(), '_blank');
                     setCheckoutModalOpen(false);
                   }}
-                  className="w-full bg-ore-gold hover:bg-ore-gold-light text-ore-dark font-bold py-3.5 px-6 uppercase text-xs tracking-widest rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                  className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark font-bold py-3.5 px-6 uppercase text-xs tracking-widest rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                 >
                   <WhatsAppLogo className="w-4 h-4 shrink-0" />
                   <span>Transferencia -15% OFF</span>
@@ -1835,20 +1805,20 @@ export default function App() {
                       if (data.init_point) {
                         window.location.href = data.init_point;
                       } else {
-                        alert('Error al iniciar el pago con MercadoPago. Intente nuevamente.');
+                        alert('Error al iniciar el pago con Mercado Pago. Intente nuevamente.');
                       }
                     } catch (err) {
-                      console.error("Error al conectar con MercadoPago:", err);
+                      console.error("Error al conectar con Mercado Pago:", err);
                       alert("Ocurrió un error al procesar el pago.");
                     }
                   }}
-                  className={`w-full font-semibold py-3.5 px-6 text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg ${
+                  className={`w-full font-semibold py-3.5 px-6 text-xs uppercase tracking-widest rounded transition flex items-center justify-center gap-2 shadow-lg ${
                     envioInfo.calculado
-                      ? 'bg-[#009EE3] hover:bg-[#0089C7] text-white cursor-pointer'
-                      : 'bg-white/10 text-ore-muted cursor-not-allowed'
+                      ? 'bg-[#0B0B0B] hover:bg-[#141414] text-ore-gold border border-ore-gold/60 hover:border-ore-gold cursor-pointer'
+                      : 'bg-white/10 text-ore-muted border border-white/10 cursor-not-allowed'
                   }`}
                 >
-                  <span>{envioInfo.calculado ? 'Pagar con' : 'Ingresá tu CP para pagar con'}</span>
+                  <span>{envioInfo.calculado ? 'Pagar ahora' : 'Ingresá tu CP para pagar ahora'}</span>
                   <MercadoPagoLogo />
                 </button>
 
