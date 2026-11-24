@@ -1906,8 +1906,8 @@ export default function App() {
                   }}
                   className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark font-bold py-3.5 px-6 uppercase text-xs tracking-widest rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                 >
-                  <WhatsAppLogo className="w-4 h-4 shrink-0" />
                   <span>Transferencia -15% OFF</span>
+                  <WhatsAppLogo className="w-4 h-4 shrink-0" />
                 </button>
 
                 <button 
