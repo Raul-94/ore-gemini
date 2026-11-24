@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
     ShoppingBag, Menu, X, Truck, Phone, Mail,
-    ArrowRight, CheckCircle, AlertCircle, Trash2, Lock, ShieldCheck, CreditCard, Landmark, Banknote, Plus
+    ArrowRight, CheckCircle, AlertCircle, Trash2, Lock, Plus
   } from 'lucide-react';
 import { supabase } from './supabase';
 import AdminDashboard from './AdminDashboard';
@@ -271,10 +271,10 @@ export default function App() {
   const transferDiscountAmount = Math.round(cartTotal * 0.15);
   const cartTotalWithTransfer = Math.max(cartTotal - transferDiscountAmount, 0);
 
-  // Sugeridos ordenados de menor a mayor precio excluyendo lo ya cargado en el carrito
+  // Sugeridos ordenados de menor a mayor precio (2 piezas para mantener el carrito compacto sin scroll interno)
   const suggestedProducts = sortByPriceAsc(
     availableProducts.filter(p => !cart.some(item => item.id === p.id))
-  ).slice(0, 3);
+  ).slice(0, 2);
 
   const getSizeGuideType = (product) => {
     if (!product) return null;
@@ -305,14 +305,15 @@ export default function App() {
   const validarSoloNumerosPeso = (valor) => valor.replace(/[^0-9.,]/g, '');
   const validarSoloTelefono = (valor) => valor.replace(/[^0-9+\s-]/g, '');
 
+  // Mismo color y estilo que la etiqueta de "Nuevo"
   const renderLastUnitBadge = (product, large = false) => {
     if (Number(product?.stock ?? 0) !== 1) return null;
 
     return (
       <span
-        className={`absolute ${large ? 'top-4 right-4 px-3 py-1.5 gap-1.5' : 'top-3 right-3 px-2.5 py-1 gap-1'} z-10 bg-[#C8A96E] border border-[#111111]/45 text-[#111111] ${large ? 'text-[10px]' : 'text-[9px]'} font-bold uppercase tracking-[0.18em] rounded shadow-md flex items-center select-none`}
+        className={`absolute ${large ? 'top-4 right-4 px-3 py-1' : 'top-3 right-3 px-2 py-0.5'} z-10 bg-ore-gold text-ore-dark ${large ? 'text-[10px]' : 'text-[9px]'} font-bold uppercase tracking-[0.2em] rounded shadow-md select-none`}
       >
-        <span>{large ? 'Última unidad disponible' : 'Última unidad'}</span>
+        Última unidad
       </span>
     );
   };
@@ -361,35 +362,29 @@ export default function App() {
     );
   };
 
-  const renderPaymentTrustBlock = () => (
-    <div className="bg-ore-dark/80 border border-white/10 rounded-lg p-3 space-y-2.5 text-left">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 text-ore-gold text-xs font-semibold">
-          <ShieldCheck size={15} className="shrink-0" />
-          <span>Compra Protegida</span>
-        </div>
-        <span className="text-[10px] text-ore-muted">Estuche y envío asegurado</span>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-ore-cream/90">
-        <span className="inline-flex items-center gap-1 bg-ore-card border border-white/10 px-2 py-1 rounded">
-          <CreditCard size={12} className="text-[#009EE3]" />
-          <span>MercadoPago</span>
-        </span>
-        <span className="inline-flex items-center gap-1 bg-ore-card border border-white/10 px-2 py-1 rounded">
-          <Landmark size={12} className="text-ore-gold" />
-          <span>Transferencia (-15%)</span>
-        </span>
-        <span className="inline-flex items-center gap-1 bg-ore-card border border-white/10 px-2 py-1 rounded">
-          <Banknote size={12} className="text-emerald-400" />
-          <span>Efectivo</span>
-        </span>
-        <span className="inline-flex items-center gap-1 bg-ore-card border border-white/10 px-2 py-1 rounded">
-          <Truck size={12} className="text-ore-gold" />
-          <span>Andreani / Local</span>
-        </span>
-      </div>
+  // Aviso informativo elegante con candadito y color dorado de alta gama
+  const renderCompraProtegidaNotice = () => (
+    <div className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border border-ore-gold/35 bg-ore-gold/[0.06] text-ore-gold text-[11px] tracking-[0.2em] uppercase font-semibold">
+      <Lock size={13} className="text-ore-gold shrink-0" />
+      <span>Compra Protegida</span>
     </div>
+  );
+
+  // Logos / íconos sobrios para MercadoPago y WhatsApp
+  const MercadoPagoLogo = () => (
+    <span className="inline-flex items-center gap-1.5">
+      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.8" />
+        <path d="M7.5 13.5c1.2-2.2 2.7-3.2 4.5-3.2 1.8 0 3.3 1 4.5 3.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+      <span className="font-serif font-bold tracking-wide normal-case text-sm">MercadoPago</span>
+    </span>
+  );
+
+  const WhatsAppLogo = ({ className = "w-4 h-4 shrink-0" }) => (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+    </svg>
   );
 
   const navigateToView = (viewId) => {
@@ -859,7 +854,7 @@ export default function App() {
                 />
               </div>
 
-              {/* INFORMACIÓN Y ACCIONES CON 15% OFF Y BARRA DE ENVÍO DEBAJO DEL PRECIO */}
+              {/* INFORMACIÓN Y ACCIONES CON 15% OFF Y BARRA DE ENVÍO SOLO CUANDO HAY ITEMS EN EL CARRITO */}
               <div className="space-y-6">
                 <div>
                   <span className="text-xs text-ore-gold uppercase tracking-widest font-semibold">
@@ -885,7 +880,7 @@ export default function App() {
                       ✨ 15% de descuento abonando por transferencia o efectivo: <strong className="font-bold">${Math.round(selectedProduct.price * 0.85).toLocaleString('es-AR')}</strong>
                     </div>
 
-                    {/* BARRA DE PROGRESO DE ENVÍO FIJA DEBAJO DEL PRECIO CUANDO HAY ITEMS EN EL CARRITO */}
+                    {/* BARRA DE PROGRESO DE ENVÍO DEBAJO DEL PRECIO: SOLO VISIBLE SI HAY PRODUCTOS EN EL CARRITO */}
                     {cartCount > 0 && (
                       <div className="pt-1">
                         {renderShippingProgressBlock(cartTotal, true)}
@@ -1016,7 +1011,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* ORDEN SOLICITADO: 1) COMPRAR AHORA, 2) AGREGAR AL CARRITO Y SEGUIR VIENDO, 3) WHATSAPP */}
+                {/* ORDEN SOLICITADO: 1) COMPRAR AHORA, 2) AGREGAR AL CARRITO Y SEGUIR VIENDO, 3) TRANSFERENCIA -15% */}
                 <div className="space-y-3 pt-2">
                   <button 
                     disabled={Number(selectedProduct.stock ?? 0) <= 0}
@@ -1053,12 +1048,13 @@ export default function App() {
                           const phone = "5492613737159"; 
                           const codigo = `ORE-${String(selectedProduct.id).padStart(4, '0')}`;
                           const precioEfectivo = Math.round(selectedProduct.price * 0.85);
-                          const message = `Hola ORE Joyería! Me interesa comprar ahora con el 15% off por transferencia la pieza *[${codigo}] ${selectedProduct.name}* a $${precioEfectivo.toLocaleString('es-AR')}. ¿Cómo coordinamos el pago y envío?`;
+                          const message = `Hola ORE Joyería! Me interesa abonar por transferencia con el 15% OFF la pieza *[${codigo}] ${selectedProduct.name}* a $${precioEfectivo.toLocaleString('es-AR')}. ¿Cómo coordinamos el pago y envío?`;
                           window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
                         }} 
-                        className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark font-bold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                        className="w-full bg-ore-dark hover:bg-white/5 text-ore-gold border border-ore-gold/50 font-bold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
                       >
-                        <span>Reservar por WhatsApp (15% OFF Transferencia)</span>
+                        <WhatsAppLogo className="w-4 h-4 shrink-0" />
+                        <span>Transferencia -15%</span>
                       </button>
                     </>
                   )}
@@ -1432,7 +1428,7 @@ export default function App() {
 
       </main>
 
-      {/* CARRITO CON AHORRO 15% TRANSFERENCIA, BARRA ENVÍO GRATIS, SUGERIDOS POR PRECIO Y COMPRA PROTEGIDA */}
+      {/* CARRITO CON AHORRO 15% TRANSFERENCIA, SUGERIDOS SOBRIOS Y COMPRA PROTEGIDA */}
       {cartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm">
           <div className="w-full max-w-md bg-ore-card h-full flex flex-col border-l border-white/10 p-5 sm:p-6 shadow-2xl">
@@ -1442,8 +1438,6 @@ export default function App() {
             </div>
 
             <div className="flex-grow overflow-y-auto py-4 space-y-4">
-              {cart.length > 0 && renderShippingProgressBlock(cartTotal, true)}
-
               {cart.length === 0 ? (
                 <p className="text-center text-ore-muted text-sm py-8">Tu carrito está vacío.</p>
               ) : (
@@ -1469,15 +1463,12 @@ export default function App() {
                 ))
               )}
 
-              {/* SUGERIDOS ORDENADOS DE MENOR A MAYOR PRECIO */}
+              {/* TAMBIÉN TE PUEDE INTERESAR (SOBRIO, SIN SCROLL INTERNO NI ETIQUETAS DE PRECIO/SUMA) */}
               {suggestedProducts.length > 0 && (
                 <div className="pt-3 border-t border-white/10 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase tracking-[0.18em] text-ore-gold font-semibold">
-                      También te puede sumar
-                    </span>
-                    <span className="text-[9px] text-ore-muted">Menor a mayor precio</span>
-                  </div>
+                  <h3 className="text-[11px] uppercase tracking-[0.2em] text-ore-gold font-semibold">
+                    También te puede interesar
+                  </h3>
 
                   <div className="space-y-2">
                     {suggestedProducts.map(sug => (
@@ -1516,7 +1507,7 @@ export default function App() {
                           className="shrink-0 bg-ore-gold/15 hover:bg-ore-gold text-ore-gold hover:text-ore-dark border border-ore-gold/40 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded transition inline-flex items-center gap-1 cursor-pointer"
                         >
                           <Plus size={12} />
-                          <span>Sumar</span>
+                          <span>Agregar</span>
                         </button>
                       </div>
                     ))}
@@ -1542,7 +1533,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {renderPaymentTrustBlock()}
+                {renderCompraProtegidaNotice()}
 
                 <button 
                   onClick={() => { 
@@ -1662,6 +1653,22 @@ export default function App() {
         const modalTransferSavings = Math.round(cartTotal * 0.15);
         const modalTotalWithTransfer = Math.max(cartTotal - modalTransferSavings, 0) + envioInfo.costo;
 
+        const buildTransferWhatsAppUrl = () => {
+          const phone = "5492613737159";
+          const itemsList = cart.map(i => {
+            const codigo = `ORE-${String(i.id).padStart(4, '0')}`;
+            const medida = i.measure ? ` | Medida: ${i.measure}` : '';
+            return `- [${codigo}] ${i.qty}x ${i.name}${medida} ($${(i.price * i.qty).toLocaleString('es-AR')})`;
+          }).join('%0A');
+
+          const envioTexto = envioInfo.calculado
+            ? `*Entrega:* ${envioInfo.zona} (${envioInfo.costo === 0 ? 'GRATIS' : `$${envioInfo.costo.toLocaleString('es-AR')}`})`
+            : `*Entrega:* A coordinar según CP`;
+
+          const message = `Hola ORE Joyería! Quisiera abonar por transferencia con el 15% OFF los siguientes productos:%0A%0A${itemsList}%0A%0A${envioTexto}%0A*Total con 15% OFF Transferencia en joyas: $${modalTotalWithTransfer.toLocaleString('es-AR')} (Ahorro: $${modalTransferSavings.toLocaleString('es-AR')})*`;
+          return `https://wa.me/${phone}?text=${message}`;
+        };
+
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
             <div className="w-full max-w-lg bg-ore-card border border-ore-gold/40 rounded-lg p-6 sm:p-8 shadow-2xl space-y-5 text-center animate-in fade-in zoom-in duration-200 my-auto">
@@ -1762,28 +1769,44 @@ export default function App() {
                   </div>
                 </div>
                 <div className="border-t border-white/10 pt-2 flex justify-between items-center text-sm font-serif text-ore-cream">
-                  <span>Total Final:</span>
+                  <span>Total:</span>
                   <span className="text-ore-gold font-bold text-lg">${finalTotal.toLocaleString('es-AR')}</span>
+                </div>
+
+                {/* COMPRA PROTEGIDA DEBAJO DEL TOTAL A ABONAR */}
+                <div className="pt-1">
+                  {renderCompraProtegidaNotice()}
                 </div>
               </div>
 
-              {/* RECORDATORIO FINAL DE 15% OFF POR TRANSFERENCIA ANTES DE ELEGIR MEDIO DE PAGO */}
+              {/* RECORDATORIO DE 15% OFF POR TRANSFERENCIA */}
               <div className="bg-emerald-950/35 border border-emerald-400/35 rounded-lg p-3.5 text-left space-y-1">
                 <p className="text-xs text-emerald-300 font-bold">
-                  ✨ Recordá: abonando por transferencia tenés 15% OFF en las joyas
+                  15% OFF abonando por transferencia
                 </p>
                 <p className="text-xs text-ore-cream/90">
-                  Ahorrás <strong className="text-emerald-300">${modalTransferSavings.toLocaleString('es-AR')}</strong> en productos
+                  Ahorrás <strong className="text-emerald-300">${modalTransferSavings.toLocaleString('es-AR')}</strong> en joyas
                   {envioInfo.calculado
-                    ? <> — Total estimado por transferencia{envioInfo.costo > 0 ? ' + envío' : ''}: <strong className="text-ore-gold">${modalTotalWithTransfer.toLocaleString('es-AR')}</strong></>
-                    : <> — Subtotal en joyas con beneficio: <strong className="text-ore-gold">${Math.max(cartTotal - modalTransferSavings, 0).toLocaleString('es-AR')}</strong></>
+                    ? <> — Con transferencia{envioInfo.costo > 0 ? ' + envío' : ''}: <strong className="text-ore-gold">${modalTotalWithTransfer.toLocaleString('es-AR')}</strong></>
+                    : <> — Subtotal con transferencia: <strong className="text-ore-gold">${Math.max(cartTotal - modalTransferSavings, 0).toLocaleString('es-AR')}</strong></>
                   }.
                 </p>
               </div>
 
-              {renderPaymentTrustBlock()}
+              {/* 1) TRANSFERENCIA -15% (CON LOGO WHATSAPP)  |  2) PAGAR CON MERCADOPAGO  |  3) VOLVER AL CARRITO */}
+              <div className="flex flex-col gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.open(buildTransferWhatsAppUrl(), '_blank');
+                    setCheckoutModalOpen(false);
+                  }}
+                  className="w-full bg-ore-gold hover:bg-ore-gold-light text-ore-dark font-bold py-3.5 px-6 uppercase text-xs tracking-widest rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                >
+                  <WhatsAppLogo className="w-4 h-4 shrink-0" />
+                  <span>Transferencia -15% OFF</span>
+                </button>
 
-              <div className="flex flex-col gap-3 pt-1">
                 <button 
                   disabled={!envioInfo.calculado}
                   onClick={async () => {
@@ -1819,39 +1842,21 @@ export default function App() {
                       alert("Ocurrió un error al procesar el pago.");
                     }
                   }}
-                  className={`w-full font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg ${
+                  className={`w-full font-semibold py-3.5 px-6 text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg ${
                     envioInfo.calculado
                       ? 'bg-[#009EE3] hover:bg-[#0089C7] text-white cursor-pointer'
                       : 'bg-white/10 text-ore-muted cursor-not-allowed'
                   }`}
                 >
-                  <span>{envioInfo.calculado ? 'Pagar Total con MercadoPago' : 'Ingresá tu CP para habilitar pago'}</span>
+                  <span>{envioInfo.calculado ? 'Pagar con' : 'Ingresá tu CP para pagar con'}</span>
+                  <MercadoPagoLogo />
                 </button>
 
-                <button 
-                  onClick={() => {
-                    const phone = "5492613737159"; 
-                    const itemsList = cart.map(i => {
-                      const codigo = `ORE-${String(i.id).padStart(4, '0')}`;
-                      const medida = i.measure ? ` | Medida: ${i.measure}` : '';
-                      return `- [${codigo}] ${i.qty}x ${i.name}${medida} ($${(i.price * i.qty).toLocaleString('es-AR')})`;
-                    }).join('%0A');
-
-                    const envioTexto = envioInfo.calculado
-                      ? `*Entrega:* ${envioInfo.zona} (${envioInfo.costo === 0 ? 'GRATIS' : `$${envioInfo.costo.toLocaleString('es-AR')}`})`
-                      : `*Entrega:* A coordinar según CP`;
-
-                    const message = `Hola ORE Joyería! Quisiera finalizar la compra de los siguientes productos:%0A%0A${itemsList}%0A%0A${envioTexto}%0A*Total Regular + Envío: $${finalTotal.toLocaleString('es-AR')}*%0A*Total con 15% OFF Transferencia en joyas: $${modalTotalWithTransfer.toLocaleString('es-AR')} (Ahorro: $${modalTransferSavings.toLocaleString('es-AR')})*%0A%0AQuedo a la espera de la atención de un asesor comercial.`;
-                    
-                    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-                    setCheckoutModalOpen(false);
-                  }}
-                  className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark font-bold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                <button
+                  type="button"
+                  onClick={() => setCheckoutModalOpen(false)}
+                  className="text-xs text-ore-muted hover:text-ore-cream uppercase tracking-wider pt-1.5 cursor-pointer"
                 >
-                  <span>Finalizar con Asesor por WhatsApp</span>
-                </button>
-
-                <button onClick={() => setCheckoutModalOpen(false)} className="text-xs text-ore-muted hover:text-ore-cream uppercase tracking-wider pt-1 cursor-pointer">
                   Volver al carrito
                 </button>
               </div>
@@ -1903,9 +1908,7 @@ export default function App() {
             aria-label="Consultar por WhatsApp"
             className="w-14 h-14 bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 cursor-pointer border-2 border-ore-dark"
           >
-            <svg className="w-7 h-7 fill-current" viewBox="0 0 24 24">
-              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-            </svg>
+            <WhatsAppLogo className="w-7 h-7" />
           </a>
         </div>
       )}
