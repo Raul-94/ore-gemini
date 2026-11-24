@@ -6,6 +6,12 @@ import {
 import { supabase } from './supabase';
 import AdminDashboard from './AdminDashboard';
 
+const HERO_BACKGROUND_IMAGE =
+  'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1920&q=80';
+
+const MP_ISOTIPO_URL =
+  'https://gxjpsfchccljmnpdyegn.supabase.co/storage/v1/object/public/product-images/mp-isotipo.svg';
+
 export default function App() {
   // Estados de navegación y vistas
   const [currentView, setCurrentView] = useState('home'); // 'home', 'shop', 'gold', 'about', 'contact', 'admin', 'product-detail'
@@ -343,27 +349,13 @@ export default function App() {
     );
   };
 
-  // Logo característico de Mercado Pago (óvalo + apretón de manos)
-  const MercadoPagoLogo = ({ className = "w-6 h-5" }) => (
-    <span className="inline-flex items-center shrink-0" aria-label="Mercado Pago">
-      <svg className={className} viewBox="0 0 36 26" fill="none" aria-hidden="true">
-        <ellipse cx="18" cy="13" rx="16.5" ry="11.5" stroke="currentColor" strokeWidth="2.1" />
-        <path
-          d="M8.5 13.8l4.2-3.2c.6-.4 1.4-.4 2 0l2.1 1.6 2.3-1.8c.6-.5 1.5-.5 2.1 0l4.1 3.2"
-          stroke="currentColor"
-          strokeWidth="2.1"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M12.2 15.6l2.4 1.9c.5.4 1.2.4 1.7 0l1.7-1.3 1.7 1.3c.5.4 1.2.4 1.7 0l2.4-1.9"
-          stroke="currentColor"
-          strokeWidth="1.9"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </span>
+  const MercadoPagoLogo = ({ className = "h-5 w-auto shrink-0 object-contain" }) => (
+    <img
+      src={MP_ISOTIPO_URL}
+      alt="Mercado Pago"
+      loading="lazy"
+      className={className}
+    />
   );
 
   const WhatsAppLogo = ({ className = "w-4 h-4 shrink-0" }) => (
@@ -599,7 +591,7 @@ export default function App() {
             <section className="relative h-[80vh] flex items-center justify-center text-center px-4 overflow-hidden">
               <div className="absolute inset-0 z-0">
                 <img 
-                  src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1920&q=80" 
+                  src={HERO_BACKGROUND_IMAGE} 
                   alt="Joyería ORE" 
                   loading="lazy"
                   className="w-full h-full object-cover opacity-40 brightness-75 scale-105"
@@ -1542,7 +1534,7 @@ export default function App() {
 
       </main>
 
-      {/* CARRITO CON AVISO DE COMPRA PROTEGIDA SIN BORDE ABAJO */}
+      {/* CARRITO CON COMPRA PROTEGIDA EN UNA LÍNEA */}
       {cartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm">
           <div className="w-full max-w-md bg-ore-card h-full flex flex-col border-l border-white/10 p-5 sm:p-6 shadow-2xl">
@@ -1656,10 +1648,10 @@ export default function App() {
                   Iniciar compra
                 </button>
 
-                <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#9CA3AF] pt-1 leading-snug text-center flex-wrap">
+                <div className="flex items-center justify-center gap-1.5 text-[10.5px] sm:text-[11px] text-[#9CA3AF] pt-1 leading-none whitespace-nowrap overflow-hidden">
                   <Lock size={11} className="text-[#D4AF37] shrink-0" />
-                  <span className="text-[#D4AF37] font-medium">Compra protegida</span>
-                  <span>· Pago encriptado con Mercado Pago y garantía de entrega asegurada</span>
+                  <span className="text-[#D4AF37] font-semibold tracking-[0.03em]">Compra Protegida</span>
+                  <span>: Pago encriptado con Mercado Pago y Entrega Asegurada</span>
                 </div>
               </div>
             )}
@@ -1904,7 +1896,7 @@ export default function App() {
                 </p>
               </div>
 
-              {/* 1) TRANSFERENCIA -15% OFF CON VERDE WHATSAPP + LOGO  |  2) PAGAR AHORA + LOGO MP EN NEGRO CON FILO DORADO  |  3) COMPRA PROTEGIDA  |  4) VOLVER AL CARRITO */}
+              {/* 1) TRANSFERENCIA -15% OFF CON VERDE WHATSAPP + LOGO  |  2) PAGAR AHORA + ISOTIPO MP EN NEGRO CON FILO DORADO  |  3) COMPRA PROTEGIDA EN UNA LÍNEA  |  4) VOLVER AL CARRITO */}
               <div className="flex flex-col gap-2.5 pt-1">
                 <button
                   type="button"
@@ -1953,20 +1945,20 @@ export default function App() {
                       alert("Ocurrió un error al procesar el pago.");
                     }
                   }}
-                  className={`w-full font-semibold py-3.5 px-6 text-xs uppercase tracking-widest rounded transition flex items-center justify-center gap-2 shadow-lg ${
+                  className={`w-full font-semibold py-3.5 px-6 text-xs uppercase tracking-widest rounded transition flex items-center justify-center gap-2.5 shadow-lg ${
                     envioInfo.calculado
                       ? 'bg-[#0B0B0B] hover:bg-[#141414] text-ore-gold border border-ore-gold/60 hover:border-ore-gold cursor-pointer'
                       : 'bg-white/10 text-ore-muted border border-white/10 cursor-not-allowed'
                   }`}
                 >
                   <span>{envioInfo.calculado ? 'Pagar ahora' : 'Ingresá tu CP para pagar ahora'}</span>
-                  <MercadoPagoLogo />
+                  {envioInfo.calculado && <MercadoPagoLogo />}
                 </button>
 
-                <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#9CA3AF] pt-1 leading-snug text-center flex-wrap">
+                <div className="flex items-center justify-center gap-1.5 text-[10.5px] sm:text-[11px] text-[#9CA3AF] pt-1 leading-none whitespace-nowrap overflow-hidden">
                   <Lock size={11} className="text-[#D4AF37] shrink-0" />
-                  <span className="text-[#D4AF37] font-medium">Compra protegida</span>
-                  <span>· Pago encriptado con Mercado Pago y garantía de entrega asegurada</span>
+                  <span className="text-[#D4AF37] font-semibold tracking-[0.03em]">Compra Protegida</span>
+                  <span>: Pago encriptado con Mercado Pago y Entrega Asegurada</span>
                 </div>
 
                 <button
