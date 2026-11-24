@@ -1651,7 +1651,7 @@ export default function App() {
                 <div className="flex items-center justify-center gap-1.5 text-[10.5px] sm:text-[11px] text-[#9CA3AF] pt-1 leading-none whitespace-nowrap overflow-hidden">
                   <Lock size={11} className="text-[#D4AF37] shrink-0" />
                   <span className="text-[#D4AF37] font-semibold tracking-[0.03em]">Compra Protegida</span>
-                  <span>: Pago encriptado con Mercado Pago y Entrega Asegurada</span>
+                  <span>: Pago encriptado y Entrega Asegurada</span>
                 </div>
               </div>
             )}
@@ -1958,7 +1958,7 @@ export default function App() {
                 <div className="flex items-center justify-center gap-1.5 text-[10.5px] sm:text-[11px] text-[#9CA3AF] pt-1 leading-none whitespace-nowrap overflow-hidden">
                   <Lock size={11} className="text-[#D4AF37] shrink-0" />
                   <span className="text-[#D4AF37] font-semibold tracking-[0.03em]">Compra Protegida</span>
-                  <span>: Pago encriptado con Mercado Pago y Entrega Asegurada</span>
+                  <span>: Pago encriptado y Entrega Asegurada</span>
                 </div>
 
                 <button
