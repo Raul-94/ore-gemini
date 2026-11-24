@@ -9,10 +9,14 @@ import AdminDashboard from './AdminDashboard';
 export default function App() {
   // Estados de navegación y vistas
   const [currentView, setCurrentView] = useState('home'); // 'home', 'shop', 'gold', 'about', 'contact', 'admin', 'product-detail'
+  const [shopMode, setShopMode] = useState('step'); // 'step' (Ver Catalogo: Categoria -> Material) | 'collection' (Explorar Coleccion: todo + filtro desplegable)
+  const [collectionCategory, setCollectionCategory] = useState('Todos');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [cartToast, setCartToast] = useState(null);
+
+  // Toast temporal solo para "Agregado al carrito" (la barra de envío gratis queda persistente mientras haya items)
+  const [addedToast, setAddedToast] = useState(null);
   const toastTimeoutRef = useRef(null);
   
   // Autenticación Admin
@@ -115,17 +119,16 @@ export default function App() {
     };
   }, []);
 
-  const triggerCartToast = (productName, nextSubtotal) => {
-    setCartToast({
-      productName: productName || 'Producto',
-      subtotal: Number(nextSubtotal ?? 0)
+  const triggerAddedToast = (productName) => {
+    setAddedToast({
+      productName: productName || 'Producto'
     });
     if (toastTimeoutRef.current) {
       clearTimeout(toastTimeoutRef.current);
     }
     toastTimeoutRef.current = setTimeout(() => {
-      setCartToast(null);
-    }, 3600);
+      setAddedToast(null);
+    }, 3200);
   };
 
   const [categories, setCategories] = useState([]);
@@ -219,6 +222,26 @@ export default function App() {
   const [filterCategory, setFilterCategory] = useState('Todos');
   const [filterMaterial, setFilterMaterial] = useState('Todos');
 
+  const openStepCatalog = () => {
+    setFilterCategory('Todos');
+    setFilterMaterial('Todos');
+    setCollectionCategory('Todos');
+    setShopMode('step');
+    setCurrentView('shop');
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const openFullCollection = () => {
+    setFilterCategory('Todos');
+    setFilterMaterial('Todos');
+    setCollectionCategory('Todos');
+    setShopMode('collection');
+    setCurrentView('shop');
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const [goldForm, setGoldForm] = useState({
     name: '', phone: '', email: '', pieceType: 'Anillo', karat: '18k', weight: '', description: '' , acceptedTerms: false
   });
@@ -230,7 +253,6 @@ export default function App() {
     setGoldForm({ name: '', phone: '', email: '', pieceType: 'Anillo', karat: '18k', weight: '', description: '' , acceptedTerms: false });
   };
 
-  // Agrega el producto y dispara la etiqueta flotante con barra de progreso cuando corresponde
   const addToCart = (product, selectedSize, options = { openCart: false, showToast: true }) => {
     if (!product || Number(product.stock ?? 0) <= 0) return;
 
@@ -247,12 +269,11 @@ export default function App() {
     }
 
     setCart(nextCart);
-    const nextSubtotal = nextCart.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.qty || 1)), 0);
 
     if (options.openCart) {
       setCartOpen(true);
     } else if (options.showToast !== false) {
-      triggerCartToast(product.name || product.title, nextSubtotal);
+      triggerAddedToast(product.name || product.title);
     }
   };
 
@@ -322,15 +343,22 @@ export default function App() {
     );
   };
 
-  // Logo visible de Mercado Pago
-  const MercadoPagoLogo = () => (
-    <span className="inline-flex items-center gap-1.5" aria-label="Mercado Pago">
-      <svg className="w-5 h-5 shrink-0" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-        <ellipse cx="14" cy="14" rx="12" ry="8.5" stroke="currentColor" strokeWidth="2" />
+  // Logo característico de Mercado Pago (óvalo + apretón de manos)
+  const MercadoPagoLogo = ({ className = "w-6 h-5" }) => (
+    <span className="inline-flex items-center shrink-0" aria-label="Mercado Pago">
+      <svg className={className} viewBox="0 0 36 26" fill="none" aria-hidden="true">
+        <ellipse cx="18" cy="13" rx="16.5" ry="11.5" stroke="currentColor" strokeWidth="2.1" />
         <path
-          d="M7.5 15.2c1.2-2.6 2.8-3.8 4.4-3.8 1.4 0 2.3.8 2.9 2.1.6-1.3 1.5-2.1 2.9-2.1 1.6 0 3.2 1.2 4.4 3.8"
+          d="M8.5 13.8l4.2-3.2c.6-.4 1.4-.4 2 0l2.1 1.6 2.3-1.8c.6-.5 1.5-.5 2.1 0l4.1 3.2"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="2.1"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M12.2 15.6l2.4 1.9c.5.4 1.2.4 1.7 0l1.7-1.3 1.7 1.3c.5.4 1.2.4 1.7 0l2.4-1.9"
+          stroke="currentColor"
+          strokeWidth="1.9"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -345,12 +373,22 @@ export default function App() {
   );
 
   const navigateToView = (viewId) => {
+    if (viewId === 'shop') {
+      openStepCatalog();
+      return;
+    }
     setCurrentView(viewId);
     setMobileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const showFloatingWhatsapp = !cartOpen && !checkoutModalOpen && !sizeModalOpen && !cartToast;
+  const hasFreeShippingBar = cartCount > 0 && !cartOpen && !checkoutModalOpen && !sizeModalOpen;
+  const showFloatingWhatsapp = !cartOpen && !checkoutModalOpen && !sizeModalOpen && !hasFreeShippingBar && !addedToast;
+
+  const freeShippingGoal = 50000;
+  const shippingPct = Math.min(Math.round((cartTotal / freeShippingGoal) * 100), 100);
+  const shippingWidthPct = Math.min((cartTotal / freeShippingGoal) * 100, 100);
+  const shippingRemaining = Math.max(freeShippingGoal - cartTotal, 0);
 
   return (
     <div className="min-h-screen bg-ore-dark text-ore-cream flex flex-col font-sans selection:bg-ore-gold selection:text-ore-dark">
@@ -500,76 +538,59 @@ export default function App() {
         )}
       </header>
 
-      {/* ETIQUETA FLOTANTE CON BARRA DE PROGRESO: SOLO APARECE AL AGREGAR UN PRODUCTO AL CARRITO */}
-      {cartToast && !cartOpen && (() => {
-        const goal = 50000;
-        const pct = Math.min(Math.round((cartToast.subtotal / goal) * 100), 100);
-        const widthPct = Math.min((cartToast.subtotal / goal) * 100, 100);
-        const remaining = Math.max(goal - cartToast.subtotal, 0);
+      {/* AVISO TEMPORAL DE PRODUCTO AGREGADO (SE BORRA SOLO, SIN BORRAR LA BARRA DE ENVÍO GRATIS) */}
+      {addedToast && !cartOpen && (
+        <div className="fixed top-24 right-4 sm:right-6 z-50 bg-ore-card/95 backdrop-blur-md border border-ore-gold/60 text-ore-cream px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2.5 text-xs">
+          <CheckCircle size={15} className="text-emerald-400 shrink-0" />
+          <span className="truncate max-w-[220px]">
+            Agregado: <strong className="text-ore-gold">{addedToast.productName}</strong>
+          </span>
+        </div>
+      )}
 
-        return (
-          <div className="fixed bottom-6 right-6 z-50 w-[calc(100%-3rem)] max-w-sm bg-ore-card/98 backdrop-blur-md border border-ore-gold/60 text-ore-cream p-4 rounded-xl shadow-2xl space-y-2.5">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-start gap-2.5 min-w-0">
-                <CheckCircle size={18} className="text-emerald-400 shrink-0 mt-0.5" />
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-ore-cream leading-tight">
-                    Agregado al carrito
-                  </p>
-                  <p className="text-[11px] text-ore-muted truncate mt-0.5">
-                    {cartToast.productName}
-                  </p>
-                </div>
-              </div>
+      {/* BARRA DE ENVÍO GRATIS PERSISTENTE Y DISCRETA (PC Y CELULAR) MIENTRAS HAYA ITEMS EN EL CARRITO */}
+      {hasFreeShippingBar && (
+        <div className="fixed bottom-4 right-4 z-40 w-[calc(100%-2rem)] max-w-xs bg-ore-dark/75 backdrop-blur-md border border-ore-gold/45 text-ore-cream px-3.5 py-2.5 rounded-xl shadow-lg space-y-1.5 text-left pointer-events-auto">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[9px] uppercase tracking-[0.18em] text-ore-gold font-bold">
+              Envío Gran Mendoza
+            </span>
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  setCartToast(null);
-                  setCartOpen(true);
-                }}
-                className="text-[10px] uppercase tracking-wider font-bold text-ore-gold hover:underline shrink-0 cursor-pointer"
+                onClick={() => setCartOpen(true)}
+                className="text-[9px] uppercase tracking-wider text-ore-cream/85 hover:text-ore-gold underline cursor-pointer"
               >
-                Ver carrito
+                Carrito ({cartCount})
               </button>
-            </div>
-
-            <div className="bg-[#C8A96E] border border-[#141414]/25 rounded-lg p-2.5 space-y-1.5 text-left">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[9px] uppercase tracking-[0.18em] text-[#111111] font-bold">
-                  Envío Gran Mendoza
-                </span>
-                <span className="text-[9px] font-mono text-[#111111] font-bold">
-                  {pct}%
-                </span>
-              </div>
-
-              <p className="text-[11px] text-[#111111] leading-snug">
-                {cartToast.subtotal >= goal ? (
-                  <span className="font-bold">¡Felicitaciones! Tenés envío gratis en Gran Mendoza ✨</span>
-                ) : (
-                  <>
-                    Sumá{' '}
-                    <strong className="font-bold">
-                      ${remaining.toLocaleString('es-AR')}
-                    </strong>{' '}
-                    para{' '}
-                    <strong className="font-bold">
-                      envío gratis
-                    </strong>.
-                  </>
-                )}
-              </p>
-
-              <div className="w-full bg-[#111111]/15 h-1.5 rounded-full overflow-hidden border border-[#111111]/20">
-                <div
-                  className="bg-[#111111] h-full transition-all duration-500 ease-out"
-                  style={{ width: `${widthPct}%` }}
-                />
-              </div>
+              <span className="text-[9px] font-mono text-ore-gold font-bold">
+                {shippingPct}%
+              </span>
             </div>
           </div>
-        );
-      })()}
+
+          <p className="text-[11px] text-ore-cream/95 leading-snug">
+            {cartTotal >= freeShippingGoal ? (
+              <span className="text-emerald-300 font-semibold">¡Envío gratis desbloqueado en Gran Mendoza!</span>
+            ) : (
+              <>
+                Te faltan{' '}
+                <strong className="text-ore-gold font-bold">
+                  ${shippingRemaining.toLocaleString('es-AR')}
+                </strong>{' '}
+                para envío gratis
+              </>
+            )}
+          </p>
+
+          <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+            <div
+              className="bg-ore-gold h-full transition-all duration-500 ease-out"
+              style={{ width: `${shippingWidthPct}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       <main className="flex-grow">
         
@@ -591,7 +612,7 @@ export default function App() {
                 <h1 className="font-serif text-4xl sm:text-6xl font-normal tracking-wide leading-tight">Joyas que acompañan tu historia</h1>
                 <p className="text-ore-cream/80 text-sm sm:text-base max-w-xl mx-auto font-light">Diseños exclusivos en Plata, Plata con Oro y Oro 18k creados para perdurar en el tiempo.</p>
                 <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
-                  <button onClick={() => setCurrentView('shop')} className="bg-ore-gold text-ore-dark font-semibold px-8 py-3.5 tracking-wider uppercase text-xs hover:bg-ore-gold-light transition shadow-lg cursor-pointer">
+                  <button onClick={openStepCatalog} className="bg-ore-gold text-ore-dark font-semibold px-8 py-3.5 tracking-wider uppercase text-xs hover:bg-ore-gold-light transition shadow-lg cursor-pointer">
                     Ver Catalogo
                   </button>
                   <button onClick={() => setCurrentView('gold')} className="border border-ore-gold text-ore-gold hover:bg-ore-gold/10 font-semibold px-8 py-3.5 tracking-wider uppercase text-xs transition cursor-pointer">
@@ -608,7 +629,7 @@ export default function App() {
                     <span className="text-ore-gold text-xs uppercase tracking-[0.2em] font-semibold">Nuestra Selección</span>
                     <h2 className="font-serif text-3xl mt-1">Piezas Recientes</h2>
                   </div>
-                  <button onClick={() => setCurrentView('shop')} className="text-xs uppercase tracking-widest text-ore-gold hover:underline flex items-center gap-1 cursor-pointer">
+                  <button onClick={openFullCollection} className="text-xs uppercase tracking-widest text-ore-gold hover:underline flex items-center gap-1 cursor-pointer">
                     Explorar Colección <ArrowRight size={14} />
                   </button>
                 </div>
@@ -657,181 +678,300 @@ export default function App() {
         {currentView === 'shop' && (
           <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
 
-            {filterCategory !== 'Todos' && filterMaterial !== 'Todos' ? (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center bg-ore-card p-4 rounded-lg border border-ore-gold/30">
-                  <div>
-                    <span className="text-[10px] uppercase tracking-widest text-ore-muted">Filtro aplicado:</span>
-                    <h3 className="font-serif text-2xl text-ore-gold">
-                      {filterCategory} <span className="text-ore-cream text-lg">en</span> {filterMaterial}
-                    </h3>
+            {/* MODO 1: EXPLORAR COLECCIÓN COMPLETA + FILTRO DESPLEGABLE POR CATEGORÍA + ORDEN MENOR A MAYOR PRECIO */}
+            {shopMode === 'collection' ? (() => {
+              const filteredCollection = sortByPriceAsc(
+                availableProducts.filter(p => {
+                  if (collectionCategory === 'Todos') return true;
+                  const matchesName = p.category && p.category.toLowerCase().trim() === collectionCategory.toLowerCase().trim();
+                  const matchesId = categories.find(c => c.name === collectionCategory)?.id === p.category_id;
+                  return matchesName || matchesId;
+                })
+              );
+
+              return (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-ore-card p-5 rounded-lg border border-ore-gold/30">
+                    <div>
+                      <span className="text-[10px] uppercase tracking-[0.22em] text-ore-gold font-semibold">
+                        Colección Completa • Ordenado por menor precio
+                      </span>
+                      <h2 className="font-serif text-2xl sm:text-3xl text-ore-cream mt-0.5">
+                        {collectionCategory === 'Todos' ? 'Toda la Colección' : collectionCategory}
+                      </h2>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <select
+                        aria-label="Filtrar por categoría"
+                        value={collectionCategory}
+                        onChange={(e) => setCollectionCategory(e.target.value)}
+                        className="bg-ore-dark border border-ore-gold/40 rounded px-3.5 py-2.5 text-xs uppercase tracking-wider text-ore-cream focus:outline-none focus:border-ore-gold cursor-pointer"
+                      >
+                        <option value="Todos">Todas las categorías</option>
+                        {categories.map(cat => (
+                          <option key={cat.id} value={cat.name}>{cat.name}</option>
+                        ))}
+                      </select>
+
+                      <button
+                        type="button"
+                        onClick={openStepCatalog}
+                        className="text-xs bg-ore-dark border border-white/15 text-ore-cream px-3.5 py-2.5 rounded hover:border-ore-gold transition uppercase tracking-wider cursor-pointer"
+                      >
+                        Ver por Categoría y Material
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => setFilterMaterial('Todos')}
-                      className="text-xs bg-ore-dark border border-white/10 text-ore-cream px-3 py-2 rounded hover:border-ore-gold transition uppercase tracking-wider cursor-pointer"
-                    >
-                      Cambiar Material
-                    </button>
-                    <button 
-                      onClick={() => { setFilterCategory('Todos'); setFilterMaterial('Todos'); }}
-                      className="text-xs bg-ore-gold/20 border border-ore-gold/40 text-ore-gold px-3 py-2 rounded hover:bg-ore-gold hover:text-ore-dark transition uppercase tracking-wider cursor-pointer"
-                    >
-                      Ver todas las Categorías
-                    </button>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                  {sortByPriceAsc(
-                    availableProducts
-                      .filter(p => {
-                        const matchesCategoryName = p.category && p.category.toLowerCase().trim() === filterCategory.toLowerCase().trim();
-                        const matchesCategoryId = categories.find(c => c.name === filterCategory)?.id === p.category_id;
-                        return matchesCategoryName || matchesCategoryId;
-                      })
-                      .filter(p => {
-                        const matchesMaterialName = p.material && p.material.toLowerCase().trim() === filterMaterial.toLowerCase().trim();
-                        const matchesMaterialId = materials.find(m => m.name === filterMaterial)?.id === p.material_id;
-                        return matchesMaterialName || matchesMaterialId;
-                      })
-                  )
-                    .map(p => {
-                      const productImg = p.image || p.image_url;
-                      return (
-                        <div 
-                          key={p.id} 
-                          onClick={() => {
-                            setSelectedProduct(p);
-                            setCurrentView('product-detail');
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          className="bg-ore-card border border-white/5 rounded-lg overflow-hidden shadow-lg hover:border-ore-gold transition group cursor-pointer"
-                        >
-                          <div className="h-64 overflow-hidden relative bg-ore-dark flex items-center justify-center">
-                            {renderLastUnitBadge(p)}
-                            {Number(p.stock) !== 1 && isProductNew(p) && (
-                              <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded shadow-md">
-                                Nuevo
-                              </span>
-                            )}
+                  {filteredCollection.length === 0 ? (
+                    <div className="bg-ore-card border border-white/10 rounded-lg p-10 text-center space-y-3">
+                      <p className="text-sm text-ore-muted">No hay piezas disponibles en esta categoría por el momento.</p>
+                      <button
+                        type="button"
+                        onClick={() => setCollectionCategory('Todos')}
+                        className="text-xs uppercase tracking-wider text-ore-gold hover:underline cursor-pointer"
+                      >
+                        Mostrar todas las categorías
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                      {filteredCollection.map(p => {
+                        const productImg = p.image || p.image_url;
+                        return (
+                          <div
+                            key={p.id}
+                            onClick={() => {
+                              setSelectedProduct(p);
+                              setCurrentView('product-detail');
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            className="bg-ore-card border border-white/5 rounded-lg overflow-hidden shadow-lg hover:border-ore-gold transition group cursor-pointer flex flex-col justify-between"
+                          >
+                            <div className="h-64 overflow-hidden relative bg-ore-dark flex items-center justify-center">
+                              {renderLastUnitBadge(p)}
+                              {Number(p.stock) !== 1 && isProductNew(p) && (
+                                <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded shadow-md">
+                                  Nuevo
+                                </span>
+                              )}
 
-                            {productImg ? (
-                              <img 
-                                src={productImg} 
-                                alt={p.title || p.name} 
-                                loading="lazy"
-                                className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500" 
-                              />
-                            ) : (
-                              <span className="text-xs text-ore-muted italic">Sin imagen disponible</span>
-                            )}
-                          </div>
+                              {productImg ? (
+                                <img
+                                  src={productImg}
+                                  alt={p.title || p.name}
+                                  loading="lazy"
+                                  className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500"
+                                />
+                              ) : (
+                                <span className="text-xs text-ore-muted italic">Sin imagen disponible</span>
+                              )}
+                            </div>
 
-                          <div className="p-5 space-y-2">
-                            <h4 className="font-serif text-lg text-ore-cream group-hover:text-ore-gold transition">{p.title || p.name}</h4>
-                            <div className="flex justify-between items-center pt-2">
-                              <span className="text-ore-gold font-bold text-lg">${Number(p.price || 0).toLocaleString('es-AR')}</span>
-                              <span className="text-xs uppercase tracking-widest text-ore-muted underline">Ver detalle</span>
+                            <div className="p-5 space-y-2">
+                              <p className="text-[10px] text-ore-muted uppercase tracking-wider">
+                                {p.category} {p.material ? `• ${p.material}` : ''}
+                              </p>
+                              <h4 className="font-serif text-lg text-ore-cream group-hover:text-ore-gold transition">
+                                {p.title || p.name}
+                              </h4>
+                              <div className="flex justify-between items-center pt-2">
+                                <span className="text-ore-gold font-bold text-lg">
+                                  ${Number(p.price || 0).toLocaleString('es-AR')}
+                                </span>
+                                <span className="text-xs uppercase tracking-widest text-ore-muted underline">
+                                  Ver detalle
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ) : filterCategory !== 'Todos' ? (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center bg-ore-card p-4 rounded-lg border border-white/10">
-                  <div>
-                    <span className="text-[10px] uppercase tracking-widest text-ore-gold font-semibold">Paso 2 de 2</span>
-                    <h2 className="font-serif text-2xl text-ore-cream">Selecciona un Material para <span className="text-ore-gold">{filterCategory}</span></h2>
+              );
+            })() : (
+              /* MODO 2: VER CATÁLOGO PASO A PASO (CATEGORÍA -> MATERIAL -> PRODUCTOS ORDENADOS DE MENOR A MAYOR PRECIO) */
+              <>
+                {filterCategory !== 'Todos' && filterMaterial !== 'Todos' ? (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center bg-ore-card p-4 rounded-lg border border-ore-gold/30">
+                      <div>
+                        <span className="text-[10px] uppercase tracking-widest text-ore-muted">Filtro aplicado:</span>
+                        <h3 className="font-serif text-2xl text-ore-gold">
+                          {filterCategory} <span className="text-ore-cream text-lg">en</span> {filterMaterial}
+                        </h3>
+                      </div>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => setFilterMaterial('Todos')}
+                          className="text-xs bg-ore-dark border border-white/10 text-ore-cream px-3 py-2 rounded hover:border-ore-gold transition uppercase tracking-wider cursor-pointer"
+                        >
+                          Cambiar Material
+                        </button>
+                        <button 
+                          onClick={() => { setFilterCategory('Todos'); setFilterMaterial('Todos'); }}
+                          className="text-xs bg-ore-gold/20 border border-ore-gold/40 text-ore-gold px-3 py-2 rounded hover:bg-ore-gold hover:text-ore-dark transition uppercase tracking-wider cursor-pointer"
+                        >
+                          Ver todas las Categorías
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                      {sortByPriceAsc(
+                        availableProducts
+                          .filter(p => {
+                            const matchesCategoryName = p.category && p.category.toLowerCase().trim() === filterCategory.toLowerCase().trim();
+                            const matchesCategoryId = categories.find(c => c.name === filterCategory)?.id === p.category_id;
+                            return matchesCategoryName || matchesCategoryId;
+                          })
+                          .filter(p => {
+                            const matchesMaterialName = p.material && p.material.toLowerCase().trim() === filterMaterial.toLowerCase().trim();
+                            const matchesMaterialId = materials.find(m => m.name === filterMaterial)?.id === p.material_id;
+                            return matchesMaterialName || matchesMaterialId;
+                          })
+                      )
+                        .map(p => {
+                          const productImg = p.image || p.image_url;
+                          return (
+                            <div 
+                              key={p.id} 
+                              onClick={() => {
+                                setSelectedProduct(p);
+                                setCurrentView('product-detail');
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                              className="bg-ore-card border border-white/5 rounded-lg overflow-hidden shadow-lg hover:border-ore-gold transition group cursor-pointer"
+                            >
+                              <div className="h-64 overflow-hidden relative bg-ore-dark flex items-center justify-center">
+                                {renderLastUnitBadge(p)}
+                                {Number(p.stock) !== 1 && isProductNew(p) && (
+                                  <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded shadow-md">
+                                    Nuevo
+                                  </span>
+                                )}
+
+                                {productImg ? (
+                                  <img 
+                                    src={productImg} 
+                                    alt={p.title || p.name} 
+                                    loading="lazy"
+                                    className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500" 
+                                  />
+                                ) : (
+                                  <span className="text-xs text-ore-muted italic">Sin imagen disponible</span>
+                                )}
+                              </div>
+
+                              <div className="p-5 space-y-2">
+                                <h4 className="font-serif text-lg text-ore-cream group-hover:text-ore-gold transition">{p.title || p.name}</h4>
+                                <div className="flex justify-between items-center pt-2">
+                                  <span className="text-ore-gold font-bold text-lg">${Number(p.price || 0).toLocaleString('es-AR')}</span>
+                                  <span className="text-xs uppercase tracking-widest text-ore-muted underline">Ver detalle</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
                   </div>
-                  <button 
-                    onClick={() => setFilterCategory('Todos')}
-                    className="text-xs bg-ore-dark border border-white/10 text-ore-cream px-4 py-2 rounded hover:border-ore-gold transition uppercase tracking-wider cursor-pointer"
-                  >
-                    Volver a Categorías
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                  {materials && materials.map(mat => {
-                    const catMatProducts = availableProducts.filter(p => {
-                      const matchesCat = (p.category && p.category.toLowerCase().trim() === filterCategory.toLowerCase().trim()) || (categories.find(c => c.name === filterCategory)?.id === p.category_id);
-                      const matchesMat = (p.material && p.material.toLowerCase().trim() === mat.name.toLowerCase().trim()) || (mat.id === p.material_id);
-                      return matchesCat && matchesMat;
-                    });
-
-                    const lastValidProduct = catMatProducts.slice().reverse().find(p => (p.image && p.image.trim() !== '') || (p.image_url));
-                    const matCoverImg = lastValidProduct ? (lastValidProduct.image || lastValidProduct.image_url) : null;
-
-                    return (
-                      <div 
-                        key={mat.id}
-                        onClick={() => setFilterMaterial(mat.name)}
-                        className="group relative h-48 rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-ore-gold transition-all shadow-xl bg-ore-dark flex items-center justify-center"
-                      >
-                        {matCoverImg ? (
-                          <img 
-                            src={matCoverImg} 
-                            alt={mat.name} 
-                            loading="lazy"
-                            className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" 
-                          />
-                        ) : (
-                          <div className="text-ore-muted text-xs italic p-4 text-center">Sin productos con imagen</div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-ore-dark via-ore-dark/40 to-transparent flex items-end p-4">
-                          <h3 className="font-serif text-lg text-ore-cream group-hover:text-ore-gold transition font-bold">{mat.name}</h3>
-                        </div>
+                ) : filterCategory !== 'Todos' ? (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center bg-ore-card p-4 rounded-lg border border-white/10">
+                      <div>
+                        <span className="text-[10px] uppercase tracking-widest text-ore-gold font-semibold">Paso 2 de 2</span>
+                        <h2 className="font-serif text-2xl text-ore-cream">Selecciona un Material para <span className="text-ore-gold">{filterCategory}</span></h2>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="border-b border-white/10 pb-4 text-center">
-                  <span className="text-[10px] uppercase tracking-widest text-ore-gold font-semibold">Paso 1 de 2</span>
-                  <h2 className="font-serif text-3xl text-ore-cream mt-1">Selecciona una Categoría</h2>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  {categories && categories.map(cat => {
-                    const catProducts = availableProducts.filter(p => {
-                      const matchesName = p.category && p.category.toLowerCase().trim() === cat.name.toLowerCase().trim();
-                      const matchesId = p.category_id === cat.id;
-                      return matchesName || matchesId;
-                    });
-
-                    const lastValidProduct = catProducts.slice().reverse().find(p => (p.image && p.image.trim() !== '') || (p.image_url));
-                    const coverImg = lastValidProduct ? (lastValidProduct.image || lastValidProduct.image_url) : null;
-
-                    return (
-                      <div 
-                        key={cat.id}
-                        onClick={() => setFilterCategory(cat.name)}
-                        className="group relative h-56 rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-ore-gold transition-all shadow-xl bg-ore-dark flex items-center justify-center"
+                      <button 
+                        onClick={() => setFilterCategory('Todos')}
+                        className="text-xs bg-ore-dark border border-white/10 text-ore-cream px-4 py-2 rounded hover:border-ore-gold transition uppercase tracking-wider cursor-pointer"
                       >
-                        {coverImg ? (
-                          <img 
-                            src={coverImg} 
-                            alt={cat.name} 
-                            loading="lazy"
-                            className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" 
-                          />
-                        ) : (
-                          <div className="text-ore-muted text-xs italic p-4 text-center">Sin productos con imagen</div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-ore-dark via-ore-dark/40 to-transparent flex items-end p-4">
-                          <h3 className="font-serif text-xl text-ore-cream group-hover:text-ore-gold transition font-bold">{cat.name}</h3>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+                        Volver a Categorías
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                      {materials && materials.map(mat => {
+                        const catMatProducts = availableProducts.filter(p => {
+                          const matchesCat = (p.category && p.category.toLowerCase().trim() === filterCategory.toLowerCase().trim()) || (categories.find(c => c.name === filterCategory)?.id === p.category_id);
+                          const matchesMat = (p.material && p.material.toLowerCase().trim() === mat.name.toLowerCase().trim()) || (mat.id === p.material_id);
+                          return matchesCat && matchesMat;
+                        });
+
+                        const lastValidProduct = catMatProducts.slice().reverse().find(p => (p.image && p.image.trim() !== '') || (p.image_url));
+                        const matCoverImg = lastValidProduct ? (lastValidProduct.image || lastValidProduct.image_url) : null;
+
+                        return (
+                          <div 
+                            key={mat.id}
+                            onClick={() => setFilterMaterial(mat.name)}
+                            className="group relative h-48 rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-ore-gold transition-all shadow-xl bg-ore-dark flex items-center justify-center"
+                          >
+                            {matCoverImg ? (
+                              <img 
+                                src={matCoverImg} 
+                                alt={mat.name} 
+                                loading="lazy"
+                                className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" 
+                              />
+                            ) : (
+                              <div className="text-ore-muted text-xs italic p-4 text-center">Sin productos con imagen</div>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-ore-dark via-ore-dark/40 to-transparent flex items-end p-4">
+                              <h3 className="font-serif text-lg text-ore-cream group-hover:text-ore-gold transition font-bold">{mat.name}</h3>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="border-b border-white/10 pb-4 text-center">
+                      <span className="text-[10px] uppercase tracking-widest text-ore-gold font-semibold">Paso 1 de 2</span>
+                      <h2 className="font-serif text-3xl text-ore-cream mt-1">Selecciona una Categoría</h2>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                      {categories && categories.map(cat => {
+                        const catProducts = availableProducts.filter(p => {
+                          const matchesName = p.category && p.category.toLowerCase().trim() === cat.name.toLowerCase().trim();
+                          const matchesId = p.category_id === cat.id;
+                          return matchesName || matchesId;
+                        });
+
+                        const lastValidProduct = catProducts.slice().reverse().find(p => (p.image && p.image.trim() !== '') || (p.image_url));
+                        const coverImg = lastValidProduct ? (lastValidProduct.image || lastValidProduct.image_url) : null;
+
+                        return (
+                          <div 
+                            key={cat.id}
+                            onClick={() => setFilterCategory(cat.name)}
+                            className="group relative h-56 rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-ore-gold transition-all shadow-xl bg-ore-dark flex items-center justify-center"
+                          >
+                            {coverImg ? (
+                              <img 
+                                src={coverImg} 
+                                alt={cat.name} 
+                                loading="lazy"
+                                className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" 
+                              />
+                            ) : (
+                              <div className="text-ore-muted text-xs italic p-4 text-center">Sin productos con imagen</div>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-ore-dark via-ore-dark/40 to-transparent flex items-end p-4">
+                              <h3 className="font-serif text-xl text-ore-cream group-hover:text-ore-gold transition font-bold">{cat.name}</h3>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
           </div>
@@ -855,7 +995,7 @@ export default function App() {
                 />
               </div>
 
-              {/* INFORMACIÓN Y ACCIONES: SOLO COMPRAR AHORA Y AGREGAR AL CARRITO */}
+              {/* INFORMACIÓN Y ACCIONES: PAGAR AHORA EN NEGRO CON FILO DORADO + AGREGAR AL CARRITO */}
               <div className="space-y-6">
                 <div>
                   <span className="text-xs text-ore-gold uppercase tracking-widest font-semibold">
@@ -958,15 +1098,16 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 py-4 my-3 border-y border-white/10 bg-ore-card/40 rounded-lg px-3">
+                {/* DETALLES VISIBLES EN CELULAR Y PC */}
+                <div className="grid grid-cols-3 gap-2 py-4 my-3 border-y border-white/10 bg-ore-card/40 rounded-lg px-2 sm:px-3">
                   <div className="flex flex-col items-center text-center space-y-1 px-1">
                     <div className="w-8 h-8 rounded-full bg-ore-gold/10 border border-ore-gold/30 flex items-center justify-center text-ore-gold">
                       <span className="text-[11px] font-bold">15d</span>
                     </div>
-                    <span className="text-[10px] sm:text-[11px] font-semibold text-ore-cream uppercase tracking-wider leading-tight">
+                    <span className="text-[10px] sm:text-[11px] font-semibold text-ore-cream uppercase tracking-wider leading-snug">
                       Ajuste sin Cargo
                     </span>
-                    <span className="text-[9px] text-ore-muted leading-tight">
+                    <span className="text-[10px] sm:text-[11px] text-ore-muted leading-snug">
                       1 modificación por pieza (15 días)
                     </span>
                   </div>
@@ -981,10 +1122,10 @@ export default function App() {
                         <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
                       </svg>
                     </div>
-                    <span className="text-[10px] sm:text-[11px] font-semibold text-ore-cream uppercase tracking-wider leading-tight">
+                    <span className="text-[10px] sm:text-[11px] font-semibold text-ore-cream uppercase tracking-wider leading-snug">
                       Estuche ORE
                     </span>
-                    <span className="text-[9px] text-ore-muted hidden sm:block">
+                    <span className="text-[10px] sm:text-[11px] text-ore-muted leading-snug">
                       Presentación de lujo
                     </span>
                   </div>
@@ -993,16 +1134,16 @@ export default function App() {
                     <div className="w-8 h-8 rounded-full bg-ore-gold/10 border border-ore-gold/30 flex items-center justify-center text-ore-gold">
                       <Truck size={15} />
                     </div>
-                    <span className="text-[10px] sm:text-[11px] font-semibold text-ore-cream uppercase tracking-wider leading-tight">
+                    <span className="text-[10px] sm:text-[11px] font-semibold text-ore-cream uppercase tracking-wider leading-snug">
                       Envío Asegurado
                     </span>
-                    <span className="text-[9px] text-ore-muted hidden sm:block">
+                    <span className="text-[10px] sm:text-[11px] text-ore-muted leading-snug">
                       A todo el país
                     </span>
                   </div>
                 </div>
 
-                {/* SOLO COMPRAR AHORA Y AGREGAR AL CARRITO Y SEGUIR VIENDO */}
+                {/* BOTÓN PAGAR AHORA EN NEGRO CON FILO DORADO + AGREGAR AL CARRITO */}
                 <div className="space-y-3 pt-2">
                   <button 
                     disabled={Number(selectedProduct.stock ?? 0) <= 0}
@@ -1010,17 +1151,16 @@ export default function App() {
                       addToCart(selectedProduct, undefined, { openCart: false, showToast: false });
                       setCheckoutModalOpen(true);
                     }} 
-                    className={`w-full font-bold py-4 px-6 uppercase text-xs tracking-widest rounded transition shadow-xl flex items-center justify-center gap-2 ${
+                    className={`w-full font-semibold py-4 px-6 uppercase text-xs tracking-widest rounded transition shadow-xl flex items-center justify-center gap-2 ${
                       Number(selectedProduct.stock ?? 0) > 0
-                        ? 'bg-ore-gold hover:bg-ore-gold-light text-ore-dark cursor-pointer'
-                        : 'bg-white/10 text-ore-muted cursor-not-allowed'
+                        ? 'bg-[#0B0B0B] hover:bg-[#141414] text-ore-gold border border-ore-gold/60 hover:border-ore-gold cursor-pointer'
+                        : 'bg-white/10 text-ore-muted border border-white/10 cursor-not-allowed'
                     }`}
                   >
                     <span>
-                      {Number(selectedProduct.stock ?? 0) > 0
-                        ? `Comprar Ahora — $${Number(selectedProduct.price).toLocaleString('es-AR')}`
-                        : 'Sin stock disponible'}
+                      {Number(selectedProduct.stock ?? 0) > 0 ? 'Pagar ahora' : 'Sin stock disponible'}
                     </span>
+                    {Number(selectedProduct.stock ?? 0) > 0 && <MercadoPagoLogo />}
                   </button>
 
                   {Number(selectedProduct.stock ?? 0) > 0 && (
@@ -1852,7 +1992,7 @@ export default function App() {
           <div>
             <h4 className="font-serif text-sm uppercase tracking-wider mb-4 text-ore-gold">Navegación</h4>
             <ul className="space-y-2 text-xs text-ore-muted">
-              <li><button onClick={() => setCurrentView('shop')} className="hover:text-ore-cream cursor-pointer">Tienda</button></li>
+              <li><button onClick={openStepCatalog} className="hover:text-ore-cream cursor-pointer">Tienda</button></li>
               <li><button onClick={() => setCurrentView('gold')} className="hover:text-ore-cream cursor-pointer">Compramos oro</button></li>
             </ul>
           </div>
