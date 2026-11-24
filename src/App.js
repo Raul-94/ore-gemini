@@ -1656,10 +1656,11 @@ export default function App() {
                   Iniciar compra
                 </button>
 
-                <p className="flex items-center justify-center gap-1.5 text-[11px] text-ore-muted pt-0.5">
-                  <Lock size={11} className="text-ore-muted shrink-0" />
-                  <span>Compra protegida · Envío asegurado y atención personalizada</span>
-                </p>
+                <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#9CA3AF] pt-1 leading-snug text-center flex-wrap">
+                  <Lock size={11} className="text-[#D4AF37] shrink-0" />
+                  <span className="text-[#D4AF37] font-medium">Compra protegida</span>
+                  <span>· Pago encriptado con Mercado Pago y garantía de entrega asegurada</span>
+                </div>
               </div>
             )}
           </div>
@@ -1903,7 +1904,7 @@ export default function App() {
                 </p>
               </div>
 
-              {/* 1) TRANSFERENCIA -15% OFF CON VERDE WHATSAPP + LOGO  |  2) PAGAR AHORA + LOGO MP EN NEGRO CON FILO DORADO  |  3) VOLVER AL CARRITO */}
+              {/* 1) TRANSFERENCIA -15% OFF CON VERDE WHATSAPP + LOGO  |  2) PAGAR AHORA + LOGO MP EN NEGRO CON FILO DORADO  |  3) COMPRA PROTEGIDA  |  4) VOLVER AL CARRITO */}
               <div className="flex flex-col gap-2.5 pt-1">
                 <button
                   type="button"
@@ -1962,10 +1963,16 @@ export default function App() {
                   <MercadoPagoLogo />
                 </button>
 
+                <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#9CA3AF] pt-1 leading-snug text-center flex-wrap">
+                  <Lock size={11} className="text-[#D4AF37] shrink-0" />
+                  <span className="text-[#D4AF37] font-medium">Compra protegida</span>
+                  <span>· Pago encriptado con Mercado Pago y garantía de entrega asegurada</span>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => setCheckoutModalOpen(false)}
-                  className="text-xs text-ore-muted hover:text-ore-cream uppercase tracking-wider pt-1.5 cursor-pointer"
+                  className="text-xs text-ore-muted hover:text-ore-cream uppercase tracking-wider pt-1 cursor-pointer"
                 >
                   Volver al carrito
                 </button>
