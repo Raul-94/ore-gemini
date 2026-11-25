@@ -12,6 +12,27 @@ const HERO_BACKGROUND_IMAGE =
 const MP_ISOTIPO_URL =
   'https://gxjpsfchccljmnpdyegn.supabase.co/storage/v1/object/public/product-images/mp-isotipo.svg';
 
+const VIEW_TO_HASH = {
+  home: '#/',
+  shop: '#/tienda',
+  gold: '#/compramos-oro',
+  about: '#/nosotros',
+  contact: '#/contacto',
+  admin: '#/admin'
+};
+
+const slugifyProduct = (product) => {
+  const rawName = String(product?.title || product?.name || 'pieza').toLowerCase();
+  const cleanSlug = rawName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return `${product.id}-${cleanSlug || 'pieza'}`;
+};
+
+const buildProductHash = (product) => `#/producto/${slugifyProduct(product)}`;
+
 export default function App() {
   // Estados de navegación y vistas
   const [currentView, setCurrentView] = useState('home'); // 'home', 'shop', 'gold', 'about', 'contact', 'admin', 'product-detail'
@@ -24,6 +45,7 @@ export default function App() {
   // Toast temporal solo para "Agregado al carrito" (la barra de envío gratis queda persistente mientras haya items)
   const [addedToast, setAddedToast] = useState(null);
   const toastTimeoutRef = useRef(null);
+  const pendingProductSlugRef = useRef(null);
   
   // Autenticación Admin
   const [adminPin, setAdminPin] = useState('');
@@ -140,39 +162,6 @@ export default function App() {
   const [categories, setCategories] = useState([]);
   const [materials, setMaterials] = useState([]);
 
-  useEffect(() => {
-    fetchCategoriesAndMaterials();
-    fetchProductsFromSupabase();
-  }, []);
-
-  const fetchCategoriesAndMaterials = async () => {
-    const { data: catData } = await supabase.from('categories').select('*').order('name');
-    if (catData) setCategories(catData);
-
-    const { data: matData } = await supabase.from('materials').select('*').order('name');
-    if (matData) setMaterials(matData);
-  };
-  
-  useEffect(() => {
-    const checkAdminPath = () => {
-      if (
-        window.location.pathname === '/admin' || 
-        window.location.hash === '#admin'
-      ) {
-        setCurrentView('admin');
-      }
-    };
-
-    checkAdminPath();
-    window.addEventListener('popstate', checkAdminPath);
-    window.addEventListener('hashchange', checkAdminPath);
-
-    return () => {
-      window.removeEventListener('popstate', checkAdminPath);
-      window.removeEventListener('hashchange', checkAdminPath);
-    };
-  }, []);
-
   const sortByPriceAsc = (list) =>
     [...list].sort((a, b) => Number(a?.price ?? 0) - Number(b?.price ?? 0));
 
@@ -199,9 +188,120 @@ export default function App() {
       stock: 3,
       featured: true
     }
-  ]);
+  ]).map(p => ({
+    ...p,
+    name: p.title,
+    image: p.image_url
+  }));
 
   const [products, setProducts] = useState(sampleProducts);
+
+  const findProductBySlug = (slugOrId, productList) => {
+    if (!slugOrId) return null;
+    const cleaned = decodeURIComponent(String(slugOrId)).replace(/^\/+|\/+$/g, '');
+    const idPrefixMatch = cleaned.match(/^(\d+)(?:-|$)/);
+    const parsedId = idPrefixMatch ? Number(idPrefixMatch[1]) : Number(cleaned);
+
+    return (
+      productList.find(p => Number(p.id) === parsedId) ||
+      productList.find(p => slugifyProduct(p) === cleaned) ||
+      null
+    );
+  };
+
+  const syncStateWithUrl = (productList = products) => {
+    const rawHash = window.location.hash || '';
+    const pathname = window.location.pathname || '/';
+
+    if (pathname === '/admin' || rawHash === '#admin' || rawHash === '#/admin') {
+      pendingProductSlugRef.current = null;
+      setCurrentView('admin');
+      return;
+    }
+
+    const normalizedHash = rawHash.startsWith('#/')
+      ? rawHash.slice(1)
+      : rawHash.startsWith('#')
+        ? `/${rawHash.slice(1)}`
+        : '/';
+
+    const productMatch = normalizedHash.match(/^\/producto\/(.+)$/);
+    if (productMatch) {
+      const slug = productMatch[1];
+      const matched = findProductBySlug(slug, productList);
+      if (matched) {
+        pendingProductSlugRef.current = null;
+        setSelectedProduct(matched);
+        setCurrentView('product-detail');
+      } else {
+        pendingProductSlugRef.current = slug;
+        setCurrentView('product-detail');
+      }
+      return;
+    }
+
+    pendingProductSlugRef.current = null;
+
+    if (normalizedHash === '/tienda' || normalizedHash === '/shop') {
+      setCurrentView('shop');
+      return;
+    }
+    if (normalizedHash === '/compramos-oro' || normalizedHash === '/gold') {
+      setCurrentView('gold');
+      return;
+    }
+    if (normalizedHash === '/nosotros' || normalizedHash === '/about') {
+      setCurrentView('about');
+      return;
+    }
+    if (normalizedHash === '/contacto' || normalizedHash === '/contact') {
+      setCurrentView('contact');
+      return;
+    }
+
+    setCurrentView('home');
+  };
+
+  const pushHashRoute = (nextHash, replace = false) => {
+    if (window.location.hash === nextHash) return;
+    if (replace) {
+      window.history.replaceState(null, '', nextHash);
+    } else {
+      window.history.pushState(null, '', nextHash);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategoriesAndMaterials();
+    fetchProductsFromSupabase();
+  }, []);
+
+  const fetchCategoriesAndMaterials = async () => {
+    const { data: catData } = await supabase.from('categories').select('*').order('name');
+    if (catData) setCategories(catData);
+
+    const { data: matData } = await supabase.from('materials').select('*').order('name');
+    if (matData) setMaterials(matData);
+  };
+  
+  useEffect(() => {
+    if (!window.location.hash && window.location.pathname === '/') {
+      window.history.replaceState(null, '', '#/');
+    }
+    syncStateWithUrl(sampleProducts);
+
+    const handleRouteChange = () => {
+      syncStateWithUrl(products);
+    };
+
+    window.addEventListener('popstate', handleRouteChange);
+    window.addEventListener('hashchange', handleRouteChange);
+
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+      window.removeEventListener('hashchange', handleRouteChange);
+    };
+  }, [products]);
 
   const availableProducts = sortByPriceAsc(
     products.filter(p => Number(p.stock ?? 0) > 0)
@@ -221,7 +321,17 @@ export default function App() {
         category: p.categories?.name || 'Joyas',
         material: p.materials?.name || 'General'
       }));
-      setProducts(sortByPriceAsc(formatted));
+      const sorted = sortByPriceAsc(formatted);
+      setProducts(sorted);
+
+      if (pendingProductSlugRef.current) {
+        const matched = findProductBySlug(pendingProductSlugRef.current, sorted);
+        if (matched) {
+          pendingProductSlugRef.current = null;
+          setSelectedProduct(matched);
+          setCurrentView('product-detail');
+        }
+      }
     }
   };
 
@@ -234,6 +344,7 @@ export default function App() {
     setCollectionCategory('Todos');
     setShopMode('step');
     setCurrentView('shop');
+    pushHashRoute(VIEW_TO_HASH.shop);
     setMobileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -244,6 +355,17 @@ export default function App() {
     setCollectionCategory('Todos');
     setShopMode('collection');
     setCurrentView('shop');
+    pushHashRoute(VIEW_TO_HASH.shop);
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const openProductDetail = (product) => {
+    if (!product) return;
+    setSelectedProduct(product);
+    setCurrentView('product-detail');
+    pushHashRoute(buildProductHash(product));
+    setCartOpen(false);
     setMobileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -370,6 +492,7 @@ export default function App() {
       return;
     }
     setCurrentView(viewId);
+    pushHashRoute(VIEW_TO_HASH[viewId] || '#/');
     setMobileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -607,7 +730,7 @@ export default function App() {
                   <button onClick={openStepCatalog} className="bg-ore-gold text-ore-dark font-semibold px-8 py-3.5 tracking-wider uppercase text-xs hover:bg-ore-gold-light transition shadow-lg cursor-pointer">
                     Ver Catalogo
                   </button>
-                  <button onClick={() => setCurrentView('gold')} className="border border-ore-gold text-ore-gold hover:bg-ore-gold/10 font-semibold px-8 py-3.5 tracking-wider uppercase text-xs transition cursor-pointer">
+                  <button onClick={() => navigateToView('gold')} className="border border-ore-gold text-ore-gold hover:bg-ore-gold/10 font-semibold px-8 py-3.5 tracking-wider uppercase text-xs transition cursor-pointer">
                     Vender mi oro
                   </button>
                 </div>
@@ -628,7 +751,7 @@ export default function App() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                   {availableProducts.slice(0, 4).map(product => (
-                    <div key={product.id} className="group cursor-pointer bg-ore-card rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition border border-white/5 flex flex-col" onClick={() => { setSelectedProduct(product); setCurrentView('product-detail'); }}>
+                    <div key={product.id} className="group cursor-pointer bg-ore-card rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition border border-white/5 flex flex-col" onClick={() => openProductDetail(product)}>
                       <div className="relative h-72 overflow-hidden bg-ore-dark flex items-center justify-center">
                         <img 
                           src={product.image} 
@@ -734,11 +857,7 @@ export default function App() {
                         return (
                           <div
                             key={p.id}
-                            onClick={() => {
-                              setSelectedProduct(p);
-                              setCurrentView('product-detail');
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
+                            onClick={() => openProductDetail(p)}
                             className="bg-ore-card border border-white/5 rounded-lg overflow-hidden shadow-lg hover:border-ore-gold transition group cursor-pointer flex flex-col justify-between"
                           >
                             <div className="h-64 overflow-hidden relative bg-ore-dark flex items-center justify-center">
@@ -831,11 +950,7 @@ export default function App() {
                           return (
                             <div 
                               key={p.id} 
-                              onClick={() => {
-                                setSelectedProduct(p);
-                                setCurrentView('product-detail');
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                              }}
+                              onClick={() => openProductDetail(p)}
                               className="bg-ore-card border border-white/5 rounded-lg overflow-hidden shadow-lg hover:border-ore-gold transition group cursor-pointer"
                             >
                               <div className="h-64 overflow-hidden relative bg-ore-dark flex items-center justify-center">
@@ -971,7 +1086,7 @@ export default function App() {
 
         {currentView === 'product-detail' && selectedProduct && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <button onClick={() => setCurrentView('shop')} className="text-xs uppercase tracking-widest text-ore-gold mb-8 flex items-center gap-2 hover:underline cursor-pointer">
+            <button onClick={openStepCatalog} className="text-xs uppercase tracking-widest text-ore-gold mb-8 flex items-center gap-2 hover:underline cursor-pointer">
               Volver al catálogo
             </button>
 
@@ -1186,10 +1301,7 @@ export default function App() {
                     return (
                       <div 
                         key={relatedProduct.id} 
-                        onClick={() => {
-                          setSelectedProduct(relatedProduct);
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
+                        onClick={() => openProductDetail(relatedProduct)}
                         className="bg-ore-card border border-white/5 rounded-lg overflow-hidden group cursor-pointer hover:border-ore-gold/50 transition shadow-xl flex flex-col justify-between"
                       >
                         <div className="aspect-square w-full overflow-hidden bg-ore-dark relative flex items-center justify-center">
@@ -1524,8 +1636,7 @@ export default function App() {
                 onLogout={() => {
                   setIsAdminAuthenticated(false);
                   sessionStorage.removeItem('ore_admin_auth');
-                  setCurrentView('home');
-                  window.location.hash = '';
+                  navigateToView('home');
                 }}
               />
             )}
@@ -1534,7 +1645,7 @@ export default function App() {
 
       </main>
 
-      {/* CARRITO CON COMPRA PROTEGIDA EN UNA LÍNEA */}
+      {/* CARRITO */}
       {cartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm">
           <div className="w-full max-w-md bg-ore-card h-full flex flex-col border-l border-white/10 p-5 sm:p-6 shadow-2xl">
@@ -1582,12 +1693,7 @@ export default function App() {
                         className="flex items-center justify-between gap-2.5 bg-ore-dark/70 border border-white/5 rounded-lg p-2.5"
                       >
                         <div
-                          onClick={() => {
-                            setSelectedProduct(sug);
-                            setCurrentView('product-detail');
-                            setCartOpen(false);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
+                          onClick={() => openProductDetail(sug)}
                           className="flex items-center gap-2.5 min-w-0 cursor-pointer group"
                         >
                           <img
@@ -1648,10 +1754,12 @@ export default function App() {
                   Iniciar compra
                 </button>
 
-                <div className="flex items-center justify-center gap-1.5 text-[10.5px] sm:text-[11px] text-[#9CA3AF] pt-1 leading-none whitespace-nowrap overflow-hidden">
-                  <Lock size={11} className="text-[#D4AF37] shrink-0" />
-                  <span className="text-[#D4AF37] font-semibold tracking-[0.03em]">Compra Protegida</span>
-                  <span>: Pago encriptado y Entrega Asegurada</span>
+                <div className="flex items-start justify-center gap-1.5 text-[10px] sm:text-[11px] text-[#9CA3AF] pt-1 leading-snug">
+                  <Lock size={11} className="text-[#D4AF37] shrink-0 mt-0.5" />
+                  <span className="text-center">
+                    <strong className="text-[#D4AF37] font-semibold tracking-[0.03em]">Compra Protegida</strong>
+                    {' • Pago encriptado y Envío Asegurado'}
+                  </span>
                 </div>
               </div>
             )}
@@ -1774,13 +1882,13 @@ export default function App() {
             ? `*Entrega:* ${envioInfo.zona} (${envioInfo.costo === 0 ? 'GRATIS' : `$${envioInfo.costo.toLocaleString('es-AR')}`})`
             : `*Entrega:* A coordinar según CP`;
 
-          const message = `Hola ORE Joyería! Quisiera abonar por transferencia con el 15% OFF los siguientes productos:%0A%0A${itemsList}%0A%0A${envioTexto}%0A*Total con 15% OFF Transferencia en joyas: $${modalTotalWithTransfer.toLocaleString('es-AR')} (Ahorro: $${modalTransferSavings.toLocaleString('es-AR')})*`;
+          const message = `Hola ORE Joyería! Quisiera abonar por transferencia con el 15% OFF los siguientes productos:%0A%0A${itemsList}%0A%0A${envioTexto}%0A*Valor Final con Descuento: $${modalTotalWithTransfer.toLocaleString('es-AR')} (Ahorro: $${modalTransferSavings.toLocaleString('es-AR')})*`;
           return `https://wa.me/${phone}?text=${message}`;
         };
 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-            <div className="w-full max-w-lg bg-ore-card border border-ore-gold/40 rounded-lg p-6 sm:p-8 shadow-2xl space-y-5 text-center animate-in fade-in zoom-in duration-200 my-auto">
+            <div className="w-full max-w-lg bg-ore-card border border-ore-gold/40 rounded-lg p-5 sm:p-8 shadow-2xl space-y-5 text-center animate-in fade-in zoom-in duration-200 my-auto">
               <div className="w-12 h-12 rounded-full bg-ore-gold/10 border border-ore-gold flex items-center justify-center mx-auto text-ore-gold">
                 <Truck size={24} />
               </div>
@@ -1896,7 +2004,6 @@ export default function App() {
                 </p>
               </div>
 
-              {/* 1) TRANSFERENCIA -15% OFF CON VERDE WHATSAPP + LOGO  |  2) PAGAR AHORA + ISOTIPO MP EN NEGRO CON FILO DORADO  |  3) COMPRA PROTEGIDA EN UNA LÍNEA  |  4) VOLVER AL CARRITO */}
               <div className="flex flex-col gap-2.5 pt-1">
                 <button
                   type="button"
@@ -1906,8 +2013,8 @@ export default function App() {
                   }}
                   className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-ore-dark font-bold py-3.5 px-6 uppercase text-xs tracking-widest rounded transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                 >
-                  <span>Transferencia -15% OFF</span>
                   <WhatsAppLogo className="w-4 h-4 shrink-0" />
+                  <span>Transferencia -15% OFF</span>
                 </button>
 
                 <button 
@@ -1955,10 +2062,12 @@ export default function App() {
                   {envioInfo.calculado && <MercadoPagoLogo />}
                 </button>
 
-                <div className="flex items-center justify-center gap-1.5 text-[10.5px] sm:text-[11px] text-[#9CA3AF] pt-1 leading-none whitespace-nowrap overflow-hidden">
-                  <Lock size={11} className="text-[#D4AF37] shrink-0" />
-                  <span className="text-[#D4AF37] font-semibold tracking-[0.03em]">Compra Protegida</span>
-                  <span>: Pago encriptado y Entrega Asegurada</span>
+                <div className="flex items-start justify-center gap-1.5 text-[10px] sm:text-[11px] text-[#9CA3AF] pt-1 leading-snug">
+                  <Lock size={11} className="text-[#D4AF37] shrink-0 mt-0.5" />
+                  <span className="text-center">
+                    <strong className="text-[#D4AF37] font-semibold tracking-[0.03em]">Compra Protegida</strong>
+                    {' • Pago encriptado y Envío Asegurado'}
+                  </span>
                 </div>
 
                 <button
@@ -1992,7 +2101,7 @@ export default function App() {
             <h4 className="font-serif text-sm uppercase tracking-wider mb-4 text-ore-gold">Navegación</h4>
             <ul className="space-y-2 text-xs text-ore-muted">
               <li><button onClick={openStepCatalog} className="hover:text-ore-cream cursor-pointer">Tienda</button></li>
-              <li><button onClick={() => setCurrentView('gold')} className="hover:text-ore-cream cursor-pointer">Compramos oro</button></li>
+              <li><button onClick={() => navigateToView('gold')} className="hover:text-ore-cream cursor-pointer">Compramos oro</button></li>
             </ul>
           </div>
           <div>
