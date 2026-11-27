@@ -1,14 +1,501 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
     ShoppingBag, Menu, X, Truck, Phone, Mail,
-    ArrowRight, CheckCircle, AlertCircle, Trash2, Lock, Plus
+    ArrowRight, CheckCircle, AlertCircle, Trash2, Lock, Plus, Gift
   } from 'lucide-react';
 import { supabase } from './supabase';
 import AdminDashboard from './AdminDashboard';
 
-const HERO_BACKGROUND_IMAGE =
-  'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1920&q=80';
+// ============================================================================
+// [NAVIDAD - 1] FRASES ROTATIVAS DEL BANNER SUPERIOR (COMENTADO PARA PROBAR)
+// ============================================================================
 
+const CHRISTMAS_BANNER_MESSAGES = [
+  'Tu Joyería Online de Confianza',
+  'Envíos a Todo El País',
+  'Tus Regalos Para Navidad Encontralos Acá',
+  'Plata 925, Plata con Oro y Oro 18k • Especial Navidad',
+];
+
+
+// ============================================================================
+// [NAVIDAD - 2] NIEVE Y DECORACIONES NAVIDEÑAS CON MOVIMIENTO (COMENTADO)
+// ============================================================================
+
+function ChristmasMotionOverlay({ snowCount = 24 }) {
+  const snowflakes = React.useMemo(
+    () =>
+      Array.from({ length: snowCount }, (_, idx) => ({
+        id: idx,
+        left: `${(idx * 29 + 11) % 100}%`,
+        size: `${(idx % 4) + 2}px`,
+        duration: `${9 + (idx % 7) * 1.3}s`,
+        delay: `${-(idx % 9)}s`,
+        opacity: 0.25 + (idx % 4) * 0.13,
+      })),
+    [snowCount]
+  );
+
+  const ornaments = [
+    { id: 'orn-1', symbol: '✦', left: '9%', duration: '13s', delay: '-2s', size: '13px' },
+    { id: 'orn-2', symbol: '❄', left: '24%', duration: '15s', delay: '-6s', size: '12px' },
+    { id: 'orn-3', symbol: '✦', left: '52%', duration: '12s', delay: '-4s', size: '14px' },
+    { id: 'orn-4', symbol: '❄', left: '74%', duration: '16s', delay: '-8s', size: '12px' },
+    { id: 'orn-5', symbol: '✦', left: '89%', duration: '14s', delay: '-5s', size: '13px' },
+  ];
+
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 z-40 overflow-hidden select-none"
+    >
+      <style>{`
+        @keyframes oreChristmasSnow {
+          0% {
+            transform: translate3d(0, -8vh, 0) rotate(0deg);
+          }
+          50% {
+            transform: translate3d(15px, 50vh, 0) rotate(180deg);
+          }
+          100% {
+            transform: translate3d(-12px, 108vh, 0) rotate(360deg);
+          }
+        }
+
+        @keyframes oreChristmasOrnament {
+          0% {
+            transform: translate3d(0, -10vh, 0) rotate(-7deg);
+          }
+          50% {
+            transform: translate3d(-16px, 50vh, 0) rotate(9deg);
+          }
+          100% {
+            transform: translate3d(12px, 110vh, 0) rotate(-6deg);
+          }
+        }
+      `}</style>
+
+      {snowflakes.map((flake) => (
+        <span
+          key={flake.id}
+          style={{
+            left: flake.left,
+            width: flake.size,
+            height: flake.size,
+            opacity: flake.opacity,
+            animation: `oreChristmasSnow ${flake.duration} linear ${flake.delay} infinite`,
+          }}
+          className="absolute top-0 rounded-full bg-amber-100 shadow-[0_0_7px_rgba(253,230,138,0.45)]"
+        />
+      ))}
+
+      {ornaments.map((item) => (
+        <span
+          key={item.id}
+          style={{
+            left: item.left,
+            fontSize: item.size,
+            animation: `oreChristmasOrnament ${item.duration} ease-in-out ${item.delay} infinite`,
+          }}
+          className="absolute top-0 text-amber-300/65 drop-shadow-[0_0_6px_rgba(245,158,11,0.35)]"
+        >
+          {item.symbol}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+
+// ============================================================================
+// [NAVIDAD - 3] COMPONENTE BANNER SUPERIOR ROTATIVO (COMENTADO)
+// ============================================================================
+
+function ChristmasRotatingBanner({ messages = [] }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    if (!messages.length) return undefined;
+
+    const timer = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setActiveIndex((prev) => (prev + 1) % messages.length);
+        setVisible(true);
+      }, 240);
+    }, 3500);
+
+    return () => clearInterval(timer);
+  }, [messages]);
+
+  if (!messages.length) return null;
+
+  return (
+    <div className="bg-ore-gold text-ore-dark text-xs font-semibold py-1.5 px-4 text-center tracking-wider flex items-center justify-center gap-2">
+      <span
+        className={`transition-opacity duration-300 ${
+          visible ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        ✦ {messages[activeIndex]} ✦
+      </span>
+    </div>
+  );
+}
+
+
+// ============================================================================
+// [NAVIDAD - 4] GUIRNALDA FRONDOSA CON LUCES, ESFERAS, CASCABELES Y TRINEO
+// INTERACTIVO COLGANDO BAJO EL HEADER
+// ============================================================================
+
+function ChristmasHeaderGarland({ onGoShop }) {
+  const [sleighModalOpen, setSleighModalOpen] = useState(false);
+  const [sleighHovered, setSleighHovered] = useState(false);
+
+  const garlandSegments = Array.from({ length: 24 }, (_, i) => i);
+
+  const bulbs = [
+    { left: '5%', top: 7, delay: '0s', dur: '1.7s' },
+    { left: '12%', top: 11, delay: '0.4s', dur: '2.1s' },
+    { left: '19%', top: 6, delay: '0.9s', dur: '1.5s' },
+    { left: '26%', top: 11, delay: '0.2s', dur: '2.3s' },
+    { left: '33%', top: 7, delay: '1.1s', dur: '1.8s' },
+    { left: '40%', top: 11, delay: '0.6s', dur: '2.0s' },
+    { left: '47%', top: 6, delay: '1.3s', dur: '1.6s' },
+    { left: '54%', top: 11, delay: '0.3s', dur: '2.2s' },
+    { left: '61%', top: 7, delay: '0.8s', dur: '1.7s' },
+    { left: '68%', top: 11, delay: '1.2s', dur: '2.1s' },
+    { left: '75%', top: 6, delay: '0.5s', dur: '1.6s' },
+    { left: '82%', top: 11, delay: '1.0s', dur: '1.9s' },
+    { left: '89%', top: 7, delay: '0.1s', dur: '2.3s' },
+    { left: '95%', top: 10, delay: '0.7s', dur: '1.8s' },
+  ];
+
+  // Esferas de colores y cascabeles colgantes sobre el cable de guirnalda
+  const hangingItems = [
+    { left: '8%', kind: 'ball', color: '#D4AF37', cord: 10, delay: '0s' },
+    { left: '16%', kind: 'bell', color: '#FDE68A', cord: 9, delay: '0.5s' },
+    { left: '25%', kind: 'ball', color: '#C53030', cord: 12, delay: '1.0s' },
+    { left: '35%', kind: 'ball', color: '#2F855A', cord: 9, delay: '0.3s' },
+    { left: '45%', kind: 'bell', color: '#F6E05E', cord: 11, delay: '0.8s' },
+    { left: '56%', kind: 'ball', color: '#D4AF37', cord: 10, delay: '1.3s' },
+    { left: '66%', kind: 'ball', color: '#C53030', cord: 12, delay: '0.2s' },
+    { left: '76%', kind: 'bell', color: '#FDE68A', cord: 9, delay: '0.9s' },
+    { left: '85%', kind: 'ball', color: '#2F855A', cord: 11, delay: '0.6s' },
+    { left: '93%', kind: 'ball', color: '#D4AF37', cord: 10, delay: '1.2s' },
+  ];
+
+  return (
+    <>
+      <div
+        aria-hidden="false"
+        className="pointer-events-none absolute top-full left-0 right-0 h-14 overflow-visible z-30 select-none"
+      >
+        <style>{`
+          @keyframes orePineBulbTwinkle {
+            0%, 100% {
+              opacity: 0.4;
+              transform: translateX(-50%) scale(0.88);
+            }
+            50% {
+              opacity: 1;
+              transform: translateX(-50%) scale(1.18);
+            }
+          }
+
+          @keyframes oreOrnamentSwing {
+            0%, 100% {
+              transform: translateX(-50%) rotate(-5deg);
+            }
+            50% {
+              transform: translateX(-50%) rotate(5deg);
+            }
+          }
+
+          /* Recorrido de derecha a izquierda */
+          @keyframes oreSleighGlideRightToLeft {
+            0% {
+              right: -165px;
+            }
+            100% {
+              right: calc(100% + 165px);
+            }
+          }
+
+          @keyframes oreSleighBob {
+            0%, 100% {
+              transform: translateY(0px) rotate(1.5deg);
+            }
+            50% {
+              transform: translateY(-2.5px) rotate(-1.5deg);
+            }
+          }
+        `}</style>
+
+        {/* Guirnalda frondosa tipo pino */}
+        <div className="relative w-full h-4 flex items-center justify-between overflow-hidden">
+          {garlandSegments.map((idx) => (
+            <svg
+              key={idx}
+              viewBox="0 0 64 24"
+              className="h-4 flex-1 shrink-0 -mx-1"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M2,12 L16,4 L12,12 L24,3 L20,12 L34,2 L29,12 L44,4 L39,12 L54,5 L49,12 L63,11"
+                fill="none"
+                stroke="#1B4332"
+                strokeWidth="3.2"
+                strokeLinecap="round"
+              />
+              <path
+                d="M1,13 L15,21 L12,13 L25,22 L21,13 L35,22 L30,13 L45,21 L40,13 L55,20 L50,13 L63,13"
+                fill="none"
+                stroke="#2D6A4F"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+              <path
+                d="M6,12 L20,7 L18,12 L32,6 L29,12 L46,7 L42,12 L58,8"
+                fill="none"
+                stroke="#40916C"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+            </svg>
+          ))}
+        </div>
+
+        {/* Luces cálidas titilando entre la guirnalda */}
+        {bulbs.map((bulb, i) => (
+          <span
+            key={`bulb-${i}`}
+            style={{
+              left: bulb.left,
+              top: `${bulb.top}px`,
+              animation: `orePineBulbTwinkle ${bulb.dur} ease-in-out ${bulb.delay} infinite`,
+            }}
+            className="absolute w-2 h-2 rounded-full bg-[#FEF08A] shadow-[0_0_9px_rgba(254,240,138,0.95),0_0_4px_rgba(212,175,55,0.85)]"
+          />
+        ))}
+
+        {/* Esferas de colores y cascabeles colgantes */}
+        {hangingItems.map((item, i) => (
+          <span
+            key={`hang-${i}`}
+            style={{
+              left: item.left,
+              top: '8px',
+              animation: `oreOrnamentSwing 2.8s ease-in-out ${item.delay} infinite`,
+            }}
+            className="absolute flex flex-col items-center origin-top"
+          >
+            <span
+              style={{ height: `${item.cord}px` }}
+              className="w-[1px] bg-amber-200/50"
+            />
+            {item.kind === 'ball' ? (
+              <span
+                style={{
+                  backgroundColor: item.color,
+                  boxShadow: `0 0 8px ${item.color}88`,
+                }}
+                className="w-2.5 h-2.5 rounded-full border border-white/25 relative"
+              >
+                <span className="w-1 h-1 rounded-full bg-white/70 absolute top-0.5 left-0.5" />
+              </span>
+            ) : (
+              <span className="flex flex-col items-center">
+                <span
+                  style={{
+                    backgroundColor: item.color,
+                    boxShadow: '0 0 7px rgba(253, 230, 138, 0.75)',
+                  }}
+                  className="w-2.5 h-2.5 rounded-full border border-amber-900/40 flex items-center justify-center"
+                >
+                  <span className="w-1 h-[1.5px] bg-amber-950/60 rounded-full" />
+                </span>
+              </span>
+            )}
+          </span>
+        ))}
+
+        {/* Trineo con renos y Papá Noel moviéndose de DERECHA a IZQUIERDA */}
+        <div
+          style={{
+            top: '17px',
+            animation: 'oreSleighGlideRightToLeft 26s linear infinite',
+            animationPlayState: sleighHovered || sleighModalOpen ? 'paused' : 'running',
+          }}
+          className="absolute right-0 pointer-events-auto cursor-pointer group flex flex-col items-center"
+          onMouseEnter={() => setSleighHovered(true)}
+          onMouseLeave={() => setSleighHovered(false)}
+          onClick={() => setSleighModalOpen(true)}
+          title="Felices Fiestas • ORE"
+        >
+          {sleighHovered && !sleighModalOpen && (
+            <div className="mb-1 px-2.5 py-0.5 rounded-full bg-ore-card/95 border border-ore-gold/70 text-[10px] font-semibold tracking-wider text-ore-gold whitespace-nowrap shadow-lg text-center">
+              ✦ Felices Fiestas • ORE ✦
+            </div>
+          )}
+
+          <div
+            style={{ animation: 'oreSleighBob 2.2s ease-in-out infinite' }}
+            className="flex items-center"
+          >
+            {/* Se refleja horizontalmente el conjunto para que los renos avancen hacia la izquierda */}
+            <svg
+              viewBox="0 0 156 36"
+              className={`h-9 sm:h-10 w-auto -scale-x-100 drop-shadow-[0_2px_9px_rgba(212,175,55,0.45)] transition-transform duration-200 ${
+                sleighHovered ? 'scale-105 -scale-x-105' : ''
+              }`}
+            >
+              {/* Riendas doradas */}
+              <line
+                x1="44"
+                y1="19"
+                x2="112"
+                y2="16"
+                stroke="#FDE68A"
+                strokeWidth="0.95"
+                strokeDasharray="2 1.5"
+              />
+
+              {/* Reno 2 (delantero, guía hacia la izquierda en pantalla) */}
+              <g transform="translate(114, 11)">
+                <path d="M18,7 L24,5 L26,8" fill="none" stroke="#D4AF37" strokeWidth="1.2" />
+                <path d="M21,6 L22,2 M23,5 L25,3" stroke="#FDE68A" strokeWidth="1" />
+                <ellipse cx="14" cy="11" rx="6" ry="3.4" fill="#A47148" />
+                <circle cx="19.5" cy="9.5" r="2.5" fill="#A47148" />
+                <circle cx="21.8" cy="9.5" r="1.1" fill="#E53E3E" />
+                <line x1="10" y1="14" x2="9" y2="19" stroke="#8B5A2B" strokeWidth="1.3" />
+                <line x1="17" y1="14" x2="18" y2="19" stroke="#8B5A2B" strokeWidth="1.3" />
+              </g>
+
+              {/* Reno 1 */}
+              <g transform="translate(82, 12)">
+                <path d="M17,7 L22,5 L24,8" fill="none" stroke="#D4AF37" strokeWidth="1.2" />
+                <path d="M19,6 L20,2 M21,5 L23,3" stroke="#FDE68A" strokeWidth="1" />
+                <ellipse cx="13" cy="11" rx="5.8" ry="3.3" fill="#8D5B4C" />
+                <circle cx="18.2" cy="9.5" r="2.4" fill="#8D5B4C" />
+                <circle cx="20.4" cy="9.5" r="0.9" fill="#FDE68A" />
+                <line x1="9.5" y1="14" x2="8.5" y2="19" stroke="#6F4537" strokeWidth="1.3" />
+                <line x1="16" y1="14" x2="17" y2="19" stroke="#6F4537" strokeWidth="1.3" />
+              </g>
+
+              {/* Trineo elegante rojo y dorado */}
+              <g transform="translate(5, 11)">
+                <path
+                  d="M2,21 L38,21 Q43,21 44,16"
+                  fill="none"
+                  stroke="#FDE68A"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <line x1="10" y1="17" x2="10" y2="21" stroke="#D4AF37" strokeWidth="1.3" />
+                <line x1="32" y1="17" x2="32" y2="21" stroke="#D4AF37" strokeWidth="1.3" />
+                <path
+                  d="M5,10 L37,10 Q36,17 28,17 L11,17 Q6,17 5,10 Z"
+                  fill="#B91C1C"
+                  stroke="#FDE68A"
+                  strokeWidth="1"
+                />
+                {/* Regalo dorado en el trineo */}
+                <rect x="25" y="4.5" width="7.5" height="5.5" rx="0.9" fill="#D4AF37" />
+                <line x1="28.75" y1="4.5" x2="28.75" y2="10" stroke="#FEF08A" strokeWidth="1" />
+
+                {/* Papá Noel a penas más grande */}
+                <g transform="translate(16.5, 10) scale(1.22) translate(-16.5, -10)">
+                  <circle cx="16" cy="5.5" r="3.2" fill="#FBD38D" />
+                  <path d="M12.8,6.6 Q16,10.8 19.2,6.6 Z" fill="#FFFFFF" />
+                  <path d="M12.2,4.2 L16.5,0.2 L20.8,4.2 Z" fill="#DC2626" />
+                  <circle cx="21.3" cy="4.2" r="1.5" fill="#FFFFFF" />
+                </g>
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* MENSAJE GRANDE AL APRETAR EL TRINEO */}
+      {sleighModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center min-h-screen bg-black/80 backdrop-blur-sm p-4 overflow-y-auto"
+          onClick={() => setSleighModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg my-auto bg-ore-card border border-ore-gold/60 rounded-2xl p-6 sm:p-8 shadow-2xl text-center space-y-5 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setSleighModalOpen(false)}
+              aria-label="Cerrar mensaje navideño"
+              className="absolute top-4 right-4 text-ore-muted hover:text-ore-gold p-1 transition cursor-pointer"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="w-14 h-14 rounded-full bg-ore-gold/15 border border-ore-gold/50 flex items-center justify-center mx-auto text-ore-gold shadow-lg">
+              <Gift size={26} />
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-[11px] uppercase tracking-[0.25em] text-ore-gold font-semibold">
+                ✦ Felices Fiestas • ORE Joyería ✦
+              </span>
+              <h3 className="font-serif text-2xl sm:text-3xl text-ore-cream leading-snug">
+                Felices Fiestas te desea ORE Joyería
+              </h3>
+            </div>
+
+            <div className="bg-ore-dark/90 border border-ore-gold/35 rounded-xl p-5 space-y-2">
+              <p className="text-sm sm:text-base text-ore-cream leading-relaxed">
+                Tenemos un regalo para vos: con tu primera compra te llevás unos{' '}
+                <strong className="text-ore-gold font-bold">
+                  Aros de Plata 925 DE REGALO!!
+                </strong>.
+              </p>
+              <p className="text-[11px] text-ore-muted">
+                Válido en tu primera compra • Stock sujeto a disponibilidad.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-1">
+              {onGoShop && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSleighModalOpen(false);
+                    onGoShop();
+                  }}
+                  className="flex-1 bg-ore-gold hover:bg-ore-gold-light text-ore-dark font-bold py-3.5 px-5 uppercase text-xs tracking-widest rounded-lg transition shadow-lg cursor-pointer"
+                >
+                  Explorar la tienda
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setSleighModalOpen(false)}
+                className="flex-1 bg-ore-dark hover:bg-white/10 text-ore-cream border border-white/15 font-semibold py-3.5 px-5 uppercase text-xs tracking-widest rounded-lg transition cursor-pointer"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+
+//const HERO_BACKGROUND_IMAGE =
+//  'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1920&q=80';
+const HERO_BACKGROUND_IMAGE =
+   'https://gxjpsfchccljmnpdyegn.supabase.co/storage/v1/object/public/product-images/joyasfondo.jpg';
 const MP_ISOTIPO_URL =
   'https://gxjpsfchccljmnpdyegn.supabase.co/storage/v1/object/public/product-images/mp-isotipo.svg';
 
@@ -507,11 +994,18 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-ore-dark text-ore-cream flex flex-col font-sans selection:bg-ore-gold selection:text-ore-dark">
-      
-      <div className="bg-ore-gold text-ore-dark text-xs font-semibold py-1.5 px-4 text-center tracking-wider flex items-center justify-center gap-2">
+
+      {/* [NAVIDAD - 2 ACTIVACION] NIEVE Y DECORACIONES EN MOVIMIENTO (COMENTADO) */}
+       <ChristmasMotionOverlay snowCount={24} /> 
+
+      {/* BANNER SUPERIOR ACTUAL (si activas el navideño rotativo, comenta este bloque) */}
+      {/*<div className="bg-ore-gold text-ore-dark text-xs font-semibold py-1.5 px-4 text-center tracking-wider flex items-center justify-center gap-2">
         <AlertCircle size={14} className="shrink-0" />
         <span>ENTORNO DE DEMOSTRACIÓN — Gestión y catálogo sincronizados con Supabase</span>
       </div>
+      */}
+      {/* [NAVIDAD - 3 ACTIVACION] BANNER SUPERIOR NAVIDEÑO ROTATIVO (COMENTADO) */}
+       <ChristmasRotatingBanner messages={CHRISTMAS_BANNER_MESSAGES} />
 
       <header className="sticky top-0 z-40 bg-ore-dark/95 backdrop-blur border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
@@ -618,6 +1112,9 @@ export default function App() {
           </div>
         </div>
 
+        {/* [NAVIDAD - 4 ACTIVACION] GUIRNALDA FRONDOSA, ESFERAS, CASCABELES Y TRINEO */}
+        <ChristmasHeaderGarland onGoShop={openStepCatalog} />
+
         {/* MENÚ MÓVIL DESPLEGABLE */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-ore-card/98 backdrop-blur-md border-t border-white/10 px-6 py-4 space-y-1 shadow-2xl">
@@ -712,15 +1209,14 @@ export default function App() {
         {currentView === 'home' && (
           <div>
             <section className="relative h-[80vh] flex items-center justify-center text-center px-4 overflow-hidden">
-              <div className="absolute inset-0 z-0">
-                <img 
-                  src={HERO_BACKGROUND_IMAGE} 
-                  alt="Joyería ORE" 
-                  loading="lazy"
-                  className="w-full h-full object-cover opacity-40 brightness-75 scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-ore-dark via-ore-dark/40 to-transparent"></div>
-              </div>
+            <div className="absolute inset-0 z-0">
+            <img
+              src={HERO_BACKGROUND_IMAGE}
+              alt="Joyería ORE"
+              className="w-full h-full object-cover opacity-90 brightness-95"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/35"></div>
+          </div>
               
               <div className="relative z-10 max-w-3xl space-y-6">
                 <span className="text-ore-gold uppercase tracking-[0.3em] text-xs font-semibold">Tu Joyería Online de Confianza</span>
@@ -1124,7 +1620,7 @@ export default function App() {
                     </div>
 
                     <div className="inline-block bg-ore-gold/10 border border-ore-gold/30 px-3 py-1 rounded text-xs text-ore-gold font-medium">
-                      ✨ 15% de descuento abonando por transferencia o efectivo: <strong className="font-bold">${Math.round(selectedProduct.price * 0.85).toLocaleString('es-AR')}</strong>
+                      ✦ 15% de descuento abonando por transferencia o efectivo: <strong className="font-bold">${Math.round(selectedProduct.price * 0.85).toLocaleString('es-AR')}</strong>
                     </div>
                   </div>
 
@@ -1143,7 +1639,7 @@ export default function App() {
                       if (stockActual === 1) {
                         return (
                           <p className="text-xs text-ore-gold flex items-center gap-1.5 font-medium">
-                            <span>✨</span> Pieza única disponible en taller — Lista para entrega inmediata.
+                            <span>✦</span> Pieza única disponible en taller — Lista para entrega inmediata.
                           </p>
                         );
                       }
@@ -1151,7 +1647,7 @@ export default function App() {
                       if (stockActual <= 3) {
                         return (
                           <p className="text-xs text-amber-400 flex items-center gap-1.5 font-medium">
-                            <span>⚡</span> Disponibilidad limitada: Quedan solo {stockActual} unidades.
+                            <span>✦</span> Disponibilidad limitada: Quedan solo {stockActual} unidades.
                           </p>
                         );
                       }
