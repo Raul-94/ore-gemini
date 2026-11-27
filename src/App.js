@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-    ShoppingBag, Menu, X, Truck, Phone, Mail,
-    ArrowRight, CheckCircle, AlertCircle, Trash2, Lock, Plus, Gift
-  } from 'lucide-react';
+import {
+  ShoppingBag, Menu, X, Truck, Phone, Mail,
+  ArrowRight, CheckCircle, AlertCircle, Trash2, Lock, Plus, Gift
+} from 'lucide-react';
 import { supabase } from './supabase';
 import AdminDashboard from './AdminDashboard';
 
 // ============================================================================
-// [NAVIDAD - 1] FRASES ROTATIVAS DEL BANNER SUPERIOR (COMENTADO PARA PROBAR)
+// [NAVIDAD - 1] FRASES ROTATIVAS DEL BANNER SUPERIOR
 // ============================================================================
 
 const CHRISTMAS_BANNER_MESSAGES = [
@@ -17,9 +17,8 @@ const CHRISTMAS_BANNER_MESSAGES = [
   'Plata 925, Plata con Oro y Oro 18k • Especial Navidad',
 ];
 
-
 // ============================================================================
-// [NAVIDAD - 2] NIEVE Y DECORACIONES NAVIDEÑAS CON MOVIMIENTO (COMENTADO)
+// [NAVIDAD - 2] NIEVE Y DECORACIONES NAVIDEÑAS CON MOVIMIENTO
 // ============================================================================
 
 function ChristmasMotionOverlay({ snowCount = 24 }) {
@@ -106,9 +105,8 @@ function ChristmasMotionOverlay({ snowCount = 24 }) {
   );
 }
 
-
 // ============================================================================
-// [NAVIDAD - 3] COMPONENTE BANNER SUPERIOR ROTATIVO (COMENTADO)
+// [NAVIDAD - 3] COMPONENTE BANNER SUPERIOR ROTATIVO
 // ============================================================================
 
 function ChristmasRotatingBanner({ messages = [] }) {
@@ -143,7 +141,6 @@ function ChristmasRotatingBanner({ messages = [] }) {
     </div>
   );
 }
-
 
 // ============================================================================
 // [NAVIDAD - 4] GUIRNALDA FRONDOSA CON LUCES, ESFERAS, CASCABELES Y TRINEO
@@ -456,7 +453,7 @@ function ChristmasHeaderGarland({ onGoShop }) {
                 Tenemos un regalo para vos: con tu primera compra te llevás unos{' '}
                 <strong className="text-ore-gold font-bold">
                   Aros de Plata 925 DE REGALO!!
-                </strong>.
+                </strong>
               </p>
               <p className="text-[11px] text-ore-muted">
                 Válido en tu primera compra • Stock sujeto a disponibilidad.
@@ -491,11 +488,8 @@ function ChristmasHeaderGarland({ onGoShop }) {
   );
 }
 
-
-//const HERO_BACKGROUND_IMAGE =
-//  'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1920&q=80';
 const HERO_BACKGROUND_IMAGE =
-   'https://gxjpsfchccljmnpdyegn.supabase.co/storage/v1/object/public/product-images/joyasfondo.jpg';
+  'https://gxjpsfchccljmnpdyegn.supabase.co/storage/v1/object/public/product-images/joyasfondo.jpg';
 const MP_ISOTIPO_URL =
   'https://gxjpsfchccljmnpdyegn.supabase.co/storage/v1/object/public/product-images/mp-isotipo.svg';
 
@@ -533,7 +527,7 @@ export default function App() {
   const [addedToast, setAddedToast] = useState(null);
   const toastTimeoutRef = useRef(null);
   const pendingProductSlugRef = useRef(null);
-  
+
   // Autenticación Admin
   const [adminPin, setAdminPin] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -565,11 +559,11 @@ export default function App() {
     if (cpNum >= 5500 && cpNum <= 5549) {
       const esGratisMendoza = subtotalCarrito >= 50000;
       const costoEnvio = tipoEntrega === 'domicilio' ? (esGratisMendoza ? 0 : 7000) : 0;
-      
+
       return {
         costo: costoEnvio,
-        zona: esGratisMendoza 
-          ? `Gran Mendoza (CP ${cpClean}) - ¡Envío Local GRATIS (Superaste $50.000)!` 
+        zona: esGratisMendoza
+          ? `Gran Mendoza (CP ${cpClean}) - ¡Envío Local GRATIS (Superaste $50.000)!`
           : (tipoEntrega === 'domicilio' ? `Gran Mendoza (CP ${cpClean}) - Envío a Domicilio ($7.000)` : `Gran Mendoza (CP ${cpClean}) - Retiro en ORE ($0)`),
         calculado: true,
         esMendoza: true
@@ -770,7 +764,7 @@ export default function App() {
     const { data: matData } = await supabase.from('materials').select('*').order('name');
     if (matData) setMaterials(matData);
   };
-  
+
   useEffect(() => {
     if (!window.location.hash && window.location.pathname === '/') {
       window.history.replaceState(null, '', '#/');
@@ -793,13 +787,13 @@ export default function App() {
   const availableProducts = sortByPriceAsc(
     products.filter(p => Number(p.stock ?? 0) > 0)
   );
-  
+
   const fetchProductsFromSupabase = async () => {
     const { data, error } = await supabase
       .from('products')
       .select('*, categories(name), materials(name)')
       .order('id', { ascending: false });
-    
+
     if (!error && data && data.length > 0) {
       const formatted = data.map(p => ({
         ...p,
@@ -858,14 +852,14 @@ export default function App() {
   };
 
   const [goldForm, setGoldForm] = useState({
-    name: '', phone: '', email: '', pieceType: 'Anillo', karat: '18k', weight: '', description: '' , acceptedTerms: false
+    name: '', phone: '', email: '', pieceType: 'Anillo', karat: '18k', weight: '', description: '', acceptedTerms: false
   });
   const [goldSuccess, setGoldSuccess] = useState(false);
 
   const handleGoldSubmit = (e) => {
     e.preventDefault();
     setGoldSuccess(true);
-    setGoldForm({ name: '', phone: '', email: '', pieceType: 'Anillo', karat: '18k', weight: '', description: '' , acceptedTerms: false });
+    setGoldForm({ name: '', phone: '', email: '', pieceType: 'Anillo', karat: '18k', weight: '', description: '', acceptedTerms: false });
   };
 
   const addToCart = (product, selectedSize, options = { openCart: false, showToast: true }) => {
@@ -920,7 +914,7 @@ export default function App() {
   const getSizeGuideType = (product) => {
     if (!product) return null;
     const cat = (product.category || product.categories?.name || product.title || product.name || '').toLowerCase();
-    
+
     if (cat.includes('anillo') || cat.includes('alianza') || cat.includes('cintillo') || cat.includes('solitario')) {
       return 'ring';
     }
@@ -969,7 +963,7 @@ export default function App() {
 
   const WhatsAppLogo = ({ className = "w-4 h-4 shrink-0" }) => (
     <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
     </svg>
   );
 
@@ -995,21 +989,15 @@ export default function App() {
   return (
     <div className="min-h-screen bg-ore-dark text-ore-cream flex flex-col font-sans selection:bg-ore-gold selection:text-ore-dark">
 
-      {/* [NAVIDAD - 2 ACTIVACION] NIEVE Y DECORACIONES EN MOVIMIENTO (COMENTADO) */}
-       <ChristmasMotionOverlay snowCount={24} /> 
+      {/* [NAVIDAD - 2 ACTIVACION] NIEVE Y DECORACIONES EN MOVIMIENTO */}
+      <ChristmasMotionOverlay snowCount={24} />
 
-      {/* BANNER SUPERIOR ACTUAL (si activas el navideño rotativo, comenta este bloque) */}
-      {/*<div className="bg-ore-gold text-ore-dark text-xs font-semibold py-1.5 px-4 text-center tracking-wider flex items-center justify-center gap-2">
-        <AlertCircle size={14} className="shrink-0" />
-        <span>ENTORNO DE DEMOSTRACIÓN — Gestión y catálogo sincronizados con Supabase</span>
-      </div>
-      */}
-      {/* [NAVIDAD - 3 ACTIVACION] BANNER SUPERIOR NAVIDEÑO ROTATIVO (COMENTADO) */}
-       <ChristmasRotatingBanner messages={CHRISTMAS_BANNER_MESSAGES} />
+      {/* [NAVIDAD - 3 ACTIVACION] BANNER SUPERIOR NAVIDEÑO ROTATIVO */}
+      <ChristmasRotatingBanner messages={CHRISTMAS_BANNER_MESSAGES} />
 
       <header className="sticky top-0 z-40 bg-ore-dark/95 backdrop-blur border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          
+
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
@@ -1059,7 +1047,7 @@ export default function App() {
             })}
 
             {isAdminAuthenticated && (
-              <button 
+              <button
                 onClick={() => navigateToView('admin')}
                 className="bg-ore-gold/20 text-ore-gold border border-ore-gold/40 px-3 py-1 rounded text-[11px] uppercase tracking-widest hover:bg-ore-gold/30 transition cursor-pointer"
               >
@@ -1093,8 +1081,8 @@ export default function App() {
               <span className="absolute bottom-0 left-0 h-[1.5px] w-0 bg-gradient-to-r from-transparent via-ore-gold to-transparent transition-all duration-300 group-hover:w-full opacity-80" />
             </a>
 
-            <button 
-              onClick={() => setCartOpen(true)} 
+            <button
+              onClick={() => setCartOpen(true)}
               className="relative py-2 text-[11px] uppercase tracking-[0.22em] font-medium text-ore-cream/85 hover:text-ore-gold transition-colors duration-300 cursor-pointer group flex items-center gap-2"
               aria-label="Ver carrito"
             >
@@ -1205,19 +1193,19 @@ export default function App() {
       )}
 
       <main className="flex-grow">
-        
+
         {currentView === 'home' && (
           <div>
             <section className="relative h-[80vh] flex items-center justify-center text-center px-4 overflow-hidden">
-            <div className="absolute inset-0 z-0">
-            <img
-              src={HERO_BACKGROUND_IMAGE}
-              alt="Joyería ORE"
-              className="w-full h-full object-cover opacity-90 brightness-95"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/35"></div>
-          </div>
-              
+              <div className="absolute inset-0 z-0">
+                <img
+                  src={HERO_BACKGROUND_IMAGE}
+                  alt="Joyería ORE"
+                  className="w-full h-full object-cover opacity-90 brightness-95"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/35"></div>
+              </div>
+
               <div className="relative z-10 max-w-3xl space-y-6">
                 <span className="text-ore-gold uppercase tracking-[0.3em] text-xs font-semibold">Tu Joyería Online de Confianza</span>
                 <h1 className="font-serif text-4xl sm:text-6xl font-normal tracking-wide leading-tight">Joyas que acompañan tu historia</h1>
@@ -1249,13 +1237,13 @@ export default function App() {
                   {availableProducts.slice(0, 4).map(product => (
                     <div key={product.id} className="group cursor-pointer bg-ore-card rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition border border-white/5 flex flex-col" onClick={() => openProductDetail(product)}>
                       <div className="relative h-72 overflow-hidden bg-ore-dark flex items-center justify-center">
-                        <img 
-                          src={product.image} 
-                          alt={product.name} 
+                        <img
+                          src={product.image}
+                          alt={product.name}
                           loading="lazy"
                           className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500"
                         />
-                        
+
                         {renderLastUnitBadge(product)}
                         {Number(product.stock) !== 1 && isProductNew(product) && (
                           <span className="absolute top-3 right-3 z-10 bg-ore-gold text-ore-dark text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded shadow-md">
@@ -1412,13 +1400,13 @@ export default function App() {
                         </h3>
                       </div>
                       <div className="flex gap-2">
-                        <button 
+                        <button
                           onClick={() => setFilterMaterial('Todos')}
                           className="text-xs bg-ore-dark border border-white/10 text-ore-cream px-3 py-2 rounded hover:border-ore-gold transition uppercase tracking-wider cursor-pointer"
                         >
                           Cambiar Material
                         </button>
-                        <button 
+                        <button
                           onClick={() => { setFilterCategory('Todos'); setFilterMaterial('Todos'); }}
                           className="text-xs bg-ore-gold/20 border border-ore-gold/40 text-ore-gold px-3 py-2 rounded hover:bg-ore-gold hover:text-ore-dark transition uppercase tracking-wider cursor-pointer"
                         >
@@ -1444,8 +1432,8 @@ export default function App() {
                         .map(p => {
                           const productImg = p.image || p.image_url;
                           return (
-                            <div 
-                              key={p.id} 
+                            <div
+                              key={p.id}
                               onClick={() => openProductDetail(p)}
                               className="bg-ore-card border border-white/5 rounded-lg overflow-hidden shadow-lg hover:border-ore-gold transition group cursor-pointer"
                             >
@@ -1458,11 +1446,11 @@ export default function App() {
                                 )}
 
                                 {productImg ? (
-                                  <img 
-                                    src={productImg} 
-                                    alt={p.title || p.name} 
+                                  <img
+                                    src={productImg}
+                                    alt={p.title || p.name}
                                     loading="lazy"
-                                    className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500" 
+                                    className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500"
                                   />
                                 ) : (
                                   <span className="text-xs text-ore-muted italic">Sin imagen disponible</span>
@@ -1488,7 +1476,7 @@ export default function App() {
                         <span className="text-[10px] uppercase tracking-widest text-ore-gold font-semibold">Paso 2 de 2</span>
                         <h2 className="font-serif text-2xl text-ore-cream">Selecciona un Material para <span className="text-ore-gold">{filterCategory}</span></h2>
                       </div>
-                      <button 
+                      <button
                         onClick={() => setFilterCategory('Todos')}
                         className="text-xs bg-ore-dark border border-white/10 text-ore-cream px-4 py-2 rounded hover:border-ore-gold transition uppercase tracking-wider cursor-pointer"
                       >
@@ -1508,17 +1496,17 @@ export default function App() {
                         const matCoverImg = lastValidProduct ? (lastValidProduct.image || lastValidProduct.image_url) : null;
 
                         return (
-                          <div 
+                          <div
                             key={mat.id}
                             onClick={() => setFilterMaterial(mat.name)}
                             className="group relative h-48 rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-ore-gold transition-all shadow-xl bg-ore-dark flex items-center justify-center"
                           >
                             {matCoverImg ? (
-                              <img 
-                                src={matCoverImg} 
-                                alt={mat.name} 
+                              <img
+                                src={matCoverImg}
+                                alt={mat.name}
                                 loading="lazy"
-                                className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" 
+                                className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100"
                               />
                             ) : (
                               <div className="text-ore-muted text-xs italic p-4 text-center">Sin productos con imagen</div>
@@ -1550,17 +1538,17 @@ export default function App() {
                         const coverImg = lastValidProduct ? (lastValidProduct.image || lastValidProduct.image_url) : null;
 
                         return (
-                          <div 
+                          <div
                             key={cat.id}
                             onClick={() => setFilterCategory(cat.name)}
                             className="group relative h-56 rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-ore-gold transition-all shadow-xl bg-ore-dark flex items-center justify-center"
                           >
                             {coverImg ? (
-                              <img 
-                                src={coverImg} 
-                                alt={cat.name} 
+                              <img
+                                src={coverImg}
+                                alt={cat.name}
                                 loading="lazy"
-                                className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" 
+                                className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100"
                               />
                             ) : (
                               <div className="text-ore-muted text-xs italic p-4 text-center">Sin productos con imagen</div>
@@ -1587,14 +1575,14 @@ export default function App() {
             </button>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-              
+
               <div className="rounded-lg overflow-hidden border border-white/10 bg-ore-dark shadow-xl flex items-center justify-center relative">
                 {renderLastUnitBadge(selectedProduct, true)}
-                <img 
-                  src={selectedProduct.image} 
-                  alt={selectedProduct.name} 
+                <img
+                  src={selectedProduct.image}
+                  alt={selectedProduct.name}
                   loading="lazy"
-                  className="w-full h-[500px] object-cover object-center" 
+                  className="w-full h-[500px] object-cover object-center"
                 />
               </div>
 
@@ -1604,11 +1592,11 @@ export default function App() {
                   <span className="text-xs text-ore-gold uppercase tracking-widest font-semibold">
                     {selectedProduct.category || 'Joyería Fina'} {selectedProduct.material ? `• ${selectedProduct.material}` : ''}
                   </span>
-                  
+
                   <h1 className="font-serif text-3xl sm:text-4xl text-ore-cream mt-1">
                     {selectedProduct.name}
                   </h1>
-                  
+
                   <div className="mt-3 space-y-2">
                     <div className="flex items-baseline gap-3">
                       <span className="text-2xl sm:text-3xl font-semibold text-ore-gold">
@@ -1659,7 +1647,7 @@ export default function App() {
                       );
                     })()}
                   </div>
-                  
+
                   <p className="text-ore-muted mt-3 leading-relaxed">
                     {selectedProduct.description || 'Pieza elaborada con los más altos estándares de calidad y acabado artesanal.'}
                   </p>
@@ -1688,7 +1676,7 @@ export default function App() {
                             {selectedProduct.measure || selectedProduct.size || 'Consultar disponibilidad'}
                           </span>
                           {getSizeGuideType(selectedProduct) && (
-                            <button 
+                            <button
                               onClick={() => setSizeModalOpen(true)}
                               className="text-[11px] text-ore-gold hover:underline uppercase tracking-wider font-semibold cursor-pointer"
                             >
@@ -1748,12 +1736,12 @@ export default function App() {
 
                 {/* BOTÓN PAGAR AHORA EN NEGRO CON FILO DORADO + AGREGAR AL CARRITO */}
                 <div className="space-y-3 pt-2">
-                  <button 
+                  <button
                     disabled={Number(selectedProduct.stock ?? 0) <= 0}
                     onClick={() => {
                       addToCart(selectedProduct, undefined, { openCart: false, showToast: false });
                       setCheckoutModalOpen(true);
-                    }} 
+                    }}
                     className={`w-full font-semibold py-4 px-6 uppercase text-xs tracking-widest rounded transition shadow-xl flex items-center justify-center gap-2 ${
                       Number(selectedProduct.stock ?? 0) > 0
                         ? 'bg-[#0B0B0B] hover:bg-[#141414] text-ore-gold border border-ore-gold/60 hover:border-ore-gold cursor-pointer'
@@ -1767,10 +1755,10 @@ export default function App() {
                   </button>
 
                   {Number(selectedProduct.stock ?? 0) > 0 && (
-                    <button 
+                    <button
                       onClick={() => {
                         addToCart(selectedProduct, undefined, { openCart: false, showToast: true });
-                      }} 
+                      }}
                       className="w-full bg-ore-card hover:bg-white/10 text-ore-cream border border-ore-gold/40 font-semibold py-3.5 px-6 uppercase text-xs tracking-wider rounded transition flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <span>Agregar al carrito y seguir viendo</span>
@@ -1795,8 +1783,8 @@ export default function App() {
                   .map(relatedProduct => {
                     const relatedImg = relatedProduct.image_url || relatedProduct.image;
                     return (
-                      <div 
-                        key={relatedProduct.id} 
+                      <div
+                        key={relatedProduct.id}
                         onClick={() => openProductDetail(relatedProduct)}
                         className="bg-ore-card border border-white/5 rounded-lg overflow-hidden group cursor-pointer hover:border-ore-gold/50 transition shadow-xl flex flex-col justify-between"
                       >
@@ -1808,9 +1796,9 @@ export default function App() {
                             </span>
                           )}
 
-                          <img 
-                            src={relatedImg} 
-                            alt={relatedProduct.title || relatedProduct.name} 
+                          <img
+                            src={relatedImg}
+                            alt={relatedProduct.title || relatedProduct.name}
                             loading="lazy"
                             className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500"
                           />
@@ -1862,8 +1850,8 @@ export default function App() {
                     Hemos recibido los datos de su pieza correctamente. Un especialista de <strong className="text-ore-gold">ORE Joyeria</strong> se comunicara con usted a la brevedad via WhatsApp o llamada para coordinar la evaluacion presencial y segura.
                   </p>
                 </div>
-                <button 
-                  onClick={() => setGoldSuccess(false)} 
+                <button
+                  onClick={() => setGoldSuccess(false)}
                   className="bg-ore-gold text-ore-dark font-semibold px-8 py-3.5 uppercase text-xs tracking-wider rounded hover:bg-ore-cream transition shadow-lg cursor-pointer"
                 >
                   Enviar otra consulta
@@ -1871,7 +1859,7 @@ export default function App() {
               </div>
             ) : (
               <form onSubmit={handleGoldSubmit} className="bg-ore-card p-8 sm:p-10 rounded-lg border border-white/5 space-y-6 shadow-2xl">
-                
+
                 <div className="border-b border-white/10 pb-4">
                   <h3 className="font-serif text-xl text-ore-cream">Detalles de la Pieza a Tasar</h3>
                   <p className="text-xs text-ore-muted mt-1">Cuantos mas detalles nos proporcione, mas precisa sera nuestra orientacion inicial.</p>
@@ -1880,9 +1868,9 @@ export default function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-ore-muted mb-2">Tipo de Pieza *</label>
-                    <select 
-                      value={goldForm.pieceType} 
-                      onChange={e => setGoldForm({...goldForm, pieceType: e.target.value})} 
+                    <select
+                      value={goldForm.pieceType}
+                      onChange={e => setGoldForm({ ...goldForm, pieceType: e.target.value })}
                       className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
                     >
                       <option value="Anillo">Anillo / Solitario</option>
@@ -1898,9 +1886,9 @@ export default function App() {
 
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-ore-muted mb-2">Kilates Estimado *</label>
-                    <select 
-                      value={goldForm.karat} 
-                      onChange={e => setGoldForm({...goldForm, karat: e.target.value})} 
+                    <select
+                      value={goldForm.karat}
+                      onChange={e => setGoldForm({ ...goldForm, karat: e.target.value })}
                       className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
                     >
                       <option value="18k">Oro 18k (Ley 750 - Estandar Joyeria)</option>
@@ -1914,23 +1902,23 @@ export default function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-ore-muted mb-2">Peso Aproximado (en gramos)</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       inputMode="decimal"
-                      placeholder="Ej: 12.5 (solo numeros, punto o coma)" 
-                      value={goldForm.weight} 
-                      onChange={e => setGoldForm({...goldForm, weight: validarSoloNumerosPeso(e.target.value)})} 
+                      placeholder="Ej: 12.5 (solo numeros, punto o coma)"
+                      value={goldForm.weight}
+                      onChange={e => setGoldForm({ ...goldForm, weight: validarSoloNumerosPeso(e.target.value) })}
                       className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-ore-muted mb-2">Estado / Observaciones</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ej: Buen estado, sello visible..." 
-                      value={goldForm.description} 
-                      onChange={e => setGoldForm({...goldForm, description: validarSoloTexto(e.target.value)})} 
+                    <input
+                      type="text"
+                      placeholder="Ej: Buen estado, sello visible..."
+                      value={goldForm.description}
+                      onChange={e => setGoldForm({ ...goldForm, description: validarSoloTexto(e.target.value) })}
                       className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
                     />
                   </div>
@@ -1943,24 +1931,24 @@ export default function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-ore-muted mb-2">Nombre y Apellido *</label>
-                    <input 
-                      type="text" 
-                      required 
+                    <input
+                      type="text"
+                      required
                       placeholder="Su nombre completo"
-                      value={goldForm.name} 
-                      onChange={e => setGoldForm({...goldForm, name: validarSoloTexto(e.target.value)})} 
+                      value={goldForm.name}
+                      onChange={e => setGoldForm({ ...goldForm, name: validarSoloTexto(e.target.value) })}
                       className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
                     />
                   </div>
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-ore-muted mb-2">Telefono / WhatsApp *</label>
-                    <input 
-                      type="text" 
-                      required 
+                    <input
+                      type="text"
+                      required
                       inputMode="tel"
                       placeholder="Ej: 2613737159"
-                      value={goldForm.phone} 
-                      onChange={e => setGoldForm({...goldForm, phone: validarSoloTelefono(e.target.value)})} 
+                      value={goldForm.phone}
+                      onChange={e => setGoldForm({ ...goldForm, phone: validarSoloTelefono(e.target.value) })}
                       className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
                     />
                   </div>
@@ -1968,22 +1956,22 @@ export default function App() {
 
                 <div>
                   <label className="block text-xs uppercase tracking-wider text-ore-muted mb-2">Correo Electronico (Opcional)</label>
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     placeholder="correo@ejemplo.com"
-                    value={goldForm.email || ''} 
-                    onChange={e => setGoldForm({...goldForm, email: e.target.value})} 
+                    value={goldForm.email || ''}
+                    onChange={e => setGoldForm({ ...goldForm, email: e.target.value })}
                     className="w-full bg-ore-dark border border-white/10 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold"
                   />
                 </div>
 
                 <div className="bg-ore-dark/60 border border-white/10 rounded-lg p-4">
                   <label className="flex items-start gap-3 cursor-pointer select-none">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       required
                       checked={goldForm.acceptedTerms}
-                      onChange={e => setGoldForm({...goldForm, acceptedTerms: e.target.checked})}
+                      onChange={e => setGoldForm({ ...goldForm, acceptedTerms: e.target.checked })}
                       className="mt-1 w-4 h-4 accent-[#D4AF37] rounded border-white/20 bg-ore-dark cursor-pointer shrink-0"
                     />
                     <span className="text-xs text-ore-cream/90 leading-relaxed">
@@ -1993,18 +1981,18 @@ export default function App() {
                 </div>
 
                 <div className="pt-2">
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={!goldForm.acceptedTerms}
                     className={`w-full font-semibold py-4 uppercase text-xs tracking-widest transition shadow-lg rounded ${
-                      goldForm.acceptedTerms 
-                        ? 'bg-ore-gold text-ore-dark hover:bg-ore-gold-light cursor-pointer' 
+                      goldForm.acceptedTerms
+                        ? 'bg-ore-gold text-ore-dark hover:bg-ore-gold-light cursor-pointer'
                         : 'bg-white/10 text-ore-muted cursor-not-allowed'
                     }`}
                   >
                     Solicitar Tasacion Profesional
                   </button>
-                
+
                   <p className="text-[11px] text-ore-muted text-center mt-3">
                     Sus datos y consultas son absolutamente confidenciales y tratados bajo rigurosas normas de seguridad.
                   </p>
@@ -2066,9 +2054,9 @@ export default function App() {
               <div className="flex items-center gap-4 border-t border-white/5 pt-6">
                 <div className="w-10 h-10 rounded-full bg-ore-dark border border-ore-gold/30 flex items-center justify-center text-ore-gold shrink-0">
                   <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
-                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
                   </svg>
                 </div>
                 <div>
@@ -2087,30 +2075,30 @@ export default function App() {
             {!isAdminAuthenticated ? (
               <div className="max-w-md mx-auto bg-ore-card p-8 rounded-lg border border-ore-gold/30 shadow-xl space-y-6">
                 <div className="text-center space-y-2">
-                  <Lock className="text-ore-gold mx-auto" size={32}/>
+                  <Lock className="text-ore-gold mx-auto" size={32} />
                   <h2 className="font-serif text-2xl">Panel de Administración ORE</h2>
                   <p className="text-xs text-ore-muted">Ingrese su contraseña de acceso seguro.</p>
                 </div>
-                <form onSubmit={(e) => { 
-                  e.preventDefault(); 
-                  if(adminPin === 'Francesca#230426') {
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  if (adminPin === 'Francesca#230426') {
                     setIsAdminAuthenticated(true);
                     sessionStorage.setItem('ore_admin_auth', 'true');
                   } else {
                     alert('PIN incorrecto');
-                  } 
+                  }
                 }} className="space-y-4">
                   <div className="relative">
-                    <input 
-                      type={showPassword ? "text" : "password"} 
-                      placeholder="Contraseña" 
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Contraseña"
                       autoComplete="new-password"
                       value={adminPin}
                       onChange={(e) => setAdminPin(e.target.value)}
                       className="w-full bg-ore-dark border border-white/10 rounded p-3 pr-10 text-sm text-ore-cream text-center focus:outline-none focus:border-ore-gold"
                     />
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-3.5 text-ore-muted hover:text-ore-gold text-xs cursor-pointer"
                     >
@@ -2123,7 +2111,7 @@ export default function App() {
                 </form>
               </div>
             ) : (
-              <AdminDashboard 
+              <AdminDashboard
                 categories={categories}
                 materials={materials}
                 fetchCategoriesAndMaterials={fetchCategoriesAndMaterials}
@@ -2147,26 +2135,27 @@ export default function App() {
           <div className="w-full max-w-md bg-ore-card h-full flex flex-col border-l border-white/10 p-5 sm:p-6 shadow-2xl">
             <div className="flex justify-between items-center border-b border-white/10 pb-3.5">
               <h2 className="font-serif text-xl text-ore-cream">Tu Carrito ({cartCount})</h2>
-              <button onClick={() => setCartOpen(false)} className="text-ore-cream hover:text-ore-gold cursor-pointer"><X size={20}/></button>
+              <button onClick={() => setCartOpen(false)} className="text-ore-cream hover:text-ore-gold cursor-pointer"><X size={20} /></button>
             </div>
 
-            <div className="flex-grow overflow-y-auto py-4 space-y-4">
+            {/* 1. LISTA DE PRODUCTOS DEL CARRITO (SCROLL PROPIO CON TOPE EN MÓVIL) */}
+            <div className="flex-1 min-h-0 max-h-[34vh] sm:max-h-none overflow-y-auto py-3 space-y-2.5 pr-1">
               {cart.length === 0 ? (
                 <p className="text-center text-ore-muted text-sm py-8">Tu carrito está vacío.</p>
               ) : (
                 cart.map(item => (
-                  <div key={item.cartKey} className="flex gap-3.5 items-center bg-ore-dark p-3.5 rounded-lg border border-white/5">
-                    <img src={item.image} alt={item.name} loading="lazy" className="w-16 h-16 object-cover rounded shrink-0" />
+                  <div key={item.cartKey} className="flex gap-3 items-center bg-ore-dark p-2.5 sm:p-3 rounded-lg border border-white/5">
+                    <img src={item.image} alt={item.name} loading="lazy" className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded shrink-0" />
                     <div className="flex-grow min-w-0">
-                      <h4 className="font-serif text-sm text-ore-cream truncate">{item.name}</h4>
-                      <p className="text-ore-gold font-semibold text-sm mt-0.5">${Number(item.price * item.qty).toLocaleString('es-AR')}</p>
+                      <h4 className="font-serif text-xs sm:text-sm text-ore-cream truncate">{item.name}</h4>
+                      <p className="text-ore-gold font-semibold text-xs sm:text-sm mt-0.5">${Number(item.price * item.qty).toLocaleString('es-AR')}</p>
                       <p className="text-[10px] text-emerald-400/90 mt-0.5">
                         Con -15% transf.: ${Math.round(item.price * item.qty * 0.85).toLocaleString('es-AR')}
                       </p>
                     </div>
-                    <div className="flex flex-col items-end gap-2 shrink-0">
-                      <button onClick={() => removeFromCart(item.cartKey)} className="text-ore-muted hover:text-red-400 cursor-pointer"><Trash2 size={15}/></button>
-                      <div className="flex items-center gap-2 border border-white/10 rounded px-2 py-1 text-xs text-ore-cream">
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <button onClick={() => removeFromCart(item.cartKey)} className="text-ore-muted hover:text-red-400 cursor-pointer"><Trash2 size={14} /></button>
+                      <div className="flex items-center gap-2 border border-white/10 rounded px-2 py-0.5 text-xs text-ore-cream">
                         <button onClick={() => updateQty(item.cartKey, -1)} className="cursor-pointer">-</button>
                         <span>{item.qty}</span>
                         <button onClick={() => updateQty(item.cartKey, 1)} className="cursor-pointer">+</button>
@@ -2175,57 +2164,62 @@ export default function App() {
                   </div>
                 ))
               )}
-
-              {suggestedProducts.length > 0 && (
-                <div className="pt-3 border-t border-white/10 space-y-2.5">
-                  <h3 className="text-[11px] uppercase tracking-[0.2em] text-ore-gold font-semibold">
-                    También te puede interesar
-                  </h3>
-
-                  <div className="space-y-2">
-                    {suggestedProducts.map(sug => (
-                      <div
-                        key={sug.id}
-                        className="flex items-center justify-between gap-2.5 bg-ore-dark/70 border border-white/5 rounded-lg p-2.5"
-                      >
-                        <div
-                          onClick={() => openProductDetail(sug)}
-                          className="flex items-center gap-2.5 min-w-0 cursor-pointer group"
-                        >
-                          <img
-                            src={sug.image || sug.image_url}
-                            alt={sug.name || sug.title}
-                            loading="lazy"
-                            className="w-11 h-11 rounded object-cover shrink-0"
-                          />
-                          <div className="min-w-0">
-                            <p className="text-xs font-serif text-ore-cream group-hover:text-ore-gold truncate">
-                              {sug.name || sug.title}
-                            </p>
-                            <p className="text-xs text-ore-gold font-semibold">
-                              ${Number(sug.price || 0).toLocaleString('es-AR')}
-                            </p>
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => addToCart(sug, undefined, { openCart: false, showToast: true })}
-                          className="shrink-0 bg-ore-gold/15 hover:bg-ore-gold text-ore-gold hover:text-ore-dark border border-ore-gold/40 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded transition inline-flex items-center gap-1 cursor-pointer"
-                        >
-                          <Plus size={12} />
-                          <span>Agregar</span>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
+            {/* 2. SECCIÓN FIJA Y SEPARADA: TAMBIÉN TE PUEDE INTERESAR */}
+            {suggestedProducts.length > 0 && (
+              <div className="shrink-0 pt-2.5 pb-2.5 border-t border-ore-gold/25 bg-ore-card space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-ore-gold font-semibold">
+                    También te puede interesar
+                  </h3>
+                  <span className="text-[10px] text-ore-muted">Sugeridos ORE</span>
+                </div>
+
+                <div className="space-y-1.5">
+                  {suggestedProducts.map(sug => (
+                    <div
+                      key={sug.id}
+                      className="flex items-center justify-between gap-2 bg-ore-dark/80 border border-white/10 rounded-lg p-1.5 sm:p-2"
+                    >
+                      <div
+                        onClick={() => openProductDetail(sug)}
+                        className="flex items-center gap-2 min-w-0 cursor-pointer group"
+                      >
+                        <img
+                          src={sug.image || sug.image_url}
+                          alt={sug.name || sug.title}
+                          loading="lazy"
+                          className="w-9 h-9 sm:w-10 sm:h-10 rounded object-cover shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <p className="text-xs font-serif text-ore-cream group-hover:text-ore-gold truncate">
+                            {sug.name || sug.title}
+                          </p>
+                          <p className="text-xs text-ore-gold font-semibold">
+                            ${Number(sug.price || 0).toLocaleString('es-AR')}
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => addToCart(sug, undefined, { openCart: false, showToast: true })}
+                        className="shrink-0 bg-ore-gold/15 hover:bg-ore-gold text-ore-gold hover:text-ore-dark border border-ore-gold/40 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded transition inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus size={12} />
+                        <span>Agregar</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 3. RESUMEN Y BOTÓN INICIAR COMPRA (SIEMPRE ACCESIBLE EN CELULAR) */}
             {cart.length > 0 && (
-              <div className="border-t border-white/10 pt-3.5 space-y-2.5">
-                <div className="bg-ore-dark/90 border border-ore-gold/30 rounded-lg p-3 space-y-1 text-xs">
+              <div className="shrink-0 border-t border-white/10 pt-2.5 space-y-2 bg-ore-card">
+                <div className="bg-ore-dark/90 border border-ore-gold/30 rounded-lg p-2.5 sm:p-3 space-y-1 text-[11px] sm:text-xs">
                   <div className="flex justify-between text-ore-cream/85">
                     <span>Subtotal (precio regular):</span>
                     <span className="font-semibold">${cartTotal.toLocaleString('es-AR')}</span>
@@ -2240,17 +2234,17 @@ export default function App() {
                   </div>
                 </div>
 
-                <button 
-                  onClick={() => { 
-                    setCartOpen(false); 
-                    setCheckoutModalOpen(true); 
+                <button
+                  onClick={() => {
+                    setCartOpen(false);
+                    setCheckoutModalOpen(true);
                   }}
-                  className="w-full bg-ore-gold text-ore-dark font-bold py-4 uppercase text-xs tracking-widest hover:bg-ore-gold-light transition shadow-lg rounded cursor-pointer"
+                  className="w-full bg-ore-gold text-ore-dark font-bold py-3 sm:py-4 uppercase text-xs tracking-widest hover:bg-ore-gold-light transition shadow-lg rounded cursor-pointer"
                 >
                   Iniciar compra
                 </button>
 
-                <div className="flex items-start justify-center gap-1.5 text-[10px] sm:text-[11px] text-[#9CA3AF] pt-1 leading-snug">
+                <div className="hidden sm:flex items-start justify-center gap-1.5 text-[10px] sm:text-[11px] text-[#9CA3AF] pt-0.5 leading-snug">
                   <Lock size={11} className="text-[#D4AF37] shrink-0 mt-0.5" />
                   <span className="text-center">
                     <strong className="text-[#D4AF37] font-semibold tracking-[0.03em]">Compra Protegida</strong>
@@ -2280,7 +2274,7 @@ export default function App() {
                   </h3>
                 </div>
                 <button onClick={() => setSizeModalOpen(false)} className="text-ore-cream hover:text-ore-gold p-1 cursor-pointer">
-                  <X size={20}/>
+                  <X size={20} />
                 </button>
               </div>
 
@@ -2402,10 +2396,10 @@ export default function App() {
                   <label className="block text-[11px] uppercase tracking-wider text-ore-gold font-semibold mb-1.5">
                     1. Código Postal de Destino *
                   </label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     maxLength={8}
-                    placeholder="Ej: 5500 (Mendoza), 1050 (CABA)..." 
+                    placeholder="Ej: 5500 (Mendoza), 1050 (CABA)..."
                     value={postalCode}
                     onChange={(e) => setPostalCode(e.target.value)}
                     className="w-full bg-ore-card border border-white/15 rounded p-3 text-sm text-ore-cream focus:outline-none focus:border-ore-gold font-mono"
@@ -2513,7 +2507,7 @@ export default function App() {
                   <span>Transferencia -15% OFF</span>
                 </button>
 
-                <button 
+                <button
                   disabled={!envioInfo.calculado}
                   onClick={async () => {
                     try {
@@ -2535,9 +2529,9 @@ export default function App() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ items: itemsConEnvio })
                       });
-                      
+
                       const data = await response.json();
-                      
+
                       if (data.init_point) {
                         window.location.href = data.init_point;
                       } else {
